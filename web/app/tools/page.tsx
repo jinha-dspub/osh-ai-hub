@@ -4,6 +4,7 @@ import {
   HeartPulse,
   FlaskConical,
   ScanLine,
+  FileText,
   ArrowUpRight,
 } from "lucide-react";
 import { PageIntro } from "@/components/ui";
@@ -18,10 +19,42 @@ export default function Tools() {
       />
       <div className="container section">
         <div className="info-note teal-note">
-          DEMO 화면입니다. 기존 분석 앱은 후속 단계에서 연결하며, 지금은 도구
-          소개와 AI 체험 화면을 살펴볼 수 있습니다.
+          한글 변환기와 건강검진 확인 프로젝트로 바로 이동할 수 있습니다.
+          건강검진 확인은 공개 연결을 준비 중이며, DEMO로 표시된 분석 도구와 AI
+          체험은 미리보기입니다.
         </div>
         <div className="tool-grid">
+          <article className="tool-card">
+            <FileText size={29} />
+            <div>
+              <span className="badge">웹 도구 · tools.osh.ai.kr</span>
+            </div>
+            <h3>한글 변환기 · HWPX</h3>
+            <p>
+              Markdown 원고를 연구보고서 템플릿의 HWPX 문서로 변환합니다.
+              비로그인 작업은 24시간 후 만료됩니다.
+            </p>
+            <a href="https://tools.osh.ai.kr/hwpx/" className="button secondary">
+              한글 변환기 바로가기 <ArrowUpRight size={14} />
+            </a>
+          </article>
+          <article className="tool-card">
+            <HeartPulse size={29} />
+            <div>
+              <span className="badge">웹 도구 · 연결 준비 중</span>
+            </div>
+            <h3>건강검진 확인 · My Health Exam</h3>
+            <p>
+              본인인증으로 건강검진 이력을 조회하고, 연도별 검진 기록과 검사
+              수치의 추이를 확인하는 도구입니다. 공개 주소 연결은 준비 중입니다.
+            </p>
+            <a
+              href="https://tools.osh.ai.kr/myhealthexam/"
+              className="button secondary"
+            >
+              건강검진 확인 바로가기 <ArrowUpRight size={14} />
+            </a>
+          </article>
           {[
             {
               title: "직업 코호트 SIR 대시보드",
