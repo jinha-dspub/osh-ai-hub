@@ -1,6 +1,7 @@
 # OSH AI Hub
 
 - Read README.md and docs before changes.
+- For UI and DEMO AI design work, follow docs/DESIGN-GUIDELINES.md and use docs/DESIGN-BRIEF-TEMPLATE.md to share the design.
 - Use TypeScript in web/; Python AI services belong in ai-api/.
 - Keep existing osh.ai.kr processes, ports and proxy configuration intact during development.
 - All displayed sample content must be explicitly marked DEMO; never invent operational metrics or model performance.

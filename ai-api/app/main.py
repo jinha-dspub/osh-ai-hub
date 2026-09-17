@@ -3,7 +3,14 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-app = FastAPI(title="OSH AI API", version="0.1.0", description="Model integration pending")
+from app.copd import router as copd_router
+
+app = FastAPI(
+    title="OSH AI API",
+    version="0.1.0",
+    description="Internal COPD exploration and image service foundation",
+)
+app.include_router(copd_router)
 
 
 @app.get("/health")

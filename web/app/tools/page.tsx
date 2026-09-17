@@ -5,6 +5,7 @@ import {
   FlaskConical,
   ScanLine,
   FileText,
+  Search,
   ArrowUpRight,
 } from "lucide-react";
 import { PageIntro } from "@/components/ui";
@@ -25,6 +26,20 @@ export default function Tools() {
         </div>
         <div className="tool-grid">
           <article className="tool-card">
+            <Search size={29} />
+            <div>
+              <span className="badge">실제 자료 · 검수 중</span>
+            </div>
+            <h3>COPD 산재 판정 사례 검색</h3>
+            <p>
+              직종·유해인자로 사례를 찾고 원문과 AI 라벨을 비교합니다. 실제 사례
+              검색은 내부 미리보기에서 제공합니다.
+            </p>
+            <Link href="/demo/copd/" className="button secondary">
+              COPD 검색 DEMO <ArrowUpRight size={14} />
+            </Link>
+          </article>
+          <article className="tool-card">
             <FileText size={29} />
             <div>
               <span className="badge">웹 도구 · tools.osh.ai.kr</span>
@@ -34,7 +49,10 @@ export default function Tools() {
               Markdown 원고를 연구보고서 템플릿의 HWPX 문서로 변환합니다.
               비로그인 작업은 24시간 후 만료됩니다.
             </p>
-            <a href="https://tools.osh.ai.kr/hwpx/" className="button secondary">
+            <a
+              href="https://tools.osh.ai.kr/hwpx/"
+              className="button secondary"
+            >
               한글 변환기 바로가기 <ArrowUpRight size={14} />
             </a>
           </article>

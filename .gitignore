@@ -17,3 +17,12 @@ ai-api/models/*
 !ai-api/models/.gitkeep
 
 .vercel/
+
+# Local credentials, models, and runtime assets
+/local_asset/
+**/gemini_api_key.txt
+
+# Imported COPD draft: do not publish source data in the web repository
+/opendata/copd/
+
+/ai-api/static/copd/

@@ -1,0 +1,18 @@
+[Unit]
+Description=OSH shared demo gateway on 192.168.0.6:8103
+Requires=osh-ollama.service
+After=osh-ollama.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/shield/osh-ai-hub/ai-api
+ExecStart=/home/shield/osh-ai-hub/ai-api/.venv/bin/python -m uvicorn app.demo_gateway:app --host 192.168.0.6 --port 8103 --no-access-log
+Environment=COPD_ALLOW_LOCAL_PREVIEW=false
+Environment=OMP_NUM_THREADS=4
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

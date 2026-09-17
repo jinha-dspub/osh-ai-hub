@@ -1,0 +1,14 @@
+[Unit]
+Description=OSH demo local models (CPU, loopback only)
+
+[Service]
+Type=simple
+WorkingDirectory=/home/shield/osh-ai-hub
+ExecStart=/bin/bash /home/shield/osh-ai-hub/ai-api/scripts/start_local_ollama.sh
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

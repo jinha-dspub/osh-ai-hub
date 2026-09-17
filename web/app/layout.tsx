@@ -47,8 +47,8 @@ export default function RootLayout({
             <div className="footer-bottom">
               <span>© 2026 OSH AI Hub</span>
               <span>
-                <i className="status-dot" /> 디자인 프리뷰 · 모든 데이터는
-                DEMO입니다
+                <i className="status-dot" /> 예시 자료는 DEMO로 표시 · 실제
+                자료는 공개 상태 확인
               </span>
               <span>Built for safer work.</span>
             </div>

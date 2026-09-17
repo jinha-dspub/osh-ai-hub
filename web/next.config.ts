@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 const config: NextConfig = {
   poweredByHeader: false,
+  skipTrailingSlashRedirect: true,
+  async rewrites() {
+    return [
+      {
+        source: "/demo/:path*",
+        destination: "https://tools.osh.ai.kr/demo/:path*",
+      },
+    ];
+  },
   async headers() {
     return [
       {

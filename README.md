@@ -43,6 +43,10 @@ DB migration은 작성된 초안이며 연결된 Supabase에서 실행·검증�
 
 샘플 CSV는 수 KB의 합성 fixture이므로 웹에서 생성합니다. 운영 대용량 파일은 별도 object storage로 직접 전송해야 합니다. 모든 예제는 DEMO이며 실제 기관 자료나 검증된 모델 성능이 아닙니다.
 
+## 디자인 가이드
+
+새 DEMO AI와 도구 화면은 [공통 디자인 가이드](docs/DESIGN-GUIDELINES.md)를 기준으로 만들고, [디자인 브리프 양식](docs/DESIGN-BRIEF-TEMPLATE.md)으로 화면 구성을 공유합니다.
+
 ## 구조
 
 - `web/`: Next.js App Router, TypeScript, CSS 디자인 시스템, 로컬 한글 글꼴
@@ -82,6 +86,8 @@ E2E는 인증 환경변수가 없는 디자인 프리뷰를 기준으로 하며 
 
 ## AI 서비스
 
+Gemini 키 저장 위치와 로컬 모델의 역할은 [로컬 AI 설정](docs/LOCAL-AI-SETUP.md)을 참고하세요.
+
 ```bash
 cd ai-api
 python3 -m venv .venv
@@ -100,3 +106,9 @@ python3 -m venv .venv
 새 개발 Supabase 프로젝트에서 마이그레이션을 검토한 뒤 적용합니다. 이미 사용 중인 DB에는 적용하지 않습니다. 초기 정책은 공개된 자료만 읽을 수 있고, 일반 사용자는 자신의 프로필만 수정할 수 있습니다. 역할·자료 쓰기와 private bucket 접근은 기본적으로 허용하지 않습니다.
 
 [현재 상태와 다음 단계](docs/IMPLEMENTATION-STATUS.md)를 참고하세요.
+
+## COPD 검토 DEMO
+
+실제 COPD 자료를 사용하는 별도 검토 앱을 `/demo/copd/`에 연결한다. 키워드·로컬/Gemini 임베딩 검색, 원문·측정자료 확인, 로컬 Gemma 설명을 구현했다. 공개 합성 샘플과 구분하며 .3 Basic 인증 뒤에서 제공한다. 자료 배포·다운로드와 검색·답변 품질 평가는 완료되지 않았다.
+
+[공통 관문 설정·UFW 요청](docs/DEMO-GATEWAY-REQUEST.md), [로컬 AI와 서비스 운영](docs/LOCAL-AI-SETUP.md), [데이터 검토](docs/COPD-DATASET-PROPOSAL.md)를 참고한다. .3 nginx 및 Vercel 최종 경로는 적용 후 검증이 필요하다.
