@@ -57,7 +57,7 @@ describe("request boundaries", () => {
   it.each(["https://evil.test", "//evil.test", "/\\evil.test", "/\nevil"])(
     "rejects unsafe redirects %s",
     (path) => {
-      expect(safeReturnPath(path)).toBe("/account/api-keys");
+      expect(safeReturnPath(path)).toBe("/tools");
     },
   );
   it("allows internal return paths", () => {

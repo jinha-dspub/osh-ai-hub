@@ -8,7 +8,7 @@ const tabs = [
   ["preview", "미리보기"],
   ["files", "파일 다운로드"],
   ["api", "API 활용"],
-  ["related", "관련 모델·분석"],
+  ["related", "관련 자료·도구"],
 ];
 export function generateStaticParams() {
   return datasets.map((d) => ({ slug: d.slug }));
@@ -222,11 +222,8 @@ export default async function DatasetDetail({
               </>
             ) : (
               <>
-                <h2>이 자료의 데이터 API는 준비 중입니다</h2>
-                <p>
-                  이미지 메타데이터는 파일로 확인할 수 있습니다. 추론 API는 실제
-                  모델이 준비된 후 제공됩니다.
-                </p>
+                <h2>이 자료는 파일로 이용할 수 있습니다</h2>
+                <p>이미지 메타데이터는 DEMO 샘플 파일로 확인할 수 있습니다.</p>
                 <Link
                   href={`/datasets/${d.slug}?tab=files`}
                   className="button secondary"
@@ -251,11 +248,8 @@ export default async function DatasetDetail({
                 <p>이 분야의 관련 자료를 준비하고 있습니다.</p>
               )}
               <div className="content-actions">
-                <Link
-                  href={d.ai ? "/models" : "/tools"}
-                  className="button secondary"
-                >
-                  {d.ai ? "AI 모델 살펴보기" : "분석 도구 살펴보기"}
+                <Link href="/tools" className="button secondary">
+                  분석 도구 살펴보기
                   <ArrowUpRight size={16} />
                 </Link>
               </div>

@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/admin";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { datasets } from "@/lib/catalog";
@@ -5,7 +6,8 @@ import { DatasetArt, PageIntro } from "@/components/ui";
 export const metadata = { title: "AI 모델" };
 import { models } from "@/lib/models";
 
-export default function Models() {
+export default async function Models() {
+  await requireAdmin();
   return (
     <>
       <PageIntro

@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/admin";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
@@ -9,6 +10,7 @@ export default async function ModelDetail({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  await requireAdmin();
   const slug = (await params).slug;
   const model = models.find((x) => x.slug === slug);
   if (!model) notFound();

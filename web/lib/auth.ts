@@ -10,7 +10,7 @@ export function authConfigured() {
   );
 }
 
-export async function authClient() {
+export async function authClient({ readOnly = false } = {}) {
   if (!authConfigured()) return null;
   const store = await cookies();
   return createServerClient(
@@ -20,6 +20,7 @@ export async function authClient() {
       cookies: {
         getAll: () => store.getAll(),
         setAll(values) {
+          if (readOnly) return;
           values.forEach(({ name, value, options }) =>
             store.set(name, value, options),
           );
@@ -37,7 +38,7 @@ export function safeReturnPath(path: string | null) {
     path.includes("\\") ||
     /[\u0000-\u001f]/.test(path)
   ) {
-    return "/account/api-keys";
+    return "/tools";
   }
   return path;
 }

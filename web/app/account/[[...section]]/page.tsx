@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/admin";
 import Link from "next/link";
 import {
   KeyRound,
@@ -15,6 +16,7 @@ export default async function Account({
 }: {
   params: Promise<{ section?: string[] }>;
 }) {
+  await requireAdmin();
   const segments = (await params).section ?? [];
   if (
     segments.length > 1 ||

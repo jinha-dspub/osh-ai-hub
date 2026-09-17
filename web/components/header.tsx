@@ -25,7 +25,13 @@ export function Brand() {
     </span>
   );
 }
-export function Header() {
+export function Header({
+  isAdmin = false,
+  loginEnabled = false,
+}: {
+  isAdmin?: boolean;
+  loginEnabled?: boolean;
+}) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   return (
@@ -46,21 +52,28 @@ export function Header() {
             className={open ? "navigation open" : "navigation"}
             aria-label="주 메뉴"
           >
-            {links.map(([label, href]) => (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setOpen(false)}
-                className={
-                  path.startsWith(href) ||
-                  (href === "/developers" && path === "/apis")
-                    ? "active"
-                    : ""
-                }
-              >
-                {label}
+            {links
+              .filter(([, href]) => href !== "/models" || isAdmin)
+              .map(([label, href]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setOpen(false)}
+                  className={
+                    path.startsWith(href) ||
+                    (href === "/developers" && path === "/apis")
+                      ? "active"
+                      : ""
+                  }
+                >
+                  {label}
+                </Link>
+              ))}
+            {isAdmin && (
+              <Link href="/admin/drafts" onClick={() => setOpen(false)}>
+                관리자 초안
               </Link>
-            ))}
+            )}
           </nav>
           <div className="header-actions">
             <Link
@@ -70,9 +83,11 @@ export function Header() {
             >
               <Search size={20} />
             </Link>
-            <Link href="/login" className="login-link">
-              로그인 <ArrowUpRight size={15} />
-            </Link>
+            {loginEnabled && (
+              <Link href="/login" className="login-link">
+                로그인 <ArrowUpRight size={15} />
+              </Link>
+            )}
             <button
               className="icon-button menu-toggle"
               aria-label={open ? "메뉴 닫기" : "메뉴 열기"}

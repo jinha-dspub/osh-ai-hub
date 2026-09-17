@@ -82,11 +82,7 @@ test("unconfigured login and API keys do not pretend to work", async ({
     page.getByRole("button", { name: "Google로 계속하기" }),
   ).toBeDisabled();
   expect((await request.post("/auth/google")).status()).toBe(503);
-  await page.goto("/account/api-keys");
-  await expect(page.getByRole("button", { name: "새 API 키" })).toBeDisabled();
-  await expect(
-    page.getByText("개인 API 워크스페이스를 준비 중이에요"),
-  ).toBeVisible();
+  expect((await request.get("/account/api-keys")).status()).toBe(404);
 });
 test("all primary pages render without client errors or horizontal overflow", async ({
   page,
@@ -97,14 +93,10 @@ test("all primary pages render without client errors or horizontal overflow", as
     "/",
     "/datasets",
     "/datasets/construction-ppe",
-    "/models",
-    "/models/ppe-detector",
     "/tools",
     "/developers",
     "/apis",
     "/login",
-    "/account/usage",
-    "/playground",
     "/about",
   ]) {
     const result = await page.goto(path);
@@ -127,8 +119,8 @@ test("all primary pages render without client errors or horizontal overflow", as
     await page.getByRole("button", { name: "메뉴 열기" }).click();
     await page
       .getByRole("navigation", { name: "주 메뉴" })
-      .getByRole("link", { name: "AI 모델" })
+      .getByRole("link", { name: "분석·체험" })
       .click();
-    await expect(page).toHaveURL(/\/models$/);
+    await expect(page).toHaveURL(/\/tools$/);
   }
 });

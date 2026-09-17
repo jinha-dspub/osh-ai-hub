@@ -23,7 +23,8 @@ test("COPD demo opens a dedicated page and keeps unpublished case APIs locked", 
   await page.getByRole("button", { name: "파일·활용법", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "원본 다운로드 · 공개 검토 중" }),
-  ).toBeDisabled();
+  ).toHaveCount(0);
+  await expect(page.getByText("Hugging Face 게시 계획 없음.")).toBeVisible();
   expect((await request.get("/api/copd?action=info")).status()).toBe(403);
   expect((await request.get("/api/copd?action=case&id=DEMO")).status()).toBe(
     403,

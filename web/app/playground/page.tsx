@@ -1,7 +1,9 @@
+import { requireAdmin } from "@/lib/admin";
 import { PageIntro } from "@/components/ui";
 import { Playground } from "@/components/playground";
 export const metadata = { title: "AI Playground" };
-export default function PlaygroundPage() {
+export default async function PlaygroundPage() {
+  await requireAdmin();
   return (
     <>
       <PageIntro

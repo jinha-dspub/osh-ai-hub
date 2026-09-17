@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Header, Brand } from "@/components/header";
 import "./globals.css";
+import { isAdmin } from "@/lib/admin";
+import { authConfigured } from "@/lib/auth";
 export const metadata: Metadata = {
   title: {
     default: "OSH AI Hub — 더 안전한 내일을 위한 데이터",
@@ -12,7 +14,7 @@ export const metadata: Metadata = {
     "산업안전보건 데이터, AI 모델, 분석 도구와 API를 연결하는 개방 플랫폼. 현재 디자인 미리보기입니다.",
   robots: { index: false, follow: false },
 };
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -20,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
-        <Header />
+        <Header isAdmin={await isAdmin()} loginEnabled={authConfigured()} />
         <main id="main">{children}</main>
         <footer className="footer">
           <div className="container">

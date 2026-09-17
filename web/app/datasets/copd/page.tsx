@@ -1,3 +1,4 @@
+import { isAdmin } from "@/lib/admin";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { CopdExplorer } from "@/components/copd-explorer";
@@ -54,6 +55,7 @@ export default async function CopdPage({
       </Link>
       <CopdExplorer
         enabled={internalCopdEnabled()}
+        showDrafts={await isAdmin()}
         initialFilters={initialFilters}
       />
     </div>

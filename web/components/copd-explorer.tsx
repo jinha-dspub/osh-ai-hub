@@ -74,10 +74,12 @@ async function requestApi(base: string, action: string, payload?: unknown) {
 }
 export function CopdExplorer({
   enabled,
+  showDrafts = false,
   initialFilters = {},
   apiBase = "/api/copd",
 }: {
   enabled: boolean;
+  showDrafts?: boolean;
   initialFilters?: Record<string, string>;
   apiBase?: string;
 }) {
@@ -337,12 +339,12 @@ export function CopdExplorer({
             세 CSV는 사건번호로 연결합니다. 행 순서로 연결하지 않습니다. 검색용
             벡터는 문서와 같은 모델·설정으로 만든 질의와 비교해야 합니다.
           </p>
-          <button className="button secondary" disabled>
-            원본 다운로드 · 공개 검토 중
-          </button>
-          <p className="copd-caption">
-            파일은 아직 Supabase Storage나 Hugging Face에 게시하지 않았습니다.
-          </p>
+          {showDrafts && (
+            <button className="button secondary" disabled>
+              원본 다운로드 · 공개 검토 중
+            </button>
+          )}
+          <p className="copd-caption">Hugging Face 게시 계획 없음.</p>
         </section>
       )}
       {tab === "search" && (

@@ -1,8 +1,10 @@
+import { isAdmin } from "@/lib/admin";
 import Link from "next/link";
 import { Database, ChartColumn, ScanLine, ArrowUpRight } from "lucide-react";
 import { PageIntro } from "@/components/ui";
 export const metadata = { title: "API 카탈로그" };
-export default function Apis() {
+export default async function Apis() {
+  const admin = await isAdmin();
   return (
     <>
       <PageIntro
@@ -34,28 +36,30 @@ export default function Apis() {
               icon: ScanLine,
               ready: false,
             },
-          ].map(({ title, desc, path, icon: Icon, ready }) => (
-            <article className="api-card" key={title}>
-              <Icon size={28} />
-              <div>
-                <span className={`badge ${ready ? "teal" : ""}`}>
-                  {ready ? "DEMO · 사용 가능" : "준비 중"}
-                </span>
-              </div>
-              <h3>{title}</h3>
-              <p>{desc}</p>
-              <div className="endpoint">
-                <code>{path}</code>
-              </div>
-              <Link
-                href={ready ? "/developers" : "/playground"}
-                className="text-link"
-              >
-                {ready ? "문서 및 실행" : "준비 현황 보기"}
-                <ArrowUpRight size={16} />
-              </Link>
-            </article>
-          ))}
+          ]
+            .filter((item) => item.ready || admin)
+            .map(({ title, desc, path, icon: Icon, ready }) => (
+              <article className="api-card" key={title}>
+                <Icon size={28} />
+                <div>
+                  <span className={`badge ${ready ? "teal" : ""}`}>
+                    {ready ? "DEMO · 사용 가능" : "준비 중"}
+                  </span>
+                </div>
+                <h3>{title}</h3>
+                <p>{desc}</p>
+                <div className="endpoint">
+                  <code>{path}</code>
+                </div>
+                <Link
+                  href={ready ? "/developers" : "/playground"}
+                  className="text-link"
+                >
+                  {ready ? "문서 및 실행" : "준비 현황 보기"}
+                  <ArrowUpRight size={16} />
+                </Link>
+              </article>
+            ))}
         </div>
       </div>
     </>

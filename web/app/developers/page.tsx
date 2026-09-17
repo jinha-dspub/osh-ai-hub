@@ -1,3 +1,4 @@
+import { isAdmin } from "@/lib/admin";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { PageIntro } from "@/components/ui";
@@ -9,6 +10,7 @@ export default async function Developers({
 }: {
   searchParams: Promise<{ dataset?: string }>;
 }) {
+  const admin = await isAdmin();
   const selected = findDataset((await searchParams).dataset ?? "");
   const slug = selected?.api ? selected.slug : "industrial-accidents";
   return (
@@ -33,18 +35,19 @@ export default async function Developers({
           <a href="/openapi.json" target="_blank" rel="noreferrer">
             OpenAPI 명세 ↗
           </a>
-          <h3>MY WORKSPACE</h3>
-          <Link href="/account/api-keys">내 API 키</Link>
-          <Link href="/account/usage">사용량</Link>
+          {admin && (
+            <>
+              <h3>MY WORKSPACE · DRAFT</h3>
+              <Link href="/account/api-keys">내 API 키</Link>
+              <Link href="/account/usage">사용량</Link>
+            </>
+          )}
         </nav>
         <div className="docs-content">
           <section id="quickstart">
             <span className="badge teal">PUBLIC SAMPLE API · v1</span>
             <h2 style={{ marginTop: 15 }}>첫 번째 API 호출</h2>
-            <p>
-              키 없이 공개 샘플을 호출해 응답 구조를 확인하세요. 운영 데이터와
-              인증 API는 준비 중입니다.
-            </p>
+            <p>키 없이 공개 DEMO 샘플을 호출해 응답 구조를 확인하세요.</p>
             <div className="steps">
               <div className="step">
                 <b>01</b>
@@ -132,16 +135,13 @@ export default async function Developers({
           <section id="authentication">
             <h2>인증과 API 키</h2>
             <div className="info-note teal-note">
-              현재 제공되는 API는 공개 합성 예제 전용입니다. Google 로그인, 개인
-              API 키 발급, 운영 한도는 별도 설정과 후속 개발을 거쳐 제공됩니다.
+              공개 합성 DEMO API는 로그인이나 API 키 없이 호출할 수 있습니다.
             </div>
-            <p>
-              운영 API에서는 계정에 발급한 키를 인증 헤더로 전달하고,
-              권한·만료·호출 한도를 적용할 예정입니다.
-            </p>
-            <Link href="/account/api-keys" className="text-link">
-              API 키 관리 화면 보기 <ArrowUpRight size={16} />
-            </Link>
+            {admin && (
+              <Link href="/account/api-keys" className="text-link">
+                API 키 관리 초안 <ArrowUpRight size={16} />
+              </Link>
+            )}
           </section>
           <section id="errors">
             <h2>오류 처리</h2>
