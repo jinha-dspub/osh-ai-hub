@@ -22,6 +22,9 @@ test("COPD introduction explains the demo without inactive search controls", asy
   await expect(page.getByRole("heading", { name: "이렇게 활용하세요" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "공개 판정문에 검색 가능한 구조를 더했습니다" })).toBeVisible();
   await expect(page.getByRole("link", { name: "COPD 검색 DEMO 열기" })).toHaveAttribute("href", "/demo/copd/");
+  await expect(page.getByRole("heading", { name: "데이터 미리보기" })).toBeVisible();
+  await expect(page.locator(".copd-sheet tbody tr")).toHaveCount(3);
+  await page.screenshot({path: `test-results/copd-preview-${page.viewportSize()?.width}.png`, fullPage: true});
   await page.getByRole("button", { name: "품질·한계", exact: true }).click();
   await expect(page.getByText("대조 가능한 사례 중 99.85%")).toBeVisible();
   await page.getByRole("button", { name: "파일·활용법", exact: true }).click();

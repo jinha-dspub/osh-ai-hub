@@ -452,3 +452,20 @@
 .copd-howto span { color: var(--muted); }
 @media (max-width: 850px) { .copd-start { grid-template-columns: 1fr; gap: 24px; } }
 @media (max-width: 640px) { .copd-start { padding: 18px; } .copd-start h2 { font-size: 22px; } }
+
+.copd-preview { margin: 28px 0; padding: 24px; border: 1px solid var(--line); border-radius: 12px; background: white; }
+.copd-preview-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.copd-preview-heading h3 { margin: 0; }
+.copd-sheet-scroll { overflow-x: auto; margin: 16px 0; border: 1px solid #a9bad0; border-radius: 6px; }
+.copd-sheet { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 15px; line-height: 1.7; table-layout: fixed; }
+.copd-sheet th, .copd-sheet td { padding: 12px; border: 1px solid var(--line); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.copd-sheet thead th { background: var(--primary-soft); color: var(--navy); }
+.copd-sheet th small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+.copd-sheet .copd-sheet-number { width: 42px; padding-left: 6px; padding-right: 6px; text-align: center; background: var(--paper); color: var(--muted); font-weight: 400; }
+.copd-sheet tr > :nth-child(2) { width: 110px; }
+.copd-sheet tr > :nth-child(3), .copd-sheet tr > :nth-child(4) { width: 100px; }
+.copd-sheet .copd-sheet-letters td { padding: 4px; text-align: center; background: var(--paper); color: var(--muted); font: 12px/1.6 monospace; }
+.copd-sheet .copd-sheet-letters td:first-child { width: 42px; }
+.copd-sheet tbody tr:hover td { background: #f5f8fd; }
+@media (max-width: 640px) { .copd-preview { padding: 16px; } }
+.copd-preview .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }

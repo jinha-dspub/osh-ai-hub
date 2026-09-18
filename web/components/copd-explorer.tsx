@@ -1,4 +1,5 @@
 "use client";
+import { CopdPreview } from "./copd-preview";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Search,
@@ -229,6 +230,7 @@ export function CopdExplorer({
             직종·상병·유해인자와 노출 측정치를 가공한 연구용 자료입니다. 원문을
             만든 기관과 AI 라벨을 만든 주체는 구분됩니다.
           </p>
+          <CopdPreview />
           <div className="copd-feature-grid">
             <article>
               <FileText />
