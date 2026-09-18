@@ -74,20 +74,20 @@ async function requestApi(base: string, action: string, payload?: unknown) {
 }
 export function CopdExplorer({
   enabled,
-  showDrafts = false,
   initialFilters = {},
+  initialTab = "search",
   apiBase = "/api/copd",
 }: {
   enabled: boolean;
-  showDrafts?: boolean;
   initialFilters?: Record<string, string>;
+  initialTab?: string;
   apiBase?: string;
 }) {
   const api = useCallback(
     (action: string, payload?: unknown) => requestApi(apiBase, action, payload),
     [apiBase],
   );
-  const [tab, setTab] = useState("search");
+  const [tab, setTab] = useState(initialTab === "files" ? "files" : "search");
   const [filters, setFilters] = useState<Filters>({
     ...initial,
     ...initialFilters,
@@ -103,11 +103,17 @@ export function CopdExplorer({
   const [answer, setAnswer] = useState("");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  const [downloads, setDownloads] = useState<{id: string; name: string; bytes: number; sha256: string}[]>([]);
+  const [fileError, setFileError] = useState("");
+  const [fileBusy, setFileBusy] = useState("");
   const requestId = useRef(0);
   const detailRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!enabled) return;
     let active = true;
+    api("files").then(data => { if (active) setDownloads(data.files); }).catch(() => {
+      if (active) setFileError("파일 목록을 불러오지 못했습니다. 잠시 후 새로고침해 주세요.");
+    });
     api("info")
       .then((data) => {
         if (active) setOccupations(data.occupations);
@@ -119,6 +125,17 @@ export function CopdExplorer({
       active = false;
     };
   }, [enabled, api]);
+  async function downloadFile(id: string) {
+    setFileBusy(id); setFileError("");
+    try {
+      const result = await api("download", { id });
+      const url = new URL(result.url);
+      if (url.protocol !== "https:" || !/^[a-z0-9]+\.supabase\.co$/.test(url.hostname) || !url.pathname.startsWith("/storage/v1/object/sign/")) throw new Error("다운로드 주소를 확인하지 못했습니다.");
+      window.location.assign(url.toString());
+    } catch (error) {
+      setFileError(error instanceof Error ? error.message : "다운로드를 준비하지 못했습니다.");
+    } finally { setFileBusy(""); }
+  }
   async function search(values: Filters) {
     const id = ++requestId.current;
     setBusy("search");
@@ -185,6 +202,10 @@ export function CopdExplorer({
     setFilters((old) => ({ ...old, [key]: value, page: 1 }));
   return (
     <>
+      <p className="copd-caption">
+        원문 출처: <a href="https://jilbyungcase.comwel.or.kr/" target="_blank" rel="noopener noreferrer">근로복지공단 원문 자료 ↗</a>
+        <br />표준화 직종·요약 등 AI 가공 항목은 원문과 구분하여 제공합니다.
+      </p>
       <nav className="copd-tabs" aria-label="COPD 데이터 메뉴">
         {[
           ["overview", "소개"],
@@ -208,8 +229,7 @@ export function CopdExplorer({
             <strong>공개 전 검수 중입니다</strong>
             <p>
               자료 소개와 품질 정보를 먼저 살펴보세요. 실제 사례 검색·원문
-              열람은 로컬 내부 미리보기에서 제공하며 원본 다운로드는 아직 열지
-              않았습니다.
+              열람과 원본 다운로드는 인증된 COPD 검토 화면에서 제공합니다.
             </p>
           </div>
         </div>
@@ -339,11 +359,20 @@ export function CopdExplorer({
             세 CSV는 사건번호로 연결합니다. 행 순서로 연결하지 않습니다. 검색용
             벡터는 문서와 같은 모델·설정으로 만든 질의와 비교해야 합니다.
           </p>
-          {showDrafts && (
-            <button className="button secondary" disabled>
-              원본 다운로드 · 공개 검토 중
-            </button>
-          )}
+          {enabled ? <section aria-label="원본 파일 다운로드">
+            <h3>원본 다운로드 · 내부 검토용</h3>
+            <p>인증된 이용자에게 제공하는 실제 연구자료입니다. 전체 ZIP에는 반입 원본과 활용 예제가 함께 들어 있습니다. 공개 범위·라이선스·가공 라벨은 검토 중입니다.</p>
+            {fileError && <p role="alert">{fileError}</p>}
+            {!downloads.length && !fileError && <p role="status">파일 목록을 불러오는 중입니다.</p>}
+            <ul className="copd-downloads">{downloads.map(file => <li key={file.id}>
+              <div><strong>{file.name}</strong><span>{(file.bytes / 1_000_000).toFixed(2)} MB</span></div>
+              <button className="button secondary" disabled={Boolean(fileBusy)} onClick={() => void downloadFile(file.id)}>
+                {fileBusy === file.id ? "주소 준비 중…" : `${file.name} 다운로드`}
+              </button>
+              <details><summary>파일 검증값 SHA-256</summary><code>{file.sha256}</code></details>
+            </li>)}</ul>
+            <p className="copd-caption">다운로드 주소는 60초간 유효하며 Supabase Storage에서 직접 전송됩니다. 만료되면 버튼을 다시 누르세요.</p>
+          </section> : <a className="button secondary" href="/demo/copd/?tab=files">인증된 화면에서 원본 다운로드 →</a>}
           <p className="copd-caption">Hugging Face 게시 계획 없음.</p>
         </section>
       )}

@@ -74,3 +74,5 @@ Google 테스트 계정 로그인 → callback 성공 → 새로고침/만료 �
 - [Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls)
 - [Private buckets](https://supabase.com/docs/guides/storage/buckets/fundamentals)
 - [Resumable uploads](https://supabase.com/docs/guides/storage/uploads/resumable-uploads)
+
+2026-09-18 업데이트: copd-research의 private 상태와 실제 연결을 확인했다. 원본 5개 배포 객체를 업로드·해시 검증했으며, 기존 인증 관문에서 60초 signed URL로 다운로드한다. [구현·접근 정책](COPD-DOWNLOAD-DESIGN-BRIEF.md). Google 로그인 통합은 별도다.

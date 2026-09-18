@@ -1,0 +1,47 @@
+# COPD 원본 다운로드 디자인 브리프
+
+2026-09-18 · 구현 완료 · [디자인 기준](DESIGN-GUIDELINES.md)
+
+## 목적과 범위
+
+기존 인증된 COPD 검토 이용자가 연구자료 원본을 받는다. 공개 소개 페이지의 파일·활용법에는 검토 화면으로 이동하는 링크를, 검토 화면에는 파일별 다운로드 버튼을 제공한다. Google 로그인은 아직 운영 연결 전이며 이번 다운로드는 기존 .3 관문 인증을 따른다. 회원별 승인·이력 관리는 포함하지 않는다.
+
+## 입력과 결과
+
+| 항목 | 구현 |
+|---|---|
+| 입력 | 서버에 등록된 파일 ID 하나 |
+| 파일 | 전체 원본 ZIP, cases.csv, case_texts.csv, exposure_measurements.csv, embeddings.parquet |
+| 표시 | 실제 파일명·크기·SHA-256, 내부 검토용 문구 |
+| 처리 | .6에서 인증 관문과 Origin 확인 → 비공개 bucket 확인 → 60초 signed URL 발급 |
+| 전송 | 브라우저가 Supabase에서 직접 다운로드. Next/Vercel·.6은 파일 본문을 중계하지 않음 |
+| 접근 정책 | 기존 관문 접근권한과 동일. Storage는 private, 일반 익명·로그인 사용자를 위한 새 RLS 허용 정책을 추가하지 않음 |
+| 공개 | 파일을 공개 bucket으로 전환하지 않음. Hugging Face 게시 계획 없음 |
+
+## 화면 상태
+
+처음에는 파일 목록 로딩, 이후 파일별 다운로드와 검증값 접기. 주소 준비 중에는 중복 클릭 방지. 실패는 파일 영역의 alert에 표시하고 재시도 가능. 만료 시 버튼을 다시 누르면 새 주소 발급. 공개 소개 화면에서는 ‘인증된 화면에서 원본 다운로드’ 링크를 제공한다. 모바일에서는 파일명과 버튼 줄바꿈을 허용한다.
+
+## 실제 업로드
+
+`opendata/copd`의 15개 원본 파일 약 73MB를 ZIP으로 보관했다. ZIP에는 추가 반입 안내문을 포함하며, 원래 파일 내용은 수정하지 않았다. 원문 CSV 세 개와 검색용 Parquet도 별도 업로드했다. 전체 ZIP은 38,951,722 bytes. 업로드 후 5개 객체 모두 직접 다운로드하여 SHA-256 일치를 확인했다.
+
+설정과 검증 manifest는 Git에서 제외된 local_asset에 보관한다. manifest에는 검증 완료된 고정 객체 경로만 등록된다. 업로드 도구는 `.6 → Storage` TUS 6MiB 청크 전송과 중단 위치 조회를 사용한다. Secret key는 서버 파일에만 있고 브라우저·저장소에는 포함하지 않는다.
+
+## 운영
+
+- 업로드: `cd ai-api && .venv/bin/python scripts/upload_copd_storage.py`
+- 화면 빌드: `npm run build:copd-demo --workspace web`
+- 적용: `systemctl --user restart osh-demo.service`
+- 경로: `/demo/copd/?tab=files`
+- 기존 포트·nginx·UFW를 변경하지 않는다.
+
+원격 DB 스키마나 RLS 정책을 변경하지 않았다. Google 로그인을 설정하는 것만으로 자동 다운로드 권한을 부여하지 않는다. 향후 회원별 승인을 도입할 때 별도 권한 정책과 migration이 필요하다.
+
+## 검증
+
+서버에서 위조 관문·잘못된 Origin·임의 객체 경로·공개 bucket·검증되지 않은 manifest를 차단하는 테스트를 추가했다. 브라우저 테스트는 DEMO fixture로 파일 선택→Storage 직접 다운로드와 오류 재시도를 검사한다. 실제 자료의 익명화·라이선스 검수 완료를 의미하지 않는다.
+
+원문 출처는 사용자가 지정한 [근로복지공단 원문 자료](https://jilbyungcase.comwel.or.kr/)를 소개·검색·파일 탭 공통 영역에 표시한다. 외부 사이트 본문은 자동 접근 오류로 이번에 검증하지 못했다. 원문 출처 표시가 원문 재배포 라이선스 확정을 의미하지 않는다.
+
+검증: Python 32개, 웹 단위 24개, 데스크톱·모바일 E2E 28개 및 lint/typecheck/build 통과.

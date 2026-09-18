@@ -139,7 +139,7 @@ export default async function Home() {
           <div className="section-notice">
             <span className="badge">실제 자료 · 검수 중</span>
             <span>
-              COPD 산재 판정 사례를 살펴보세요. 원문 다운로드는 공개 범위 검토 후 제공합니다.
+              COPD 산재 판정 사례를 살펴보세요. 원문은 인증된 검토 화면에서 내려받을 수 있습니다.
             </span>
           </div>
           <div className="dataset-grid">

@@ -115,6 +115,6 @@ python3 -m venv .venv
 
 ## 실제 데이터와 음성 안내
 
-홈과 데이터 목록은 실제 COPD 소개 카드만 공개한다. 합성 예제 카드는 관리자에게만 표시하며 개발자 샘플 API는 DEMO 상태로 유지한다. COPD 원문은 아직 Storage에 게시하지 않았다.
+홈과 데이터 목록은 실제 COPD 소개 카드만 공개한다. 합성 예제 카드는 관리자에게만 표시하며 개발자 샘플 API는 DEMO 상태로 유지한다. COPD 원본은 Supabase private Storage에 업로드했고 기존 인증 관문 뒤에서 다운로드한다. [다운로드 구성](docs/COPD-DOWNLOAD-DESIGN-BRIEF.md)을 참고한다.
 
 [Supabase Storage·Google 로그인 설정](docs/SUPABASE-GOOGLE-SETUP.md), [음성 안내 설계·예산 제한·검증 상태](docs/VOICE-DESIGN-BRIEF.md)를 참고한다. 음성 DEMO는 `/demo/voice/`이며 OpenAI 크레딧 부족으로 실제 음성 생성 검증 대기 중이다. 카드도 관리자에게만 표시한다.

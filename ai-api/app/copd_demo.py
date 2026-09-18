@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 
 from app.copd import ExplainInput, SearchInput, detail, explain, info, search
+from app.storage import DownloadInput, files, signed_download
 
 PREFIX = "/demo/copd"
 STATIC = Path(__file__).resolve().parents[1] / "static/copd"
@@ -85,6 +86,8 @@ def page():
 def read_api(action: str, id: str = ""):
     if action == "info":
         return info()
+    if action == "files":
+        return files()
     if action == "case" and 0 < len(id) <= 100:
         return detail(id)
     raise HTTPException(400, "지원하지 않는 요청입니다.")
@@ -103,6 +106,8 @@ async def write_api(request: Request, action: str):
         # AI work runs in a thread so health/static requests remain responsive.
         from starlette.concurrency import run_in_threadpool
 
+        if action == "download":
+            return await run_in_threadpool(signed_download, DownloadInput.model_validate_json(body))
         if action == "search":
             return await run_in_threadpool(search, SearchInput.model_validate_json(body))
         if action == "explain":

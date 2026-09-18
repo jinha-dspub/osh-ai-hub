@@ -48,7 +48,7 @@ createRoot(document.getElementById("root")!).render(
           노동자의 질병 위험을 뜻하지 않습니다.
         </p>
       </header>
-      <CopdExplorer enabled initialFilters={initialFilters} apiBase="./api" />
+      <CopdExplorer enabled initialFilters={initialFilters} initialTab={params.get("tab") || "search"} apiBase="./api" />
     </main>
   </>,
 );

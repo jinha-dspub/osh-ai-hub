@@ -432,3 +432,10 @@
     animation: none;
   }
 }
+
+.copd-downloads { list-style: none; padding: 0; display: grid; gap: 16px; }
+.copd-downloads li { padding: 16px; border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.copd-downloads li > div { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 12px; overflow-wrap: anywhere; }
+.copd-downloads .button { min-height: 44px; white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
+.copd-downloads details { margin-top: 12px; }
+.copd-downloads code { overflow-wrap: anywhere; }
