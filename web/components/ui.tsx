@@ -87,7 +87,9 @@ export function DatasetArt({
             ? "VISION DATASET"
             : "STRUCTURED KNOWLEDGE"}
       </span>
-      {dataset.kind === "statistics" ? (
+      {dataset.isReal ? (
+        <div className="art-code"><FileText size={56} /><span>COPD · 판정 사례</span><span>원문 · 직종 · 유해인자</span></div>
+      ) : dataset.kind === "statistics" ? (
         <>
           <div className="art-bars">
             {[36, 62, 49, 81, 65, 94, 72, 100, 83, 115].map((h, i) => (
@@ -156,7 +158,7 @@ export function DatasetCard({ dataset: d }: { dataset: Dataset }) {
       <div className="dataset-card-body">
         <div className="card-meta">
           <span>{d.category}</span>
-          <DemoBadge />
+          {d.isReal ? <span className="badge">실제 자료 · 검수 중</span> : <DemoBadge />}
         </div>
         <h3>
           <Link href={`/datasets/${d.slug}`}>{d.title}</Link>
@@ -169,7 +171,7 @@ export function DatasetCard({ dataset: d }: { dataset: Dataset }) {
         </div>
         <div className="card-bottom">
           <span>
-            <Database size={13} /> 예제 자료
+            <Database size={13} /> {d.isReal ? "연구자료 · 내부 검토" : "예제 자료"}
           </span>
           <span>
             {d.api && <b>API</b>}

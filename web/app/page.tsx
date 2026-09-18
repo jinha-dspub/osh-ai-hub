@@ -14,7 +14,8 @@ import {
   MoveUpRight,
   Sparkles,
 } from "lucide-react";
-import { datasets } from "@/lib/catalog";
+import { visibleDatasets } from "@/lib/catalog";
+import { isAdmin } from "@/lib/admin";
 import { SearchForm, SectionHeading, DatasetCard } from "@/components/ui";
 const topics = [
   { name: "산업재해", icon: HardHat },
@@ -24,7 +25,9 @@ const topics = [
   { name: "화학물질", icon: FlaskConical },
   { name: "인간공학", icon: PersonStanding },
 ];
-export default function Home() {
+export default async function Home() {
+  const admin = await isAdmin();
+  const datasets = visibleDatasets(admin);
   return (
     <>
       <section className="hero">
@@ -89,7 +92,7 @@ export default function Home() {
           <SearchForm large />
           <div className="recommended">
             <span>추천 검색어</span>
-            {["산업재해", "직업성 암", "안전모", "작업환경측정"].map((q) => (
+            {["COPD", "만성폐쇄성폐질환", "산재 판정", "분진"].map((q) => (
               <Link key={q} href={`/datasets?q=${encodeURIComponent(q)}`}>
                 #{q}
               </Link>
@@ -107,7 +110,7 @@ export default function Home() {
           </h2>
         </div>
         <div className="topic-grid">
-          {topics.map(({ name, icon: Icon }) => (
+          {topics.filter(topic => datasets.some(d => d.category === topic.name)).map(({ name, icon: Icon }) => (
             <Link
               className="topic"
               href={`/datasets?category=${encodeURIComponent(name)}`}
@@ -118,7 +121,7 @@ export default function Home() {
               </span>
               <b>{name}</b>
               <small>
-                {datasets.filter((d) => d.category === name).length}개 예제
+                {datasets.filter((d) => d.category === name).length}개 데이터
               </small>
             </Link>
           ))}
@@ -134,9 +137,9 @@ export default function Home() {
             link="모든 데이터 보기"
           />
           <div className="section-notice">
-            <span className="badge demo">DEMO COLLECTION</span>
+            <span className="badge">실제 자료 · 검수 중</span>
             <span>
-              현재는 화면과 활용 흐름을 살펴볼 수 있는 예제 자료를 제공합니다.
+              COPD 산재 판정 사례를 살펴보세요. 원문 다운로드는 공개 범위 검토 후 제공합니다.
             </span>
           </div>
           <div className="dataset-grid">
@@ -235,8 +238,8 @@ export default function Home() {
             </Link>
             <Link href="/datasets">
               <span className="badge">데이터 안내</span>
-              <h3>12개 예제 데이터로 탐색하는 플랫폼</h3>
-              <time>2026.09.12</time>
+              <h3>12개 데이터 데이터로 탐색하는 플랫폼</h3>
+              <time>2026.09.17</time>
               <MoveUpRight size={18} />
             </Link>
           </div>

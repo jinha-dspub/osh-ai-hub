@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { isAdmin } from "@/lib/admin";
 import { RotateCcw, SlidersHorizontal, X } from "lucide-react";
 import {
-  datasets,
+  visibleDatasets,
   categories,
   filterDatasets,
   type CatalogFilters,
@@ -24,7 +25,9 @@ export default async function DatasetsPage({
     const value = params[key];
     if (typeof value === "string") f[key] = value;
   }
-  const results = filterDatasets(f);
+  const admin = await isAdmin();
+  const datasets = visibleDatasets(admin);
+  const results = filterDatasets(f, datasets);
   const active = Object.entries(f).filter(
     ([key, value]) => value && key !== "sort" && value !== "전체",
   );
@@ -50,7 +53,7 @@ export default async function DatasetsPage({
           {f.q && <input type="hidden" name="q" value={f.q} />}
           <fieldset className="filter-group">
             <legend>분야</legend>
-            {categories.map((c) => (
+            {categories.filter(c => c === "전체" || datasets.some(d => d.category === c)).map((c) => (
               <label key={c}>
                 <input
                   type="radio"
@@ -86,6 +89,7 @@ export default async function DatasetsPage({
               </label>
             ))}
           </fieldset>
+          {admin && <>
           <fieldset className="filter-group">
             <legend>활용 방식</legend>
             <label>
@@ -107,6 +111,7 @@ export default async function DatasetsPage({
               AI 학습 데이터 예제
             </label>
           </fieldset>
+          </>}
           <button className="button small full-width" type="submit">
             필터 적용
           </button>
@@ -123,7 +128,7 @@ export default async function DatasetsPage({
             <span>
               {f.q && <>‘{f.q}’ 검색 결과 · </>}전체{" "}
               <strong>{results.length}</strong>개{" "}
-              <span className="muted">예제 데이터</span>
+              <span className="muted">데이터{admin ? " · 관리자 예제 포함" : ""}</span>
             </span>
             <form action="/datasets">
               {Object.entries(f)

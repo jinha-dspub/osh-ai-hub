@@ -112,3 +112,9 @@ python3 -m venv .venv
 실제 COPD 자료를 사용하는 별도 검토 앱을 `/demo/copd/`에 연결한다. 키워드·로컬/Gemini 임베딩 검색, 원문·측정자료 확인, 로컬 Gemma 설명을 구현했다. 공개 합성 샘플과 구분하며 .3 Basic 인증 뒤에서 제공한다. 자료 배포·다운로드와 검색·답변 품질 평가는 완료되지 않았다.
 
 [공통 관문 설정·UFW 요청](docs/DEMO-GATEWAY-REQUEST.md), [로컬 AI와 서비스 운영](docs/LOCAL-AI-SETUP.md), [데이터 검토](docs/COPD-DATASET-PROPOSAL.md)를 참고한다. .3 nginx 및 Vercel 최종 경로는 적용 후 검증이 필요하다.
+
+## 실제 데이터와 음성 안내
+
+홈과 데이터 목록은 실제 COPD 소개 카드만 공개한다. 합성 예제 카드는 관리자에게만 표시하며 개발자 샘플 API는 DEMO 상태로 유지한다. COPD 원문은 아직 Storage에 게시하지 않았다.
+
+[Supabase Storage·Google 로그인 설정](docs/SUPABASE-GOOGLE-SETUP.md), [음성 안내 설계·예산 제한·검증 상태](docs/VOICE-DESIGN-BRIEF.md)를 참고한다. 음성 DEMO는 `/demo/voice/`이며 OpenAI 크레딧 부족으로 실제 음성 생성 검증 대기 중이다. 카드도 관리자에게만 표시한다.

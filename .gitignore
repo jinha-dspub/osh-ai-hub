@@ -26,3 +26,6 @@ ai-api/models/*
 /opendata/copd/
 
 /ai-api/static/copd/
+
+**/chagpt_dspubs.txt
+/ai-api/static/voice/

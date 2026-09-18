@@ -1,6 +1,7 @@
 import { isAdmin } from "@/lib/admin";
 import Link from "next/link";
 import {
+  Mic,
   ChartNoAxesCombined,
   HeartPulse,
   FlaskConical,
@@ -70,6 +71,13 @@ export default async function Tools() {
               건강검진 확인 바로가기 <ArrowUpRight size={14} />
             </a>
           </article>
+          {admin && <article className="tool-card">
+            <Mic size={29} />
+            <div><span className="badge demo">DEMO · 관리자 검증 중</span></div>
+            <h3>음성으로 사이트 이용하기</h3>
+            <p>음성·자막 안내와 COPD 검색을 검증합니다. OpenAI API 크레딧 충전 후 실제 음성 시험이 필요합니다.</p>
+            <Link href="/demo/voice/" className="button secondary">음성 DEMO 검토 <ArrowUpRight size={14} /></Link>
+          </article>}
           {admin &&
             [
               {

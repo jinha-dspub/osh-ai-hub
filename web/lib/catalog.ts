@@ -9,6 +9,7 @@ export const categories = [
 ] as const;
 export type Category = (typeof categories)[number];
 export type Dataset = {
+  isReal?: boolean;
   slug: string;
   title: string;
   description: string;
@@ -338,9 +339,9 @@ export type CatalogFilters = {
 };
 const normalize = (value: string) =>
   value.toLocaleLowerCase().replace(/\s+/g, "");
-export function filterDatasets(filters: CatalogFilters): Dataset[] {
+export function filterDatasets(filters: CatalogFilters, source: Dataset[] = datasets): Dataset[] {
   const query = normalize((filters.q ?? "").trim());
-  return datasets
+  return source
     .filter(
       (d) =>
         (!query ||
@@ -375,4 +376,19 @@ export function sampleCsv(dataset: Dataset): string {
       ),
     ].join("\r\n") + "\r\n"
   );
+}
+
+// Public metadata only. Case text remains behind the authenticated demo gateway.
+export const copdDataset: Dataset = {
+  isReal: true,
+  slug: "copd",
+  title: "COPD 산재 판정 사례",
+  description: "만성폐쇄성폐질환 산재 판정문과 직종·유해인자·노출 측정자료를 함께 탐색합니다. 실제 자료이며 공개 범위와 가공 라벨을 검수 중입니다.",
+  category: "산업보건", format: "CSV", kind: "text",
+  tags: ["COPD", "만성폐쇄성폐질환", "산재 판정", "직종", "분진"],
+  updated: "2026-09-17", year: 2021, api: false, ai: false, accent: "blue",
+  sample: [], variables: [],
+};
+export function visibleDatasets(admin = false): Dataset[] {
+  return admin ? [copdDataset, ...datasets] : [copdDataset];
 }

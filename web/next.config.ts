@@ -24,6 +24,13 @@ const config: NextConfig = {
           },
         ],
       },
+      {
+        source: "/demo/voice/:path*",
+        headers: [{
+          key: "Permissions-Policy",
+          value: "camera=(), microphone=(self), geolocation=()",
+        }],
+      },
     ];
   },
 };

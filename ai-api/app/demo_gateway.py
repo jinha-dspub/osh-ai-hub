@@ -3,6 +3,9 @@
 from fastapi.responses import HTMLResponse
 
 from app.copd_demo import app
+from app.voice import register
+
+register(app)
 
 
 @app.get("/demo")

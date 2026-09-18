@@ -1,48 +1,31 @@
 import { test, expect } from "@playwright/test";
-test("search, filter, inspect a dataset and download real sample bytes", async ({
-  page,
-  request,
-}) => {
+test("public home and catalog show real COPD data, with working search", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "더 안전한 내일",
-  );
-  await page.getByRole("textbox", { name: "데이터 검색어" }).fill("직업성 암");
+  await expect(page.locator(".dataset-card")).toHaveCount(1);
+  await expect(page.locator(".dataset-card")).toContainText("COPD 산재 판정 사례");
+  await expect(page.getByText("건설현장 안전보호구 이미지")).toHaveCount(0);
+  await page.getByRole("textbox", { name: "데이터 검색어" }).fill("COPD");
   await page.getByRole("button", { name: "검색", exact: true }).click();
-  await expect(
-    page.getByRole("heading", { name: "업종별 직업성 암 분석 데이터" }),
-  ).toBeVisible();
-  await page
-    .getByRole("heading", { name: "업종별 직업성 암 분석 데이터" })
-    .getByRole("link")
-    .click();
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "업종별 직업성 암 분석 데이터",
-  );
-  await page.getByRole("link", { name: "파일 다운로드", exact: true }).click();
-  const download = page.waitForEvent("download");
-  await page.getByRole("link", { name: "다운로드", exact: true }).click();
-  expect((await download).suggestedFilename()).toBe(
-    "occupational-cancer-DEMO.csv",
-  );
-  const response = await request.get("/api/samples/occupational-cancer");
-  expect(response.headers()["x-checksum-sha256"]).toMatch(/^[a-f0-9]{64}$/);
-  expect(await response.text()).toContain('"industry"');
+  await expect(page.locator(".dataset-card")).toHaveCount(1);
+  await page.getByRole("heading", { name: "COPD 산재 판정 사례" }).getByRole("link").click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("COPD 산재 판정 사례");
+  await expect(page.getByRole("link", { name: "COPD 검색 DEMO 열기" })).toHaveAttribute("href", "/demo/copd/");
 });
-test("filters remain in URL and empty results can be reset", async ({
-  page,
-}) => {
+test("catalog filters preserve URL and empty results can be reset", async ({ page }) => {
   await page.goto("/datasets");
-  await page.getByRole("radio", { name: "산업재해" }).check();
-  await page.getByRole("checkbox", { name: "샘플 API 제공" }).check();
-  await page.getByRole("checkbox", { name: "AI 학습 데이터 예제" }).check();
+  await page.getByRole("radio", { name: "산업보건" }).check();
   await page.getByRole("button", { name: "필터 적용" }).click();
-  await expect(page).toHaveURL(/ai=true/);
+  await expect(page).toHaveURL(/category=/);
   await expect(page.locator(".dataset-card")).toHaveCount(1);
   await page.goto("/datasets?q=unmatchedzzzz");
   await expect(page.getByText("조건에 맞는 데이터가 없어요")).toBeVisible();
   await page.getByRole("link", { name: "전체 데이터 보기" }).click();
-  await expect(page.locator(".dataset-card")).toHaveCount(12);
+  await expect(page.locator(".dataset-card")).toHaveCount(1);
+});
+test("explicit DEMO sample downloads still return real sample bytes", async ({ request }) => {
+  const response = await request.get("/api/samples/occupational-cancer");
+  expect(response.headers()["x-checksum-sha256"]).toMatch(/^[a-f0-9]{64}$/);
+  expect(await response.text()).toContain('"industry"');
 });
 test("API explorer makes an actual request and language tabs work", async ({
   page,

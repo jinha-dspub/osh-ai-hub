@@ -18,6 +18,7 @@ import pyarrow.parquet as pq
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.budget import reserve, settle
 from app.secrets import read_gemini_api_key
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -234,15 +235,20 @@ def embed(mode, query):
                     "options": {"num_thread": 4, "num_gpu": 0},
                 },
             )["embeddings"][0]
-        return post_json(
+        key = read_gemini_api_key()
+        charge = reserve("gemini-embedding-2", 5)
+        result = post_json(
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent",
             {
                 "model": "models/gemini-embedding-2",
                 "content": {"parts": [{"text": query}]},
                 "outputDimensionality": 768,
             },
-            {"x-goog-api-key": read_gemini_api_key()},
+            {"x-goog-api-key": key},
         )["embedding"]["values"]
+        # <=300 characters: retain a conservative fixed 5 KRW estimate.
+        settle(charge, 5)
+        return result
     finally:
         MODEL_LOCK.release()
 
