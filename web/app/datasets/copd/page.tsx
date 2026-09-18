@@ -19,14 +19,14 @@ export default async function CopdPage({
   }
   return (
     <div className="container copd-page">
-      <Link href="/tools" className="text-link">
-        <ArrowLeft size={15} /> 분석·체험으로
+      <Link href="/datasets" className="text-link">
+        <ArrowLeft size={15} /> 데이터 목록으로
       </Link>
       <header className="copd-heading">
         <div className="copd-labels">
           <span className="badge">산업보건 · 한국어</span>
           <span className="badge">실제 자료 · 검수 중</span>
-          <span className="badge demo">DEMO 검색 인터페이스</span>
+          <span className="badge">데이터 소개</span>
         </div>
         <h1>COPD 산재 판정 사례</h1>
         <p>
@@ -49,9 +49,23 @@ export default async function CopdPage({
           범위 검토 중
         </p>
       </header>
-      <Link href="/demo/copd/" className="button" style={{ marginBottom: 24 }}>
-        COPD 검색 DEMO 열기 →
-      </Link>
+      <section className="copd-start" aria-labelledby="copd-start-title">
+        <div>
+          <span className="badge demo">검색 DEMO</span>
+          <h2 id="copd-start-title">실제 사례를 직접 찾아보세요</h2>
+          <p>이 페이지에서는 자료의 구성과 활용 방법을 안내합니다. 검색 DEMO를 열면 직종·유해인자로 사례를 찾고 원문을 읽을 수 있습니다.</p>
+          <Link href="/demo/copd/" className="button">COPD 검색 DEMO 열기 →</Link>
+          <p className="copd-caption">검색·원문 열람·다운로드는 별도 검토 화면에서 제공합니다. 접근 인증이 필요할 수 있습니다.</p>
+        </div>
+        <div className="copd-howto">
+          <h3>이렇게 활용하세요</h3>
+          <ol>
+            <li><strong>검색 조건 정하기</strong><span>직종이나 유해인자를 입력하고 청구 연도·판정 조건으로 범위를 좁힙니다.</span></li>
+            <li><strong>원문과 가공 정보 비교하기</strong><span>사례를 열어 판정문, AI 요약·라벨, 노출 측정치를 함께 확인합니다.</span></li>
+            <li><strong>연구자료 내려받기</strong><span>DEMO의 파일·활용법에서 원본 ZIP이나 CSV를 받아 분석에 활용합니다.</span></li>
+          </ol>
+        </div>
+      </section>
       <CopdExplorer
         enabled={internalCopdEnabled()}
         initialFilters={initialFilters}

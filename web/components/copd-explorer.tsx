@@ -6,7 +6,6 @@ import {
   Sparkles,
   ArrowRight,
   LoaderCircle,
-  LockKeyhole,
 } from "lucide-react";
 
 type Case = {
@@ -87,7 +86,7 @@ export function CopdExplorer({
     (action: string, payload?: unknown) => requestApi(apiBase, action, payload),
     [apiBase],
   );
-  const [tab, setTab] = useState(initialTab === "files" ? "files" : "search");
+  const [tab, setTab] = useState(initialTab === "files" ? "files" : enabled ? "search" : "overview");
   const [filters, setFilters] = useState<Filters>({
     ...initial,
     ...initialFilters,
@@ -212,7 +211,7 @@ export function CopdExplorer({
           ["search", "사례 검색"],
           ["quality", "품질·한계"],
           ["files", "파일·활용법"],
-        ].map(([key, label]) => (
+        ].filter(([key]) => enabled || key !== "search").map(([key, label]) => (
           <button
             key={key}
             aria-pressed={tab === key}
@@ -222,18 +221,6 @@ export function CopdExplorer({
           </button>
         ))}
       </nav>
-      {!enabled && (
-        <div className="copd-access">
-          <LockKeyhole size={22} />
-          <div>
-            <strong>공개 전 검수 중입니다</strong>
-            <p>
-              자료 소개와 품질 정보를 먼저 살펴보세요. 실제 사례 검색·원문
-              열람과 원본 다운로드는 인증된 COPD 검토 화면에서 제공합니다.
-            </p>
-          </div>
-        </div>
-      )}
       {tab === "overview" && (
         <section className="copd-prose">
           <h2>공개 판정문에 검색 가능한 구조를 더했습니다</h2>
@@ -376,7 +363,7 @@ export function CopdExplorer({
           <p className="copd-caption">Hugging Face 게시 계획 없음.</p>
         </section>
       )}
-      {tab === "search" && (
+      {enabled && tab === "search" && (
         <>
           <form
             className="copd-search"
@@ -494,16 +481,8 @@ export function CopdExplorer({
           {!results && !busy && (
             <div className="copd-empty">
               <Search size={34} />
-              <h2>
-                {enabled
-                  ? "사례 탐색을 시작해 보세요"
-                  : "검색 화면을 준비했습니다"}
-              </h2>
-              <p>
-                {enabled
-                  ? "검색어를 입력하거나 조건을 선택한 뒤 사례 검색을 누르세요."
-                  : "공개 범위가 확정되면 이곳에서 실제 사례를 검색할 수 있습니다."}
-              </p>
+              <h2>사례 탐색을 시작해 보세요</h2>
+              <p>검색어를 입력하거나 조건을 선택한 뒤 사례 검색을 누르세요.</p>
             </div>
           )}
           {results && (
