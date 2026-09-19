@@ -6,11 +6,10 @@ test("collaborators can discover and download the documentation kit", async ({
   page,
   request,
 }, info) => {
-  await page.goto("/datasets");
-  await page.getByRole("radio", { name: "데이터 제작 가이드" }).check();
-  await page.getByRole("button", { name: "필터 적용" }).click();
-  await expect(page.locator(".dataset-card")).toHaveCount(1);
-  await expect(page.locator(".dataset-card")).toContainText("공개 제작 양식");
+  await page.goto("/collaboration");
+  await expect(
+    page.locator(".dataset-card").filter({ hasText: "데이터 제작 가이드" }),
+  ).toContainText("공개 제작 양식");
   await page
     .getByRole("heading", { name: "데이터 제작 가이드" })
     .getByRole("link")

@@ -13,7 +13,6 @@ import {
   Layers3,
   MoveUpRight,
   Sparkles,
-  Palette,
 } from "lucide-react";
 import { visibleDatasets } from "@/lib/catalog";
 import { isAdmin } from "@/lib/admin";
@@ -25,7 +24,6 @@ const topics = [
   { name: "근로환경", icon: Clock3 },
   { name: "화학물질", icon: FlaskConical },
   { name: "인간공학", icon: PersonStanding },
-  { name: "디자인 리소스", icon: Palette },
 ];
 export default async function Home() {
   const admin = await isAdmin();
@@ -182,22 +180,22 @@ export default async function Home() {
               ))}
             </div>
           </Link>
-          <Link href="/developers" className="feature-panel feature-dark">
+          <Link href="/collaboration" className="feature-panel feature-dark">
             <span className="feature-number">02 / BUILD</span>
             <div className="feature-icon">
               <Braces size={33} />
             </div>
             <h3>
-              몇 줄의 코드로
-              <br />더 넓은 가능성
+              데이터와 도구를
+              <br />함께 만드는 협업
             </h3>
             <p>
-              데이터를 내 프로젝트 안으로.
+              자료 제작 양식과 공통 디자인으로
               <br />
-              Python, R, API로 바로 시작하세요.
+              연구·개발 협업을 시작하세요.
             </p>
             <span className="feature-link">
-              API 시작하기 <ArrowUpRight size={19} />
+              협업 안내 보기 <ArrowUpRight size={19} />
             </span>
             <div className="mini-code" aria-hidden="true">
               <span>GET</span> /openapi/v1/datasets
@@ -232,15 +230,15 @@ export default async function Home() {
               <time>2026.09.12</time>
               <MoveUpRight size={18} />
             </Link>
-            <Link href="/developers">
-              <span className="badge">개발자 안내</span>
-              <h3>샘플 데이터 API를 직접 호출해 보세요</h3>
-              <time>2026.09.12</time>
+            <Link href="/collaboration#templates">
+              <span className="badge">협업 안내</span>
+              <h3>데이터 제작 양식과 OSH Family Design을 공개했습니다</h3>
+              <time>2026.09.19</time>
               <MoveUpRight size={18} />
             </Link>
             <Link href="/datasets">
               <span className="badge">데이터 안내</span>
-              <h3>12개 데이터 데이터로 탐색하는 플랫폼</h3>
+              <h3>COPD 산재 판정 사례와 활용 방법을 살펴보세요</h3>
               <time>2026.09.17</time>
               <MoveUpRight size={18} />
             </Link>

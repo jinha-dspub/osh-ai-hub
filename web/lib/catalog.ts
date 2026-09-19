@@ -409,7 +409,8 @@ export const openDataGuideDataset: Dataset = {
   updated: "2026-09-19", year: 2026, api: false, ai: false, accent: "blue",
   sample: [], variables: [],
 };
+export const collaborationTemplates = [openDataGuideDataset, familyDesignDataset];
 export function visibleDatasets(admin = false): Dataset[] {
-  const published = [copdDataset, familyDesignDataset, openDataGuideDataset];
+  const published = [copdDataset];
   return admin ? [...published, ...datasets] : published;
 }

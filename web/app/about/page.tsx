@@ -27,8 +27,8 @@ export default async function About() {
           </p>
           <h2>지금 살펴볼 수 있는 기능</h2>
           <ul>
-            <li>12개 합성 예제 데이터 검색과 필터</li>
-            <li>변수 설명, 샘플 미리보기와 CSV 다운로드</li>
+            <li>COPD 산재 판정 사례 소개와 데이터 탐색</li>
+            <li>자료 미리보기와 활용 방법, 협업용 제작·디자인 템플릿</li>
             <li>브라우저에서 실제로 호출하는 공개 샘플 API</li>
             <li>한글 변환기, 건강검진 확인과 COPD 사례 검색 도구 바로가기</li>
             {admin && <li>관리자 전용 모델·분석 앱·API 관리 초안</li>}
@@ -47,8 +47,8 @@ export default async function About() {
             <Link href="/datasets" className="button">
               데이터 둘러보기
             </Link>
-            <Link href="/developers" className="button secondary">
-              개발자 문서
+            <Link href="/collaboration" className="button secondary">
+              협업 안내
             </Link>
           </div>
         </article>

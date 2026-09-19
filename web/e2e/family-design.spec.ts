@@ -38,15 +38,13 @@ test("catalog filter options stay below headings and inside the sidebar", async 
   });
 });
 
-test("public design category opens an interactive kit with direct storage downloads", async ({
+test("collaboration templates open an interactive design kit with direct storage downloads", async ({
   page,
 }, info) => {
-  await page.goto("/datasets");
-  await page.getByRole("radio", { name: "디자인 리소스" }).check();
-  await page.getByRole("radio", { name: "ZIP · 압축 파일" }).check();
-  await page.getByRole("button", { name: "필터 적용" }).click();
-  await expect(page.locator(".dataset-card")).toHaveCount(1);
-  await expect(page.locator(".dataset-card")).toContainText("공개 디자인 키트");
+  await page.goto("/collaboration");
+  await expect(
+    page.locator(".dataset-card").filter({ hasText: "OSH Family Design" }),
+  ).toContainText("공개 디자인 키트");
   await page
     .getByRole("heading", { name: "OSH Family Design" })
     .getByRole("link")

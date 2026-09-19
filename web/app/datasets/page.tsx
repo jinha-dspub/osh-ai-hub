@@ -36,7 +36,7 @@ export default async function DatasetsPage({
       <PageIntro
         eyebrow="DATA EXPLORER"
         title="데이터에서 답을 찾아보세요"
-        description="연구와 현장에 필요한 데이터와 앱 제작용 디자인 리소스를 살펴보세요."
+        description="연구와 현장에 필요한 데이터를 찾고 출처와 활용 방법을 살펴보세요."
       >
         <SearchForm value={f.q} />
       </PageIntro>
@@ -82,17 +82,23 @@ export default async function DatasetsPage({
               ["JSON", "JSON · 구조화 데이터"],
               ["IMAGE", "이미지 메타데이터"],
               ["ZIP", "ZIP · 압축 파일"],
-            ].map(([value, label]) => (
-              <label key={value}>
-                <input
-                  type="radio"
-                  name="format"
-                  value={value}
-                  defaultChecked={(f.format || "") === value}
-                />
-                {label}
-              </label>
-            ))}
+            ]
+              .filter(
+                ([value]) =>
+                  !value ||
+                  datasets.some((dataset) => dataset.format === value),
+              )
+              .map(([value, label]) => (
+                <label key={value}>
+                  <input
+                    type="radio"
+                    name="format"
+                    value={value}
+                    defaultChecked={(f.format || "") === value}
+                  />
+                  {label}
+                </label>
+              ))}
           </fieldset>
           {admin && (
             <>

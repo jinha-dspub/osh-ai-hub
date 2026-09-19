@@ -3,7 +3,7 @@ test("public home and catalog show published resources, with working search", as
   page,
 }) => {
   await page.goto("/");
-  await expect(page.locator(".dataset-card")).toHaveCount(3);
+  await expect(page.locator(".dataset-card")).toHaveCount(1);
   await expect(
     page.locator(".dataset-card").filter({ hasText: "COPD 산재 판정 사례" }),
   ).toHaveCount(1);
@@ -33,7 +33,7 @@ test("catalog filters preserve URL and empty results can be reset", async ({
   await page.goto("/datasets?q=unmatchedzzzz");
   await expect(page.getByText("조건에 맞는 데이터가 없어요")).toBeVisible();
   await page.getByRole("link", { name: "전체 데이터 보기" }).click();
-  await expect(page.locator(".dataset-card")).toHaveCount(3);
+  await expect(page.locator(".dataset-card")).toHaveCount(1);
 });
 test("explicit DEMO sample downloads still return real sample bytes", async ({
   request,
@@ -93,6 +93,7 @@ test("all primary pages render without client errors or horizontal overflow", as
     "/datasets/construction-ppe",
     "/tools",
     "/developers",
+    "/collaboration",
     "/apis",
     "/login",
     "/about",

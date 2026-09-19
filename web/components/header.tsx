@@ -8,7 +8,7 @@ const links = [
   ["데이터 찾기", "/datasets"],
   ["AI 모델", "/models"],
   ["분석·체험", "/tools"],
-  ["개발자 API", "/developers"],
+  ["협업", "/collaboration"],
   ["플랫폼 소개", "/about"],
 ];
 export function Brand() {
@@ -37,6 +37,13 @@ export function Header({
 }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
+  const collaborationPath =
+    path.startsWith("/collaboration") ||
+    path.startsWith("/developers") ||
+    path === "/apis" ||
+    path === "/datasets/family-design" ||
+    path === "/datasets/opendata-guide";
+  const activePath = collaborationPath ? "/collaboration" : path;
   return (
     <>
       <a href="#main" className="skip-link">
@@ -62,12 +69,10 @@ export function Header({
                   key={href}
                   href={href}
                   onClick={() => setOpen(false)}
-                  className={
-                    path.startsWith(href) ||
-                    (href === "/developers" && path === "/apis")
-                      ? "active"
-                      : ""
+                  aria-current={
+                    activePath.startsWith(href) ? "page" : undefined
                   }
+                  className={activePath.startsWith(href) ? "active" : ""}
                 >
                   {label}
                 </Link>

@@ -42,8 +42,8 @@ export default async function RootLayout({
                 <Link href="/about">
                   플랫폼 소개 <ArrowUpRight size={14} />
                 </Link>
-                <Link href="/developers">
-                  개발자 문서 <ArrowUpRight size={14} />
+                <Link href="/collaboration">
+                  협업 안내 <ArrowUpRight size={14} />
                 </Link>
                 <Link href="/about#data-policy">
                   데이터 이용 안내 <ArrowUpRight size={14} />

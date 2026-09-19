@@ -38,8 +38,8 @@ export default function FamilyDesignPage() {
   return (
     <div className="osh-app family-design-page">
       <div className="osh-container osh-main">
-        <Link className="osh-link" href="/datasets">
-          ← 데이터 목록으로
+        <Link className="osh-link" href="/collaboration#templates">
+          ← 협업 템플릿으로
         </Link>
         <header className="family-intro">
           <div className="osh-actions">
