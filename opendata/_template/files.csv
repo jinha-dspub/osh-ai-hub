@@ -1,0 +1,2 @@
+file_id,path,kind,format,bytes,sha256,rows,access
+demo-preview,preview.csv,preview,csv,147,61f57273735ad80194d82ab421ff9fac1bdd28405eb3fe3a344aa1e32a1132ec,3,restricted

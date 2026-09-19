@@ -47,6 +47,10 @@ DB migration은 작성된 초안이며 연결된 Supabase에서 실행·검증�
 
 새 DEMO AI와 도구 화면은 [공통 디자인 가이드](docs/DESIGN-GUIDELINES.md)를 기준으로 만들고, [디자인 브리프 양식](docs/DESIGN-BRIEF-TEMPLATE.md)으로 화면 구성을 공유합니다.
 
+## 새 데이터 패키지를 준비할 때
+
+다른 서버·AI에서 자료를 제작해 전달하려면 [OpenData 제작·인수 가이드](opendata/README.md)를 먼저 읽으세요. [복사 가능한 패키지 템플릿](opendata/_template/README.md)과 [다른 AI에게 전달할 작업 지시문](docs/OPENDATA-AI-TASK.md)을 제공합니다. 실제 원본은 Git에 올리지 않으며 자료 소개·3행 미리보기·검색 DEMO·다운로드를 각각 검토하고 연결합니다. 폴더 복사만으로 웹에 자동 등록되지는 않습니다.
+
 ## 구조
 
 - `web/`: Next.js App Router, TypeScript, CSS 디자인 시스템, 로컬 한글 글꼴

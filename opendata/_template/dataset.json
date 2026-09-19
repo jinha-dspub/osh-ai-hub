@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0",
+  "is_template": true,
+  "id": "demo-dataset",
+  "title": "DEMO 데이터 패키지 템플릿",
+  "version": "0.0.0-demo",
+  "data_kind": "synthetic",
+  "status": "draft",
+  "description": "인수 양식을 설명하는 합성 문서 3행. 실제 연구자료·실행 앱이 아님.",
+  "language": [
+    "ko"
+  ],
+  "sources": [],
+  "processing_owner": null,
+  "license": {
+    "source": null,
+    "derived": null,
+    "evidence": "ACCESS.md"
+  },
+  "statistics": {
+    "record_count": 3,
+    "period": {
+      "start": "2020",
+      "end": "2022",
+      "meaning": "합성 예시 연도; 실제 수집 기간 아님"
+    },
+    "scope": "preview.csv 합성 행만",
+    "evidence": "QUALITY.md"
+  },
+  "tables": [
+    {
+      "path": "preview.csv",
+      "primary_key": [
+        "record_id"
+      ],
+      "foreign_keys": []
+    }
+  ],
+  "dictionary": "data_dictionary.csv",
+  "inventory": "files.csv",
+  "quality_report": "QUALITY.md",
+  "access_policy": "ACCESS.md",
+  "handoff": "HANDOFF.md",
+  "preview": {
+    "path": "preview.csv",
+    "row_count": 3,
+    "selection": "고정 합성 값 3행",
+    "columns": [
+      "record_id",
+      "title",
+      "year",
+      "source_kind"
+    ],
+    "label": "DEMO · 합성 예시"
+  },
+  "publication": {
+    "introduction": {
+      "state": "draft",
+      "audience": "admin",
+      "evidence": null
+    },
+    "preview": {
+      "state": "draft",
+      "audience": "admin",
+      "evidence": null
+    },
+    "demo": {
+      "state": "not_planned",
+      "audience": "none",
+      "evidence": null
+    },
+    "download": {
+      "state": "not_planned",
+      "audience": "none",
+      "evidence": null
+    }
+  },
+  "hugging_face": {
+    "state": "not_planned",
+    "url": null
+  },
+  "demo": {
+    "spec": "DEMO.md",
+    "entrypoint": null,
+    "public_url": null,
+    "reason": "실행 앱 미구현"
+  },
+  "downloads": []
+}

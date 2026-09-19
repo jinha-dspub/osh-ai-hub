@@ -1,0 +1,4 @@
+record_id,title,year,source_kind
+DEMO-001,DEMO 문서 1,2020,synthetic
+DEMO-002,DEMO 문서 2,2021,synthetic
+DEMO-003,DEMO 문서 3,2022,synthetic

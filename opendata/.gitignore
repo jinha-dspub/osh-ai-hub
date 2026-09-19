@@ -1,0 +1,5 @@
+# Imported datasets stay local by default. Only the guide and synthetic template are tracked.
+/*
+!/.gitignore
+!/README.md
+!/_template/

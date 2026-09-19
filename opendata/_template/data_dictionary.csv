@@ -1,0 +1,5 @@
+table,column,description,type,nullable,missing_value,unit,allowed_values,origin,key,public_review
+preview.csv,record_id,합성 문서 식별자,string,false,,,DEMO- 접두어,synthetic,primary,template-only
+preview.csv,title,DEMO 합성 제목,string,false,,,,synthetic,,template-only
+preview.csv,year,형식 설명용 가상 연도; 실제 조사 기간 아님,integer,false,,year,2020|2021|2022,synthetic,,template-only
+preview.csv,source_kind,합성 자료 표시,string,false,,,synthetic,synthetic,,template-only
