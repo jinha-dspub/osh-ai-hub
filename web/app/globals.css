@@ -3135,3 +3135,24 @@ tr:last-child td {
     transform: translate(-50%, -50%) !important;
   }
 }
+
+/* Authentication: readable account details and keyboard/touch targets. */
+.login-link { min-height: 44px; }
+.login-card > p, .google-button { font-size: 16px; }
+.login-card .info-note, .login-card .login-footnote, .login-card > .text-link { font-size: 14px; line-height: 1.7; }
+.google-button { min-height: 48px; }
+.account-section { max-width: 760px; }
+.account-card { border: 1px solid var(--line); border-radius: 12px; padding: 32px; background: white; }
+.account-card h1 { font-size: 32px; margin-bottom: 12px; }
+.account-card > p { color: var(--muted); line-height: 1.7; }
+.account-details { margin: 28px 0; }
+.account-details > div { padding: 16px 0; border-bottom: 1px solid var(--line); }
+.account-details dt { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+.account-details dd { margin: 0; overflow-wrap: anywhere; font-size: 16px; }
+.account-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+.account-actions .button { min-height: 44px; }
+.account-note { margin-top: 16px; font-size: 14px; }
+@media (max-width: 640px) {
+  .account-card { padding: 20px; }
+  .account-card h1 { font-size: 28px; }
+}

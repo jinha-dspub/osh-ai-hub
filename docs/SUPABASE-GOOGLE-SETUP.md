@@ -44,10 +44,10 @@ Google 콘솔의 callback은 **Google → Supabase**, 위 Redirect URL은 **Supa
 NEXT_PUBLIC_SUPABASE_URL=https://프로젝트REF.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=프로젝트의_Publishable_key
 APP_URL=https://osh.ai.kr
-ENABLE_GOOGLE_AUTH=false
+ENABLE_GOOGLE_AUTH=true
 ```
 
-지금은 시작·callback 기본 코드만 있고, 세션 갱신·로그아웃·로그인 상태 UI의 운영 통합은 미완료다. 콘솔 설정을 먼저 마친 후 앱 통합과 실계정 검증을 끝내고 `ENABLE_GOOGLE_AUTH=true`로 바꾸어 재배포한다. 값만 켜서 로그인 전체가 완성됐다고 판단하지 않는다. 로컬 테스트의 APP_URL은 `http://localhost:3100`이다.
+2026-09-19: 로그인 시작·callback·세션 갱신·내 계정·로그아웃 UI를 구현했다. 콘솔 설정과 위 네 환경변수를 등록하고 재배포한다. `/login`에서 실제 Google 계정으로 로그인·새로고침·로그아웃을 확인한다. 로컬 테스트의 APP_URL은 `http://localhost:3100`이다. 운영과 Preview 환경의 APP_URL 및 허용 callback을 섞지 않는다. 비활성화하려면 ENABLE_GOOGLE_AUTH=false로 설정하고 재배포한다. [구현·검증 범위](GOOGLE-LOGIN-DESIGN-BRIEF.md).
 
 관리자 권한은 검증된 사용자 UUID에 대한 서버 관리 `role_assignments`로 부여한다. 자기 프로필이나 이메일 입력만으로 관리자 역할을 부여하지 않는다. 기존 migration은 초안이므로 원격 DB 현황을 확인한 뒤 적용한다.
 
@@ -76,3 +76,13 @@ Google 테스트 계정 로그인 → callback 성공 → 새로고침/만료 �
 - [Resumable uploads](https://supabase.com/docs/guides/storage/uploads/resumable-uploads)
 
 2026-09-18 업데이트: copd-research의 private 상태와 실제 연결을 확인했다. 원본 5개 배포 객체를 업로드·해시 검증했으며, 기존 인증 관문에서 60초 signed URL로 다운로드한다. [구현·접근 정책](COPD-DOWNLOAD-DESIGN-BRIEF.md). Google 로그인 통합은 별도다.
+
+## 이번 프로젝트에 입력할 주소
+
+- Google Authorized JavaScript origins: `https://osh.ai.kr`
+- Google Authorized redirect URIs: `https://wrtpuznoqrjgxfdqpqpf.supabase.co/auth/v1/callback`
+- Supabase Site URL: `https://osh.ai.kr`
+- Supabase Redirect URLs: `https://osh.ai.kr/auth/callback`
+- Publishable key 위치: Supabase → Settings → API Keys → Publishable key (`sb_publishable_`로 시작).
+- Google Client Secret은 Supabase Google provider에만 입력. Vercel에는 넣지 않는다.
+- Vercel의 Production 네 환경변수 등록 후 Git 배포. 이번 확인에서 기존 CLI 인증은 403으로 거부되어 원격 환경변수는 자동 변경하지 않았다.

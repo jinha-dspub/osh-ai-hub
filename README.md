@@ -37,7 +37,7 @@ npm start
 
 ## 아직 운영 기능이 아닌 부분
 
-Google 인증은 외부 프로젝트 설정과 실제 통합 검증이 필요합니다. 로그인 후 사용자 화면·세션 갱신·로그아웃·약관 동의·관리자 MFA 연결은 후속 구현입니다. 현재 API 키 화면은 인증된 사용자 정보를 조회하지 않으며 키를 만들지 않습니다.
+Google 로그인·내 계정·세션 갱신·로그아웃을 구현했습니다. 외부 Google/Supabase/Vercel 설정 및 실계정 통합 검증은 필요합니다. 약관 동의·관리자 MFA는 후속 구현입니다. 현재 API 키 화면은 인증된 사용자 정보를 조회하지 않으며 키를 만들지 않습니다.
 
 DB migration은 작성된 초안이며 연결된 Supabase에서 실행·검증하지 않았습니다. 현재 웹 카탈로그는 `web/lib/catalog.ts`를 읽습니다. 데이터 적재·관리자 CRUD·저장소 대용량 업로드·서명 다운로드·개인 API 키·호출 제한·사용량·실제 모델 추론은 후속 단계입니다.
 
@@ -118,3 +118,9 @@ python3 -m venv .venv
 홈과 데이터 목록은 실제 COPD 소개 카드만 공개한다. 합성 예제 카드는 관리자에게만 표시하며 개발자 샘플 API는 DEMO 상태로 유지한다. COPD 원본은 Supabase private Storage에 업로드했고 기존 인증 관문 뒤에서 다운로드한다. [다운로드 구성](docs/COPD-DOWNLOAD-DESIGN-BRIEF.md)을 참고한다.
 
 [Supabase Storage·Google 로그인 설정](docs/SUPABASE-GOOGLE-SETUP.md), [음성 안내 설계·예산 제한·검증 상태](docs/VOICE-DESIGN-BRIEF.md)를 참고한다. 음성 DEMO는 `/demo/voice/`이며 OpenAI 크레딧 부족으로 실제 음성 생성 검증 대기 중이다. 카드도 관리자에게만 표시한다.
+
+## 2026-09-19 Google 로그인
+
+[로그인 화면·보안 설계](docs/GOOGLE-LOGIN-DESIGN-BRIEF.md), [외부 콘솔 설정](docs/SUPABASE-GOOGLE-SETUP.md).
+Google 로그인은 계정 인증이며 기존 연구자료의 접근 관문을 대체하지 않습니다. 실계정 검증 전 인증 완료를 주장하지 않습니다.
+설정된 로그인 UI와 PKCE 시작 경로의 추가 E2E: `npm run test:e2e --workspace web -- --config playwright.auth.config.ts` (실계정 인증 없이 DEMO 설정 사용).

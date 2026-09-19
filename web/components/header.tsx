@@ -28,9 +28,11 @@ export function Brand() {
 export function Header({
   isAdmin = false,
   loginEnabled = false,
+  signedIn = false,
 }: {
   isAdmin?: boolean;
   loginEnabled?: boolean;
+  signedIn?: boolean;
 }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
@@ -84,8 +86,16 @@ export function Header({
               <Search size={20} />
             </Link>
             {loginEnabled && (
-              <Link href="/login" className="login-link">
-                로그인 <ArrowUpRight size={15} />
+              <Link
+                href={
+                  signedIn
+                    ? "/account"
+                    : `/login?next=${encodeURIComponent(path)}`
+                }
+                className="login-link"
+                prefetch={false}
+              >
+                {signedIn ? "내 계정" : "로그인"} <ArrowUpRight size={15} />
               </Link>
             )}
             <button

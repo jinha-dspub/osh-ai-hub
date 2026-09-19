@@ -4,7 +4,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Header, Brand } from "@/components/header";
 import "./globals.css";
 import { isAdmin } from "@/lib/admin";
-import { authConfigured } from "@/lib/auth";
+import { authConfigured, currentUser } from "@/lib/auth";
 export const metadata: Metadata = {
   title: {
     default: "OSH AI Hub — 더 안전한 내일을 위한 데이터",
@@ -22,7 +22,11 @@ export default async function RootLayout({
   return (
     <html lang="ko">
       <body>
-        <Header isAdmin={await isAdmin()} loginEnabled={authConfigured()} />
+        <Header
+          isAdmin={await isAdmin()}
+          loginEnabled={authConfigured()}
+          signedIn={Boolean(await currentUser())}
+        />
         <main id="main">{children}</main>
         <footer className="footer">
           <div className="container">
