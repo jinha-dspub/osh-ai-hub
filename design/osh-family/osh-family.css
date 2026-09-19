@@ -1,0 +1,101 @@
+/* OSH Family Design v1.0 · opt in with .osh-app; no global page reset. */
+.osh-app {
+  --osh-primary: #003876;
+  --osh-primary-hover: #002a65;
+  --osh-primary-soft: #e6effb;
+  --osh-navy: #06264c;
+  --osh-ink: #14243d;
+  --osh-muted: #52627a;
+  --osh-line: #d6e0ed;
+  --osh-input-line: #7b8aa0;
+  --osh-paper: #f5f8fd;
+  --osh-surface: #ffffff;
+  --osh-focus: #0e4a9f;
+  --osh-demo-bg: #fff2d6;
+  --osh-demo-ink: #785209;
+  --osh-success-bg: #edf7f1;
+  --osh-success-ink: #22613c;
+  --osh-error-bg: #fff0f3;
+  --osh-error-ink: #9b1c31;
+  --osh-radius-card: 12px;
+  --osh-radius-control: 7px;
+  --osh-radius-badge: 4px;
+  --osh-font: "Noto Sans KR Variable", "Noto Sans KR", Arial, sans-serif;
+  color: var(--osh-ink);
+  background: var(--osh-paper);
+  font: 400 16px/1.7 var(--osh-font);
+  -webkit-font-smoothing: antialiased;
+  overflow-wrap: anywhere;
+}
+body.osh-app { margin: 0; }
+.osh-app, .osh-app *, .osh-app *::before, .osh-app *::after { box-sizing: border-box; }
+.osh-app :where(button, input, select, textarea) { font: inherit; color: inherit; }
+.osh-app :where(button, input, select, a) { touch-action: manipulation; }
+.osh-app :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--osh-focus); outline-offset: 4px;
+}
+.osh-app ::selection { background: #b5cced; }
+.osh-app .osh-container { width: calc(100% - 80px); max-width: 1240px; margin-inline: auto; }
+.osh-app .osh-header { background: var(--osh-surface); border-bottom: 1px solid var(--osh-line); }
+.osh-app .osh-header-inner { min-height: 88px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; padding-block: 16px; }
+.osh-app .osh-brand { display: inline-flex; align-items: center; gap: 12px; color: var(--osh-primary); text-decoration: none; font-size: 22px; font-weight: 750; line-height: 1.3; }
+.osh-app .osh-brand small { display: block; font-size: 12px; font-weight: 400; color: var(--osh-muted); margin-top: 4px; }
+.osh-app .osh-brand-mark { position: relative; display: block; flex: 0 0 32px; width: 32px; height: 34px; transform: rotate(-8deg); }
+.osh-app .osh-brand-mark i { position: absolute; width: 9px; border-radius: 2px; transform: skewY(-28deg); }
+.osh-app .osh-brand-mark i:nth-child(1) { height: 23px; left: 0; top: 8px; background: var(--osh-primary); }
+.osh-app .osh-brand-mark i:nth-child(2) { height: 33px; left: 11px; top: 0; background: #1769c2; }
+.osh-app .osh-brand-mark i:nth-child(3) { height: 23px; left: 22px; top: 3px; background: #63a5ef; }
+.osh-app .osh-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.osh-app .osh-main { padding-block: 40px 64px; }
+.osh-app .osh-intro { max-width: 760px; margin-bottom: 32px; }
+.osh-app .osh-title { margin: 12px 0; font-size: 36px; line-height: 1.4; font-weight: 750; letter-spacing: -1px; word-break: keep-all; }
+.osh-app .osh-heading { margin: 0 0 12px; font-size: 24px; font-weight: 700; line-height: 1.5; word-break: keep-all; }
+.osh-app .osh-card-title { margin: 0 0 8px; font-size: 20px; font-weight: 650; line-height: 1.5; }
+.osh-app .osh-copy { margin: 0 0 16px; }
+.osh-app .osh-muted { color: var(--osh-muted); }
+.osh-app .osh-help { font-size: 14px; line-height: 1.7; color: var(--osh-muted); margin: 8px 0 0; }
+.osh-app .osh-section { margin-top: 40px; }
+.osh-app .osh-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.osh-app .osh-workspace { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.osh-app .osh-stack { display: grid; gap: 16px; }
+.osh-app .osh-card { min-width: 0; background: var(--osh-surface); border: 1px solid var(--osh-line); border-radius: var(--osh-radius-card); padding: 24px; }
+.osh-app .osh-panel { padding: 20px; border: 1px solid var(--osh-line); border-radius: var(--osh-radius-card); background: var(--osh-primary-soft); }
+.osh-app .osh-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border: 1px solid transparent; border-radius: var(--osh-radius-control); background: var(--osh-primary); color: white; font-size: 16px; font-weight: 600; line-height: 1.5; text-decoration: none; cursor: pointer; transition: background-color .15s; }
+.osh-app .osh-button:hover:not(:disabled) { background: var(--osh-primary-hover); }
+.osh-app .osh-button--secondary { background: white; border-color: var(--osh-input-line); color: var(--osh-primary); }
+.osh-app .osh-button--secondary:hover:not(:disabled) { background: var(--osh-primary-soft); }
+.osh-app .osh-button:disabled { cursor: not-allowed; opacity: .55; }
+.osh-app .osh-link { color: var(--osh-primary); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+.osh-app .osh-field { display: grid; gap: 8px; min-width: 0; }
+.osh-app .osh-label { font-size: 16px; font-weight: 600; }
+.osh-app .osh-input { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid var(--osh-input-line); border-radius: var(--osh-radius-control); background: white; line-height: 1.5; }
+.osh-app textarea.osh-input { resize: vertical; min-height: 120px; }
+.osh-app .osh-input::placeholder { color: var(--osh-muted); }
+.osh-app .osh-input[aria-invalid="true"] { border-color: var(--osh-error-ink); }
+.osh-app .osh-badge { display: inline-flex; padding: 4px 8px; border-radius: var(--osh-radius-badge); background: var(--osh-primary-soft); color: var(--osh-primary); font-size: 14px; font-weight: 600; line-height: 1.5; }
+.osh-app .osh-badge--demo { background: var(--osh-demo-bg); color: var(--osh-demo-ink); }
+.osh-app .osh-note { margin: 0; padding: 16px 20px; border: 1px solid var(--osh-line); border-radius: var(--osh-radius-control); background: var(--osh-primary-soft); color: var(--osh-ink); font-size: 14px; }
+.osh-app .osh-note--success { background: var(--osh-success-bg); color: var(--osh-success-ink); border-color: currentColor; }
+.osh-app .osh-note--error { background: var(--osh-error-bg); color: var(--osh-error-ink); border-color: currentColor; }
+.osh-app .osh-table-scroll { max-width: 100%; overflow: auto; border: 1px solid var(--osh-line); border-radius: var(--osh-radius-card); background: white; }
+.osh-app .osh-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+.osh-app .osh-table caption { text-align: left; padding: 16px; color: var(--osh-muted); }
+.osh-app .osh-table :where(th, td) { padding: 12px 16px; border-bottom: 1px solid var(--osh-line); vertical-align: top; }
+.osh-app .osh-table th { background: var(--osh-paper); font-weight: 600; }
+.osh-app .osh-table tbody tr:last-child td { border-bottom: 0; }
+.osh-app .osh-skip { clip-path: inset(50%); position: fixed; top: -100px; left: 16px; z-index: 100; background: var(--osh-primary); color: white; padding: 12px 20px; }
+.osh-app .osh-skip:focus { clip-path: none; top: 12px; }
+.osh-app .osh-footer { padding-block: 24px; border-top: 1px solid var(--osh-line); background: white; color: var(--osh-muted); font-size: 14px; }
+@media (max-width: 1150px) { .osh-app .osh-container { width: calc(100% - 48px); } }
+@media (max-width: 850px) {
+  .osh-app .osh-grid, .osh-app .osh-workspace { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .osh-app .osh-container { width: calc(100% - 36px); }
+  .osh-app .osh-header-inner { min-height: 72px; }
+  .osh-app .osh-main { padding-top: 24px; }
+  .osh-app .osh-title { font-size: 28px; }
+  .osh-app .osh-heading { font-size: 22px; }
+  .osh-app .osh-card { padding: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .osh-app .osh-button { transition: none; } }

@@ -13,6 +13,7 @@ import {
   Layers3,
   MoveUpRight,
   Sparkles,
+  Palette,
 } from "lucide-react";
 import { visibleDatasets } from "@/lib/catalog";
 import { isAdmin } from "@/lib/admin";
@@ -24,6 +25,7 @@ const topics = [
   { name: "근로환경", icon: Clock3 },
   { name: "화학물질", icon: FlaskConical },
   { name: "인간공학", icon: PersonStanding },
+  { name: "디자인 리소스", icon: Palette },
 ];
 export default async function Home() {
   const admin = await isAdmin();

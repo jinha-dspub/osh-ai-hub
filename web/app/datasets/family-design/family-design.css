@@ -1,0 +1,90 @@
+.osh-app.family-design-page .family-intro {
+  max-width: 900px;
+  margin-top: 32px;
+}
+.osh-app.family-design-page .family-lead {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+.osh-app.family-design-page .family-palette {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.osh-app.family-design-page .family-swatch {
+  border: 1px solid var(--osh-line);
+  border-radius: 12px;
+  background: white;
+  overflow: hidden;
+}
+.osh-app.family-design-page .family-swatch-color {
+  height: 64px;
+  border-bottom: 1px solid var(--osh-line);
+}
+.osh-app.family-design-page .family-swatch-text {
+  padding: 12px;
+  font-size: 14px;
+}
+.osh-app.family-design-page .family-swatch-text code {
+  display: block;
+}
+.osh-app.family-design-page .family-example-table {
+  min-width: 470px;
+  white-space: normal;
+}
+.osh-app.family-design-page .family-type-sample {
+  font-size: 22px;
+  font-weight: 600;
+}
+.osh-app.family-design-page .family-specs {
+  margin: 0;
+}
+.osh-app.family-design-page .family-specs > div {
+  padding: 12px 0;
+  border-top: 1px solid var(--osh-line);
+}
+.osh-app.family-design-page .family-specs dt {
+  font-size: 14px;
+  color: var(--osh-muted);
+}
+.osh-app.family-design-page .family-specs dd {
+  margin: 4px 0 0;
+}
+.osh-app.family-design-page .family-prompt {
+  min-height: 180px;
+}
+.osh-app.family-design-page .family-download {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 20px;
+}
+.osh-app.family-design-page .family-download > div {
+  min-width: 0;
+}
+.osh-app.family-design-page .family-download .osh-button {
+  flex-shrink: 0;
+}
+.osh-app.family-design-page .family-checksum {
+  margin-top: 12px;
+  font-size: 14px;
+}
+.osh-app.family-design-page .family-checksum summary {
+  cursor: pointer;
+  color: var(--osh-primary);
+}
+.osh-app.family-design-page .family-checksum code {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .osh-app.family-design-page .family-palette {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .osh-app.family-design-page .family-download {
+    flex-direction: column;
+  }
+  .osh-app.family-design-page .family-lead {
+    font-size: 20px;
+  }
+}

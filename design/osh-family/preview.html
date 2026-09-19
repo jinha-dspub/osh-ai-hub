@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>OSH Family Design · UI 예시</title>
+  <link rel="stylesheet" href="fonts/font.css">
+  <link rel="stylesheet" href="osh-family.css">
+  <style>
+    .osh-app .palette { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+    .osh-app .swatch { border: 1px solid var(--osh-line); border-radius: 12px; overflow: hidden; background: white; }
+    .osh-app .swatch-color { height: 64px; background: var(--color); border-bottom: 1px solid var(--osh-line); }
+    .osh-app .swatch-text { padding: 12px; font-size: 14px; }
+    .osh-app .swatch-text code { display: block; }
+    .osh-app .sample-table { min-width: 580px; }
+    .osh-app .result-count { min-height: 28px; margin-top: 12px; }
+    @media (max-width: 640px) { .osh-app .palette { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body class="osh-app">
+  <a class="osh-skip" href="#main">본문으로 바로가기</a>
+  <header class="osh-header">
+    <div class="osh-container osh-header-inner">
+      <a class="osh-brand" href="https://osh.ai.kr/">
+        <span class="osh-brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>OSH AI Hub<small>Family Design · 공통 UI</small></span>
+      </a>
+      <nav class="osh-actions" aria-label="스타일 가이드">
+        <a class="osh-link" href="#colors">색상</a>
+        <a class="osh-link" href="#components">컴포넌트</a>
+        <a class="osh-link" href="#applications">앱별 적용</a>
+      </nav>
+    </div>
+  </header>
+  <main class="osh-container osh-main" id="main">
+    <div class="osh-intro">
+      <span class="osh-badge osh-badge--demo">DEMO · 디자인 예시</span>
+      <h1 class="osh-title">다른 도구, 같은 OSH 디자인</h1>
+      <p class="osh-copy osh-muted">짙은 파란색과 흰 카드, 읽기 편한 글꼴을 공유합니다. 앱의 기능은 달라도 같은 제품군으로 느껴지도록 만드는 공통 스타일입니다.</p>
+      <p class="osh-note">이 페이지는 스타일 확인용입니다. 아래 검색은 합성 예시 3행만 브라우저에서 필터링하며, 실제 자료 조회·파일 업로드·본인인증을 실행하지 않습니다.</p>
+    </div>
+    <section id="colors" class="osh-section" aria-labelledby="colors-title">
+      <h2 id="colors-title" class="osh-heading">함께 쓰는 색상</h2>
+      <div class="palette">
+        <div class="swatch"><div class="swatch-color" style="--color:#003876"></div><div class="swatch-text">주요 행동<code>#003876</code></div></div>
+        <div class="swatch"><div class="swatch-color" style="--color:#e6effb"></div><div class="swatch-text">선택·안내 배경<code>#E6EFFB</code></div></div>
+        <div class="swatch"><div class="swatch-color" style="--color:#06264c"></div><div class="swatch-text">브랜드 네이비<code>#06264C</code></div></div>
+        <div class="swatch"><div class="swatch-color" style="--color:#14243d"></div><div class="swatch-text">본문<code>#14243D</code></div></div>
+        <div class="swatch"><div class="swatch-color" style="--color:#52627a"></div><div class="swatch-text">보조 설명<code>#52627A</code></div></div>
+        <div class="swatch"><div class="swatch-color" style="--color:#d6e0ed"></div><div class="swatch-text">카드 테두리<code>#D6E0ED</code></div></div>
+        <div class="swatch"><div class="swatch-color" style="--color:#f5f8fd"></div><div class="swatch-text">페이지 배경<code>#F5F8FD</code></div></div>
+        <div class="swatch"><div class="swatch-color" style="--color:#ffffff"></div><div class="swatch-text">작업 카드<code>#FFFFFF</code></div></div>
+      </div>
+    </section>
+    <section id="components" class="osh-section" aria-labelledby="components-title">
+      <h2 id="components-title" class="osh-heading">같은 폰트·박스·입력창</h2>
+      <div class="osh-workspace">
+        <article class="osh-card">
+          <h3 class="osh-card-title">Noto Sans KR로 읽기 편하게</h3>
+          <p class="osh-copy">본문과 입력은 16px, 설명은 14px를 사용합니다. 카드는 12px, 버튼과 입력창은 7px 모서리를 공유합니다.</p>
+          <form id="demo-search" class="osh-stack">
+            <div class="osh-field"><label class="osh-label" for="query">DEMO 예시 검색</label><input id="query" class="osh-input" placeholder="예: 문서" aria-describedby="query-help"><p id="query-help" class="osh-help">아래 합성 자료에서 제목을 찾습니다. 빈 값은 전체 예시를 표시합니다.</p></div>
+            <div class="osh-actions"><button class="osh-button" type="submit">예시 검색</button><button class="osh-button osh-button--secondary" type="reset">초기화</button></div>
+          </form>
+          <div id="search-status" class="osh-help result-count" role="status" aria-live="polite">DEMO 합성 예시 3개</div>
+        </article>
+        <article class="osh-card osh-stack">
+          <h3 class="osh-card-title">같은 안내·상태 표시</h3>
+          <p class="osh-note">안내 예시: 자료를 선택하면 다음 단계를 진행할 수 있습니다.</p>
+          <p class="osh-note osh-note--success">성공 문구 예시: 파일을 저장했습니다. 실제 저장 결과가 있을 때 사용합니다.</p>
+          <p class="osh-note osh-note--error">오류 문구 예시: 파일 형식을 읽을 수 없습니다. 지원 형식을 확인해 주세요.</p>
+          <div class="osh-actions"><span class="osh-badge">안내 배지</span><span class="osh-badge osh-badge--demo">DEMO</span></div>
+          <button class="osh-button" disabled aria-describedby="disabled-help">연결 준비 중</button>
+          <p id="disabled-help" class="osh-help">비활성 버튼의 스타일 예시입니다. 아직 연결되지 않은 기능은 공개 앱의 실행 메뉴에서 제외합니다.</p>
+        </article>
+      </div>
+      <div class="osh-section">
+        <h3 class="osh-card-title">표도 같은 스타일로</h3>
+        <p id="table-help" class="osh-help">DEMO · 합성 자료입니다. 좁은 화면에서는 표 안에서 좌우로 이동하세요.</p>
+        <div class="osh-table-scroll" tabindex="0" role="region" aria-label="합성 자료 표" aria-describedby="table-help">
+          <table class="osh-table sample-table"><caption>스타일 확인용 합성 예시</caption><thead><tr><th scope="col">번호</th><th scope="col">예시 자료</th><th scope="col">용도</th><th scope="col">구분</th></tr></thead><tbody id="demo-rows">
+            <tr><td>DEMO-001</td><td>문서 변환 예시</td><td>입력·결과 배치</td><td>합성 DEMO</td></tr>
+            <tr><td>DEMO-002</td><td>데이터 검색 예시</td><td>필터·목록 배치</td><td>합성 DEMO</td></tr>
+            <tr><td>DEMO-003</td><td>건강 기록 예시</td><td>단계·확인 배치</td><td>합성 DEMO</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </section>
+    <section id="applications" class="osh-section" aria-labelledby="apps-title">
+      <h2 id="apps-title" class="osh-heading">앱마다 작업 흐름은 다르게</h2>
+      <div class="osh-grid">
+        <article class="osh-card"><span class="osh-badge osh-badge--demo">DEMO · 구성 예시</span><h3 class="osh-card-title">자료 검색</h3><p class="osh-copy osh-muted">필터 → 목록 → 원문·근거. 표와 검색 결과를 넓게 사용합니다.</p><a class="osh-link" href="#demo-search">검색 구성 보기</a></article>
+        <article class="osh-card"><span class="osh-badge osh-badge--demo">DEMO · 구성 예시</span><h3 class="osh-card-title">문서 변환</h3><p class="osh-copy osh-muted">파일 선택 → 변환 → 다운로드. 입력과 결과 카드로 구분합니다.</p><a class="osh-link" href="#components">카드 구성 보기</a></article>
+        <article class="osh-card"><span class="osh-badge osh-badge--demo">DEMO · 구성 예시</span><h3 class="osh-card-title">건강 기록</h3><p class="osh-copy osh-muted">동의 → 확인 → 제출. 한 단계씩 읽을 수 있는 화면을 사용합니다.</p><a class="osh-link" href="#components">안내 구성 보기</a></article>
+      </div>
+    </section>
+  </main>
+  <footer class="osh-footer"><div class="osh-container">OSH Family Design v1.0 · 디자인 확인용 DEMO</div></footer>
+  <script>
+    const form = document.getElementById('demo-search');
+    const query = document.getElementById('query');
+    const rows = Array.from(document.querySelectorAll('#demo-rows tr'));
+    function filter(value) {
+      let count = 0;
+      for (const row of rows) { row.hidden = !row.textContent.includes(value.trim()); if (!row.hidden) count++; }
+      document.getElementById('search-status').textContent = count ? `DEMO 합성 예시 ${count}개` : '일치하는 예시가 없습니다. 검색어를 바꿔 주세요.';
+    }
+    form.addEventListener('submit', event => { event.preventDefault(); filter(query.value); });
+    form.addEventListener('reset', () => filter(''));
+  </script>
+</body>
+</html>

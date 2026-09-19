@@ -36,7 +36,7 @@ export default async function DatasetsPage({
       <PageIntro
         eyebrow="DATA EXPLORER"
         title="데이터에서 답을 찾아보세요"
-        description="연구와 현장에 필요한 산업안전보건 데이터, 한곳에서 탐색하세요."
+        description="연구와 현장에 필요한 데이터와 앱 제작용 디자인 리소스를 살펴보세요."
       >
         <SearchForm value={f.q} />
       </PageIntro>
@@ -53,22 +53,26 @@ export default async function DatasetsPage({
           {f.q && <input type="hidden" name="q" value={f.q} />}
           <fieldset className="filter-group">
             <legend>분야</legend>
-            {categories.filter(c => c === "전체" || datasets.some(d => d.category === c)).map((c) => (
-              <label key={c}>
-                <input
-                  type="radio"
-                  name="category"
-                  value={c}
-                  defaultChecked={(f.category || "전체") === c}
-                />
-                {c}
-                <span>
-                  {c === "전체"
-                    ? datasets.length
-                    : datasets.filter((d) => d.category === c).length}
-                </span>
-              </label>
-            ))}
+            {categories
+              .filter(
+                (c) => c === "전체" || datasets.some((d) => d.category === c),
+              )
+              .map((c) => (
+                <label key={c}>
+                  <input
+                    type="radio"
+                    name="category"
+                    value={c}
+                    defaultChecked={(f.category || "전체") === c}
+                  />
+                  {c}
+                  <span>
+                    {c === "전체"
+                      ? datasets.length
+                      : datasets.filter((d) => d.category === c).length}
+                  </span>
+                </label>
+              ))}
           </fieldset>
           <fieldset className="filter-group">
             <legend>데이터 형식</legend>
@@ -77,6 +81,7 @@ export default async function DatasetsPage({
               ["CSV", "CSV · 표 데이터"],
               ["JSON", "JSON · 구조화 데이터"],
               ["IMAGE", "이미지 메타데이터"],
+              ["ZIP", "ZIP · 디자인 키트"],
             ].map(([value, label]) => (
               <label key={value}>
                 <input
@@ -89,46 +94,54 @@ export default async function DatasetsPage({
               </label>
             ))}
           </fieldset>
-          {admin && <>
-          <fieldset className="filter-group">
-            <legend>활용 방식</legend>
-            <label>
-              <input
-                type="checkbox"
-                name="api"
-                value="true"
-                defaultChecked={f.api === "true"}
-              />
-              샘플 API 제공
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                name="ai"
-                value="true"
-                defaultChecked={f.ai === "true"}
-              />
-              AI 학습 데이터 예제
-            </label>
-          </fieldset>
-          </>}
+          {admin && (
+            <>
+              <fieldset className="filter-group">
+                <legend>활용 방식</legend>
+                <label>
+                  <input
+                    type="checkbox"
+                    name="api"
+                    value="true"
+                    defaultChecked={f.api === "true"}
+                  />
+                  샘플 API 제공
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    name="ai"
+                    value="true"
+                    defaultChecked={f.ai === "true"}
+                  />
+                  AI 학습 데이터 예제
+                </label>
+              </fieldset>
+            </>
+          )}
           <button className="button small full-width" type="submit">
             필터 적용
           </button>
         </form>
         <div className="catalog-results">
-          <div className="info-note teal-note">
-            <strong>COPD 산재 판정 사례 · 실제 자료 검수 중</strong>
-            <p>자료 소개, 검증 현황과 검색 화면을 살펴보세요.</p>
-            <Link href="/datasets/copd" className="text-link">
-              COPD 검색 DEMO →
-            </Link>
-          </div>
+          {(!f.category ||
+            f.category === "전체" ||
+            f.category === "산업보건") && (
+            <div className="info-note teal-note">
+              <strong>COPD 산재 판정 사례 · 실제 자료 검수 중</strong>
+              <p>자료 소개, 검증 현황과 검색 화면을 살펴보세요.</p>
+              <Link href="/datasets/copd" className="text-link">
+                COPD 검색 DEMO →
+              </Link>
+            </div>
+          )}
           <div className="catalog-top">
             <span>
               {f.q && <>‘{f.q}’ 검색 결과 · </>}전체{" "}
               <strong>{results.length}</strong>개{" "}
-              <span className="muted">데이터{admin ? " · 관리자 예제 포함" : ""}</span>
+              <span className="muted">
+                데이터{admin ? " · 관리자 예제 포함" : ""}
+              </span>
             </span>
             <form action="/datasets">
               {Object.entries(f)

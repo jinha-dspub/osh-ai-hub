@@ -7,6 +7,7 @@ import {
   Braces,
   Search,
   Download,
+  Palette,
   ChartNoAxesCombined,
 } from "lucide-react";
 import type { Dataset } from "@/lib/catalog";
@@ -81,13 +82,17 @@ export function DatasetArt({
     >
       <span className="art-grid" />
       <span className="art-type">
-        {dataset.kind === "statistics"
+        {dataset.kind === "design"
+          ? "OSH FAMILY DESIGN"
+          : dataset.kind === "statistics"
           ? "DATA INSIGHT"
           : dataset.kind === "image"
             ? "VISION DATASET"
             : "STRUCTURED KNOWLEDGE"}
       </span>
-      {dataset.isReal ? (
+      {dataset.kind === "design" ? (
+        <div className="art-code"><Palette size={48} /><span>같은 색상 · 폰트 · 컴포넌트</span><div className="family-art-swatches" aria-hidden="true"><i /><i /><i /><i /></div></div>
+      ) : dataset.isReal ? (
         <div className="art-code"><FileText size={56} /><span>COPD · 판정 사례</span><span>원문 · 직종 · 유해인자</span></div>
       ) : dataset.kind === "statistics" ? (
         <>
@@ -158,7 +163,7 @@ export function DatasetCard({ dataset: d }: { dataset: Dataset }) {
       <div className="dataset-card-body">
         <div className="card-meta">
           <span>{d.category}</span>
-          {d.isReal ? <span className="badge">실제 자료 · 검수 중</span> : <DemoBadge />}
+          {d.kind === "design" ? <span className="badge">공개 디자인 키트</span> : d.isReal ? <span className="badge">실제 자료 · 검수 중</span> : <DemoBadge />}
         </div>
         <h3>
           <Link href={`/datasets/${d.slug}`}>{d.title}</Link>
@@ -171,7 +176,7 @@ export function DatasetCard({ dataset: d }: { dataset: Dataset }) {
         </div>
         <div className="card-bottom">
           <span>
-            <Database size={13} /> {d.isReal ? "연구자료 · 내부 검토" : "예제 자료"}
+            <Database size={13} /> {d.kind === "design" ? "CSS · 폰트 · 가이드" : d.isReal ? "연구자료 · 내부 검토" : "예제 자료"}
           </span>
           <span>
             {d.api && <b>API</b>}

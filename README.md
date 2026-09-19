@@ -45,6 +45,8 @@ DB migration은 작성된 초안이며 연결된 Supabase에서 실행·검증�
 
 ## 디자인 가이드
 
+다른 앱과 **색상·폰트·버튼·박스를 통일**하려면 [OSH Family Design](design/osh-family/README.md)을 사용하세요. 공통 CSS·예시 화면과 폰트를 포함한 전달용 ZIP을 만들 수 있습니다.
+
 새 DEMO AI와 도구 화면은 [공통 디자인 가이드](docs/DESIGN-GUIDELINES.md)를 기준으로 만들고, [디자인 브리프 양식](docs/DESIGN-BRIEF-TEMPLATE.md)으로 화면 구성을 공유합니다.
 
 ## 새 데이터 패키지를 준비할 때
@@ -119,7 +121,7 @@ python3 -m venv .venv
 
 ## 실제 데이터와 음성 안내
 
-홈과 데이터 목록은 실제 COPD 소개 카드만 공개한다. 합성 예제 카드는 관리자에게만 표시하며 개발자 샘플 API는 DEMO 상태로 유지한다. COPD 원본은 Supabase private Storage에 업로드했고 기존 인증 관문 뒤에서 다운로드한다. [다운로드 구성](docs/COPD-DOWNLOAD-DESIGN-BRIEF.md)을 참고한다.
+홈과 데이터 목록은 실제 COPD 소개와 OSH Family Design 리소스를 공개한다. 합성 예제 카드는 관리자에게만 표시하며 개발자 샘플 API는 DEMO 상태로 유지한다. COPD 원본은 Supabase private Storage에 업로드했고 기존 인증 관문 뒤에서 다운로드한다. [다운로드 구성](docs/COPD-DOWNLOAD-DESIGN-BRIEF.md)을 참고한다.
 
 [Supabase Storage·Google 로그인 설정](docs/SUPABASE-GOOGLE-SETUP.md), [음성 안내 설계·예산 제한·검증 상태](docs/VOICE-DESIGN-BRIEF.md)를 참고한다. 음성 DEMO는 `/demo/voice/`이며 OpenAI 크레딧 부족으로 실제 음성 생성 검증 대기 중이다. 카드도 관리자에게만 표시한다.
 

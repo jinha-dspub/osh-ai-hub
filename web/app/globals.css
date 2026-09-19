@@ -1241,6 +1241,8 @@ select:focus-visible,
   margin-bottom: 13px;
 }
 .filter-group label {
+  /* Start below the floated legend, including the first radio option. */
+  clear: both;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -3174,3 +3176,9 @@ tr:last-child td {
   .header-actions .account-link { display: none; }
   .navigation .mobile-account-link { display: flex; }
 }
+
+.family-art-swatches { display: flex; gap: 8px; margin-top: 8px; }
+.family-art-swatches i { width: 30px; height: 22px; border-radius: 4px; border: 1px solid #ffffff80; background: #003876; }
+.family-art-swatches i:nth-child(2) { background: #e6effb; }
+.family-art-swatches i:nth-child(3) { background: #f5f8fd; }
+.family-art-swatches i:nth-child(4) { background: #ffffff; }

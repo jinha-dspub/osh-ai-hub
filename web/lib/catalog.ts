@@ -6,6 +6,7 @@ export const categories = [
   "근로환경",
   "화학물질",
   "인간공학",
+  "디자인 리소스",
 ] as const;
 export type Category = (typeof categories)[number];
 export type Dataset = {
@@ -14,8 +15,8 @@ export type Dataset = {
   title: string;
   description: string;
   category: Category;
-  format: "CSV" | "JSON" | "IMAGE";
-  kind: "statistics" | "image" | "text";
+  format: "CSV" | "JSON" | "IMAGE" | "ZIP";
+  kind: "statistics" | "image" | "text" | "design";
   tags: string[];
   updated: string;
   year: number;
@@ -389,6 +390,17 @@ export const copdDataset: Dataset = {
   updated: "2026-09-17", year: 2021, api: false, ai: false, accent: "blue",
   sample: [], variables: [],
 };
+export const familyDesignDataset: Dataset = {
+  isReal: true,
+  slug: "family-design",
+  title: "OSH Family Design",
+  description: "OSH AI Hub와 같은 색상·폰트·카드·버튼으로 앱을 만드는 공통 UI 키트입니다. CSS, 한글 폰트, 디자인 가이드와 예시 화면을 제공합니다.",
+  category: "디자인 리소스", format: "ZIP", kind: "design",
+  tags: ["Family Design", "UI 디자인", "패밀리 디자인", "CSS", "폰트"],
+  updated: "2026-09-19", year: 2026, api: false, ai: false, accent: "blue",
+  sample: [], variables: [],
+};
 export function visibleDatasets(admin = false): Dataset[] {
-  return admin ? [copdDataset, ...datasets] : [copdDataset];
+  const published = [copdDataset, familyDesignDataset];
+  return admin ? [...published, ...datasets] : published;
 }

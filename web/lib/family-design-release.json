@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "published": "2026-09-19",
+  "files": [
+    {
+      "id": "kit",
+      "name": "osh-family-design-v1.zip",
+      "url": "https://wrtpuznoqrjgxfdqpqpf.supabase.co/storage/v1/object/public/osh-design-assets/family-design/1.0/28765ec92bab663d/osh-family-design-v1.zip?download=osh-family-design-v1.zip",
+      "bytes": 3591372,
+      "sha256": "28765ec92bab663d593eeb460bd22aad94f3bd61bec0533e1da29d2341e89c2b"
+    },
+    {
+      "id": "css",
+      "name": "osh-family.css",
+      "url": "https://wrtpuznoqrjgxfdqpqpf.supabase.co/storage/v1/object/public/osh-design-assets/family-design/1.0/28765ec92bab663d/osh-family.css?download=osh-family.css",
+      "bytes": 7677,
+      "sha256": "a2866a2358b3366fb6eda95426175c67d3ab1159785080f47d2468a918525dcf"
+    },
+    {
+      "id": "guide",
+      "name": "OSH-FAMILY-DESIGN.md",
+      "url": "https://wrtpuznoqrjgxfdqpqpf.supabase.co/storage/v1/object/public/osh-design-assets/family-design/1.0/28765ec92bab663d/OSH-FAMILY-DESIGN.md?download=OSH-FAMILY-DESIGN.md",
+      "bytes": 9937,
+      "sha256": "1800f2400d266b7a03ce5225ccd096119b225cd232b1494054adbf39963e1802"
+    }
+  ]
+}
