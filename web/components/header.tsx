@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X, ArrowUpRight, Search } from "lucide-react";
+import { AuthSubmit } from "./auth-submit";
 const links = [
   ["데이터 찾기", "/datasets"],
   ["AI 모델", "/models"],
@@ -71,6 +72,16 @@ export function Header({
                   {label}
                 </Link>
               ))}
+            {loginEnabled && signedIn && (
+              <Link
+                href="/account"
+                className="mobile-account-link"
+                onClick={() => setOpen(false)}
+                prefetch={false}
+              >
+                내 계정
+              </Link>
+            )}
             {isAdmin && (
               <Link href="/admin/drafts" onClick={() => setOpen(false)}>
                 관리자 초안
@@ -92,11 +103,22 @@ export function Header({
                     ? "/account"
                     : `/login?next=${encodeURIComponent(path)}`
                 }
-                className="login-link"
+                className={signedIn ? "login-link account-link" : "login-link"}
                 prefetch={false}
               >
                 {signedIn ? "내 계정" : "로그인"} <ArrowUpRight size={15} />
               </Link>
+            )}
+            {loginEnabled && signedIn && (
+              <form
+                action="/auth/logout"
+                method="post"
+                className="header-logout-form"
+              >
+                <AuthSubmit className="header-logout" pendingLabel="처리 중…">
+                  로그아웃
+                </AuthSubmit>
+              </form>
             )}
             <button
               className="icon-button menu-toggle"

@@ -3156,3 +3156,21 @@ tr:last-child td {
   .account-card { padding: 20px; }
   .account-card h1 { font-size: 28px; }
 }
+
+.navigation .mobile-account-link { display: none; }
+.header-logout-form { margin: 0; }
+.header-logout {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: white;
+  color: var(--ink);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.header-logout:hover { background: var(--primary-soft); }
+@media (max-width: 640px) {
+  .header-actions .account-link { display: none; }
+  .navigation .mobile-account-link { display: flex; }
+}
