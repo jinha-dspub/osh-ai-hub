@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "is_template": true,
   "id": "demo-dataset",
   "title": "DEMO 데이터 패키지 템플릿",
@@ -85,5 +85,33 @@
     "public_url": null,
     "reason": "실행 앱 미구현"
   },
-  "downloads": []
+  "downloads": [],
+  "research": {
+    "principal_investigator": {
+      "name": null,
+      "affiliation": null
+    },
+    "lead_researcher": {
+      "name": null,
+      "affiliation": null
+    },
+    "public_contact": null
+  },
+  "version_date": "2026-09-19",
+  "update_plan": {
+    "status": "undecided",
+    "frequency": null,
+    "next_version": null,
+    "next_target_date": null,
+    "planned_changes": [],
+    "maintainer": null,
+    "note": "합성 템플릿. 실제 자료의 업데이트 계획은 제작자가 확인해 작성."
+  },
+  "version_history": [
+    {
+      "version": "0.0.0-demo",
+      "date": "2026-09-19",
+      "changes": "DEMO 합성 인수 양식. 실제 연구자료의 발행일이 아님."
+    }
+  ]
 }
