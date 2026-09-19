@@ -85,4 +85,4 @@ Google 테스트 계정 로그인 → callback 성공 → 새로고침/만료 �
 - Supabase Redirect URLs: `https://osh.ai.kr/auth/callback`
 - Publishable key 위치: Supabase → Settings → API Keys → Publishable key (`sb_publishable_`로 시작).
 - Google Client Secret은 Supabase Google provider에만 입력. Vercel에는 넣지 않는다.
-- Vercel의 Production 네 환경변수 등록 후 Git 배포. 이번 확인에서 기존 CLI 인증은 403으로 거부되어 원격 환경변수는 자동 변경하지 않았다.
+- Vercel의 Production 네 환경변수 등록 후 Git 배포. 기존 CLI 인증은 자동 갱신으로 복구했다. Production의 Supabase 두 변수를 확인하고 누락된 APP_URL과 ENABLE_GOOGLE_AUTH를 등록했다.

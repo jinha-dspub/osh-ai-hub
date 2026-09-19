@@ -50,3 +50,5 @@ OSH AI Hub에서 Google 계정으로 로그인하고 본인의 계정·권한을
 설정: [Supabase·Google 설정 안내](SUPABASE-GOOGLE-SETUP.md). 실제 Google 계정 선택·동의와 운영에서의 세션 갱신·로그아웃 검증은 사용자 계정으로 완료해야 한다.
 
 검증 결과: lint·typecheck·build 통과, 단위 테스트 35개, 기존 E2E 28개, 인증 E2E 6개 통과. 모바일 로그인 화면 시각 검수 완료.
+
+운영 설정: Vercel Production의 네 환경변수 등록 완료. 기존 Supabase 주소·publishable key는 유지하고 APP_URL=https://osh.ai.kr, ENABLE_GOOGLE_AUTH=true를 추가했다. Supabase Google provider 활성 상태는 확인했으며 실계정 인증 검증은 별도다.
