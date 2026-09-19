@@ -1228,21 +1228,20 @@ select:focus-visible,
   gap: 4px;
 }
 .filter-group {
+  min-width: 0;
   border: 0;
-  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
   margin: 0 0 22px;
-  padding: 18px 0 0;
+  padding: 0 0 18px;
 }
 .filter-group legend {
-  float: left;
+  padding: 0;
   width: 100%;
   font-size: 11px;
   font-weight: 700;
   margin-bottom: 13px;
 }
 .filter-group label {
-  /* Start below the floated legend, including the first radio option. */
-  clear: both;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -1257,11 +1256,6 @@ select:focus-visible,
   margin-left: auto;
   color: #52637a;
   font-size: 10px;
-}
-.filter-group:after {
-  content: "";
-  display: block;
-  clear: both;
 }
 .catalog-top {
   display: flex;

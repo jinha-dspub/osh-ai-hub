@@ -7,6 +7,7 @@ export const categories = [
   "화학물질",
   "인간공학",
   "디자인 리소스",
+  "데이터 제작 가이드",
 ] as const;
 export type Category = (typeof categories)[number];
 export type Dataset = {
@@ -16,7 +17,7 @@ export type Dataset = {
   description: string;
   category: Category;
   format: "CSV" | "JSON" | "IMAGE" | "ZIP";
-  kind: "statistics" | "image" | "text" | "design";
+  kind: "statistics" | "image" | "text" | "design" | "guide";
   tags: string[];
   updated: string;
   year: number;
@@ -400,7 +401,15 @@ export const familyDesignDataset: Dataset = {
   updated: "2026-09-19", year: 2026, api: false, ai: false, accent: "blue",
   sample: [], variables: [],
 };
+export const openDataGuideDataset: Dataset = {
+  isReal: true, slug: "opendata-guide", title: "데이터 제작 가이드",
+  description: "협업자를 위한 데이터 패키지 양식과 AI 작업 지시문. 출처·연구자·버전·검증 결과와 Python 실행 환경을 함께 준비하세요.",
+  category: "데이터 제작 가이드", format: "ZIP", kind: "guide",
+  tags: ["OpenData", "협업 템플릿", "Python", "requirements"],
+  updated: "2026-09-19", year: 2026, api: false, ai: false, accent: "blue",
+  sample: [], variables: [],
+};
 export function visibleDatasets(admin = false): Dataset[] {
-  const published = [copdDataset, familyDesignDataset];
+  const published = [copdDataset, familyDesignDataset, openDataGuideDataset];
   return admin ? [...published, ...datasets] : published;
 }

@@ -36,6 +36,8 @@
 
 실제 패키지에서는 data/records.csv, raw/md/ 등의 실제 파일을 추가하고 manifest·사전·설명을 함께 갱신한다. 템플릿 합성 값을 실제 데이터에 섞지 않는다.
 
+Python/참조 코드를 함께 전달한다면 [ENVIRONMENT.md](ENVIRONMENT.md)에 실제 실행 환경을 기록한다. [requirements.txt](requirements.txt)는 주석만 있는 양식이며 실제 사용하는 패키지와 검증 버전으로 채운다. 데이터만 전달할 때는 외부 패키지가 필요 없다.
+
 ## 읽는 법
 
 Excel에서 preview.csv를 UTF-8로 가져오고 식별자는 문자열로 읽는다. Python 표준 라이브러리 예:

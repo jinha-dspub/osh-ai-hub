@@ -43,7 +43,7 @@ test("public design category opens an interactive kit with direct storage downlo
 }, info) => {
   await page.goto("/datasets");
   await page.getByRole("radio", { name: "디자인 리소스" }).check();
-  await page.getByRole("radio", { name: "ZIP · 디자인 키트" }).check();
+  await page.getByRole("radio", { name: "ZIP · 압축 파일" }).check();
   await page.getByRole("button", { name: "필터 적용" }).click();
   await expect(page.locator(".dataset-card")).toHaveCount(1);
   await expect(page.locator(".dataset-card")).toContainText("공개 디자인 키트");

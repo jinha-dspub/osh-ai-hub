@@ -81,7 +81,7 @@ export default async function DatasetsPage({
               ["CSV", "CSV · 표 데이터"],
               ["JSON", "JSON · 구조화 데이터"],
               ["IMAGE", "이미지 메타데이터"],
-              ["ZIP", "ZIP · 디자인 키트"],
+              ["ZIP", "ZIP · 압축 파일"],
             ].map(([value, label]) => (
               <label key={value}>
                 <input

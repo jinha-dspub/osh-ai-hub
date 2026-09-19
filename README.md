@@ -51,6 +51,8 @@ DB migration은 작성된 초안이며 연결된 Supabase에서 실행·검증�
 
 ## 새 데이터 패키지를 준비할 때
 
+협업자는 [공개 데이터 제작 가이드](https://osh.ai.kr/datasets/opendata-guide)에서 양식 ZIP을 받을 수 있습니다. 문서 변경 후 `python3 scripts/export-opendata-kit.py`로 공개 묶음과 해시를 갱신합니다. 이 작은 ZIP은 문서·합성 양식만 담으며 실제 연구자료는 포함하지 않습니다.
+
 다른 서버·AI에서 자료를 제작해 전달하려면 [OpenData 제작·인수 가이드](opendata/README.md)를 먼저 읽으세요. [복사 가능한 패키지 템플릿](opendata/_template/README.md)과 [다른 AI에게 전달할 작업 지시문](docs/OPENDATA-AI-TASK.md)을 제공합니다. 실제 원본은 Git에 올리지 않으며 자료 소개·3행 미리보기·검색 DEMO·다운로드를 각각 검토하고 연결합니다. 폴더 복사만으로 웹에 자동 등록되지는 않습니다.
 
 ## 구조
@@ -121,7 +123,7 @@ python3 -m venv .venv
 
 ## 실제 데이터와 음성 안내
 
-홈과 데이터 목록은 실제 COPD 소개와 OSH Family Design 리소스를 공개한다. 합성 예제 카드는 관리자에게만 표시하며 개발자 샘플 API는 DEMO 상태로 유지한다. COPD 원본은 Supabase private Storage에 업로드했고 기존 인증 관문 뒤에서 다운로드한다. [다운로드 구성](docs/COPD-DOWNLOAD-DESIGN-BRIEF.md)을 참고한다.
+홈과 데이터 목록은 실제 COPD 소개, OSH Family Design과 데이터 제작 가이드를 공개한다. 합성 예제 카드는 관리자에게만 표시하며 개발자 샘플 API는 DEMO 상태로 유지한다. COPD 원본은 Supabase private Storage에 업로드했고 기존 인증 관문 뒤에서 다운로드한다. [다운로드 구성](docs/COPD-DOWNLOAD-DESIGN-BRIEF.md)을 참고한다.
 
 [Supabase Storage·Google 로그인 설정](docs/SUPABASE-GOOGLE-SETUP.md), [음성 안내 설계·예산 제한·검증 상태](docs/VOICE-DESIGN-BRIEF.md)를 참고한다. 음성 DEMO는 `/demo/voice/`이며 OpenAI 크레딧 부족으로 실제 음성 생성 검증 대기 중이다. 카드도 관리자에게만 표시한다.
 

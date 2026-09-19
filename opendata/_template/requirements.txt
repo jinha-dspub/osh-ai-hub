@@ -1,0 +1,6 @@
+# DEMO dependency template: no executable app or third-party dependencies included.
+# If you deliver Python scripts, replace these comments with the packages and
+# exact versions verified in an isolated environment (package==verified.version).
+# Do not copy every package from a shared server or include tokens/private URLs.
+# Record Python/OS versions and install/run/test commands in ENVIRONMENT.md.
+# A pyproject.toml + matching lock file may be used instead; document that choice.
