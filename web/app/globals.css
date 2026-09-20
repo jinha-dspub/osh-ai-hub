@@ -1170,6 +1170,18 @@ select:focus-visible,
 .footer .brand small {
   font-size: 8px;
 }
+.footer-operator {
+  margin: 0;
+  padding-bottom: 24px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.footer-operator a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .footer-bottom {
   display: flex;
   justify-content: space-between;

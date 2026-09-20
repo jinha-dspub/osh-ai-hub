@@ -50,6 +50,10 @@ export default async function RootLayout({
                 </Link>
               </div>
             </div>
+            <p className="footer-operator">
+              개발·운영: <a href="https://yioh.ai.kr">연세대학교 산업보건연구소</a>
+              {" "}소속 <strong>Team SHIELD</strong>
+            </p>
             <div className="footer-bottom">
               <span>© 2026 OSH AI Hub</span>
               <span>

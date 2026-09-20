@@ -105,6 +105,10 @@ export default function CollaborationPage() {
               데이터 제공, 공동 연구, DEMO 제작이나 앱 연결을 논의하고 싶다면
               아래 이메일로 연락해 주세요.
             </p>
+            <p className="osh-help">
+              협업 담당: <a className="osh-link" href="https://yioh.ai.kr">연세대학교 산업보건연구소</a>
+              {" "}소속 <strong>Team SHIELD</strong>
+            </p>
             <a
               className="osh-button collaboration-email"
               href="mailto:jinha@dspubs.org"

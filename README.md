@@ -1,5 +1,7 @@
 # OSH AI Hub
 
+개발·운영: [연세대학교 산업보건연구소](https://yioh.ai.kr) 소속 **Team SHIELD** (Safety & Health Information Evolutionary Linked Database).
+
 산업안전보건 데이터·AI 플랫폼의 첫 구현입니다. 현재는 **독립적인 디자인 프리뷰와 공개 합성 샘플 API**입니다.
 
 ## 실행

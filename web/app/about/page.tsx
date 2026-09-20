@@ -25,6 +25,15 @@ export default async function About() {
             연결하고, 현장 실무자가 분석 도구로 결과를 살펴보는 경험을 목표로
             합니다.
           </p>
+          <h2>개발·운영</h2>
+          <p>
+            OSH AI Hub는 <a href="https://yioh.ai.kr">연세대학교 산업보건연구소</a>
+            {" "}소속 <strong>Team SHIELD</strong>가 개발하고 운영합니다.
+          </p>
+          <p>
+            SHIELD는 Safety &amp; Health Information Evolutionary Linked Database의
+            약자입니다.
+          </p>
           <h2>지금 살펴볼 수 있는 기능</h2>
           <ul>
             <li>COPD 산재 판정 사례 소개와 데이터 탐색</li>
