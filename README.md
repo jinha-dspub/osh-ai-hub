@@ -117,7 +117,13 @@ python3 -m venv .venv
 
 [현재 상태와 다음 단계](docs/IMPLEMENTATION-STATUS.md)를 참고하세요.
 
-## COPD 검토 DEMO
+## 산재 판정사례 · 7개 질환군
+
+산재 컬렉션 `/datasets/sanje`에서 COPD·뇌심혈관·암·감염성질환·난청·근골격계·기타 자료를 안내합니다. 2026-09-19.v1은 중복 없는 61,566건이며 COPD는 2,049건입니다. 연구자: 윤진하 · 연세대학교 산업보건연구소. 기존 COPD 소개·DEMO 주소는 유지합니다.
+
+실제 검색·원문·라벨·근무시간과 질환별 8종 파일은 기존 인증 관문 뒤에서 제공합니다. 검색은 로컬 임베딩과 한국어 키워드를 결합한 자연어 하이브리드를 기본으로 하고, 원문 키워드 검색·다중 필터도 제공합니다. [검색 범위·인덱스·검증 방법](docs/SANJE-HYBRID-SEARCH.md)을 참고하세요. [데이터 인수·화면·다운로드·버전 전환·검증 기록](docs/SANJE-RELEASE-DESIGN-BRIEF.md)을 참고하세요.
+
+## 이전 COPD 검토 DEMO (교체 전 기록)
 
 실제 COPD 자료를 사용하는 별도 검토 앱을 `/demo/copd/`에 연결한다. 키워드·로컬/Gemini 임베딩 검색, 원문·측정자료 확인, 로컬 Gemma 설명을 구현했다. 공개 합성 샘플과 구분하며 .3 Basic 인증 뒤에서 제공한다. 자료 배포·다운로드와 검색·답변 품질 평가는 완료되지 않았다.
 
@@ -125,7 +131,7 @@ python3 -m venv .venv
 
 ## 실제 데이터와 음성 안내
 
-홈과 데이터 목록은 실제 COPD 소개를 공개한다. OSH Family Design과 데이터 제작 가이드는 [협업](https://osh.ai.kr/collaboration)의 협업 템플릿에서 제공한다. 합성 예제 카드는 관리자에게만 표시하며 개발자 샘플 API는 DEMO 상태로 유지한다. COPD 원본은 Supabase private Storage에 업로드했고 기존 인증 관문 뒤에서 다운로드한다. [다운로드 구성](docs/COPD-DOWNLOAD-DESIGN-BRIEF.md)을 참고한다.
+홈과 데이터 목록은 산재 판정사례 컬렉션과 7개 질환 소개를 공개한다. OSH Family Design과 데이터 제작 가이드는 [협업](https://osh.ai.kr/collaboration)의 협업 템플릿에서 제공한다. 합성 예제 카드는 관리자에게만 표시하며 개발자 샘플 API는 DEMO 상태로 유지한다. COPD 원본은 Supabase private Storage에 업로드했고 기존 인증 관문 뒤에서 다운로드한다. [다운로드 구성](docs/COPD-DOWNLOAD-DESIGN-BRIEF.md)을 참고한다.
 
 [Supabase Storage·Google 로그인 설정](docs/SUPABASE-GOOGLE-SETUP.md), [음성 안내 설계·예산 제한·검증 상태](docs/VOICE-DESIGN-BRIEF.md)를 참고한다. 음성 DEMO는 `/demo/voice/`이며 OpenAI 크레딧 부족으로 실제 음성 생성 검증 대기 중이다. 카드도 관리자에게만 표시한다.
 
@@ -134,3 +140,7 @@ python3 -m venv .venv
 [로그인 화면·보안 설계](docs/GOOGLE-LOGIN-DESIGN-BRIEF.md), [외부 콘솔 설정](docs/SUPABASE-GOOGLE-SETUP.md).
 Google 로그인은 계정 인증이며 기존 연구자료의 접근 관문을 대체하지 않습니다. 실계정 검증 전 인증 완료를 주장하지 않습니다.
 설정된 로그인 UI와 PKCE 시작 경로의 추가 E2E: `npm run test:e2e --workspace web -- --config playwright.auth.config.ts` (실계정 인증 없이 DEMO 설정 사용).
+
+## OSHMASTER 표준분류 마스터
+
+`/datasets/oshmaster`에서 자료 소개와 실제 코드 3행 미리보기를 제공합니다. `/demo/oshmaster/`는 기존 인증 관문 뒤에서 표준명·동의어·판본별 계층을 탐색하고 선택 코드 JSON 및 원본 ZIP을 제공합니다. 원 코드 98,638개이며 사건 자료와 별도 데이터셋입니다. [화면·권한·Storage·검증 및 한계](docs/OSHMASTER-DESIGN-BRIEF.md)를 참고하세요. 정적 앱 빌드는 `npm run build:oshmaster-demo --workspace web`입니다.

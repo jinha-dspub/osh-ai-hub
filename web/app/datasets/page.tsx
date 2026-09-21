@@ -134,10 +134,10 @@ export default async function DatasetsPage({
             f.category === "전체" ||
             f.category === "산업보건") && (
             <div className="info-note teal-note">
-              <strong>COPD 산재 판정 사례 · 실제 자료 검수 중</strong>
-              <p>자료 소개, 검증 현황과 검색 화면을 살펴보세요.</p>
-              <Link href="/datasets/copd" className="text-link">
-                COPD 검색 DEMO →
+              <strong>산재 판정사례 · 7개 질환군</strong>
+              <p>61,566개 사례의 질환별 소개·검색·검증 현황을 살펴보세요.</p>
+              <Link href="/datasets/sanje" className="text-link">
+                질환별 자료 보기 →
               </Link>
             </div>
           )}

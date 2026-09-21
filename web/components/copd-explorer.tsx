@@ -1,5 +1,7 @@
 "use client";
 import { CopdPreview } from "./copd-preview";
+import { getStudy, studyDemo, type SanjeStudy } from "@/lib/sanje";
+import { SanjeEvidence, type LabelPage } from "./sanje-evidence";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Search,
@@ -24,6 +26,9 @@ type Detail = Case & {
   fields: Record<string, string>;
   text: string;
   measurement_rows: Record<string, string>[];
+  standard_labels?: LabelPage;
+  worktime?: Record<string, string> | null;
+  worktime_rows?: Record<string, string>[];
 };
 type Results = {
   results: Case[];
@@ -36,19 +41,19 @@ type Results = {
 type Filters = {
   q: string;
   mode: string;
-  year: string;
-  approval: string;
-  occupation: string;
-  qa: string;
+  year: string[];
+  approval: string[];
+  occupation: string[];
+  qa: string[];
   page: number;
 };
 const initial: Filters = {
   q: "",
-  mode: "keyword",
-  year: "",
-  approval: "",
-  occupation: "",
-  qa: "",
+  mode: "hybrid",
+  year: [],
+  approval: [],
+  occupation: [],
+  qa: [],
   page: 1,
 };
 const qaLabel: Record<string, string> = {
@@ -77,24 +82,46 @@ export function CopdExplorer({
   initialFilters = {},
   initialTab = "search",
   apiBase = "/api/copd",
+  study = getStudy("copd")!,
 }: {
   enabled: boolean;
   initialFilters?: Record<string, string>;
   initialTab?: string;
   apiBase?: string;
+  study?: SanjeStudy;
 }) {
+  const parsedFilters: Filters = {
+    ...initial,
+    q: initialFilters.q || "",
+    mode: initialFilters.mode === "keyword" ? "keyword" : "hybrid",
+  };
+  for (const key of ["year", "approval", "occupation", "qa"] as const) {
+    const raw = initialFilters[key];
+    if (raw) {
+      try {
+        const value: unknown = JSON.parse(raw);
+        parsedFilters[key] =
+          Array.isArray(value) &&
+          value.every((item) => typeof item === "string")
+            ? value
+            : [raw];
+      } catch {
+        parsedFilters[key] = [raw];
+      }
+    }
+  }
   const api = useCallback(
     (action: string, payload?: unknown) => requestApi(apiBase, action, payload),
     [apiBase],
   );
-  const [tab, setTab] = useState(initialTab === "files" ? "files" : enabled ? "search" : "overview");
+  const [tab, setTab] = useState(
+    initialTab === "files" ? "files" : enabled ? "search" : "overview",
+  );
   const [filters, setFilters] = useState<Filters>({
-    ...initial,
-    ...initialFilters,
+    ...parsedFilters,
   });
   const [applied, setApplied] = useState<Filters>({
-    ...initial,
-    ...initialFilters,
+    ...parsedFilters,
   });
   const [occupations, setOccupations] = useState<string[]>([]);
   const [results, setResults] = useState<Results | null>(null);
@@ -103,7 +130,9 @@ export function CopdExplorer({
   const [answer, setAnswer] = useState("");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
-  const [downloads, setDownloads] = useState<{id: string; name: string; bytes: number; sha256: string}[]>([]);
+  const [downloads, setDownloads] = useState<
+    { id: string; name: string; bytes: number; sha256: string }[]
+  >([]);
   const [fileError, setFileError] = useState("");
   const [fileBusy, setFileBusy] = useState("");
   const requestId = useRef(0);
@@ -111,9 +140,16 @@ export function CopdExplorer({
   useEffect(() => {
     if (!enabled) return;
     let active = true;
-    api("files").then(data => { if (active) setDownloads(data.files); }).catch(() => {
-      if (active) setFileError("파일 목록을 불러오지 못했습니다. 잠시 후 새로고침해 주세요.");
-    });
+    api("files")
+      .then((data) => {
+        if (active) setDownloads(data.files);
+      })
+      .catch(() => {
+        if (active)
+          setFileError(
+            "파일 목록을 불러오지 못했습니다. 잠시 후 새로고침해 주세요.",
+          );
+      });
     api("info")
       .then((data) => {
         if (active) setOccupations(data.occupations);
@@ -126,15 +162,27 @@ export function CopdExplorer({
     };
   }, [enabled, api]);
   async function downloadFile(id: string) {
-    setFileBusy(id); setFileError("");
+    setFileBusy(id);
+    setFileError("");
     try {
       const result = await api("download", { id });
       const url = new URL(result.url);
-      if (url.protocol !== "https:" || !/^[a-z0-9]+\.supabase\.co$/.test(url.hostname) || !url.pathname.startsWith("/storage/v1/object/sign/")) throw new Error("다운로드 주소를 확인하지 못했습니다.");
+      if (
+        url.protocol !== "https:" ||
+        !/^[a-z0-9]+\.supabase\.co$/.test(url.hostname) ||
+        !url.pathname.startsWith("/storage/v1/object/sign/")
+      )
+        throw new Error("다운로드 주소를 확인하지 못했습니다.");
       window.location.assign(url.toString());
     } catch (error) {
-      setFileError(error instanceof Error ? error.message : "다운로드를 준비하지 못했습니다.");
-    } finally { setFileBusy(""); }
+      setFileError(
+        error instanceof Error
+          ? error.message
+          : "다운로드를 준비하지 못했습니다.",
+      );
+    } finally {
+      setFileBusy("");
+    }
   }
   async function search(values: Filters) {
     const id = ++requestId.current;
@@ -150,7 +198,11 @@ export function CopdExplorer({
       setApplied(values);
       const params = new URLSearchParams();
       for (const [key, value] of Object.entries(values))
-        if (value && key !== "page") params.set(key, String(value));
+        if (value && key !== "page")
+          params.set(
+            key,
+            Array.isArray(value) ? JSON.stringify(value) : String(value),
+          );
       window.history.replaceState(
         null,
         "",
@@ -198,39 +250,55 @@ export function CopdExplorer({
       setBusy("");
     }
   }
-  const set = (key: keyof Filters, value: string) =>
+  const set = (key: keyof Filters, value: string | string[]) =>
     setFilters((old) => ({ ...old, [key]: value, page: 1 }));
   return (
     <>
       <p className="copd-caption">
-        원문 출처: <a href="https://jilbyungcase.comwel.or.kr/" target="_blank" rel="noopener noreferrer">근로복지공단 원문 자료 ↗</a>
-        <br />표준화 직종·요약 등 AI 가공 항목은 원문과 구분하여 제공합니다.
+        원문 출처:{" "}
+        <a
+          href="https://jilbyungcase.comwel.or.kr/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          근로복지공단 원문 자료 ↗
+        </a>
+        <br />
+        표준화 직종·요약 등 AI 가공 항목은 원문과 구분하여 제공합니다.
       </p>
-      <nav className="copd-tabs" aria-label="COPD 데이터 메뉴">
+      <nav className="copd-tabs" aria-label={`${study.name} 데이터 메뉴`}>
         {[
           ["overview", "소개"],
           ["search", "사례 검색"],
           ["quality", "품질·한계"],
           ["files", "파일·활용법"],
-        ].filter(([key]) => enabled || key !== "search").map(([key, label]) => (
-          <button
-            key={key}
-            aria-pressed={tab === key}
-            onClick={() => setTab(key)}
-          >
-            {label}
-          </button>
-        ))}
+        ]
+          .filter(([key]) => enabled || key !== "search")
+          .map(([key, label]) => (
+            <button
+              key={key}
+              aria-pressed={tab === key}
+              onClick={() => setTab(key)}
+            >
+              {label}
+            </button>
+          ))}
       </nav>
       {tab === "overview" && (
         <section className="copd-prose">
           <h2>공개 판정문에 검색 가능한 구조를 더했습니다</h2>
           <p>
-            근로복지공단 질병판정서에서 COPD 관련 사례를 정리하고,
+            근로복지공단 질병판정서에서 {study.name} 관련 사례를 정리하고,
             직종·상병·유해인자와 노출 측정치를 가공한 연구용 자료입니다. 원문을
             만든 기관과 AI 라벨을 만든 주체는 구분됩니다.
           </p>
-          <CopdPreview />
+          {study.id === "copd" ? (
+            <CopdPreview />
+          ) : (
+            <p className="copd-caption">
+              사례별 표와 원문은 인증된 검색 DEMO에서 확인할 수 있습니다.
+            </p>
+          )}
           <div className="copd-feature-grid">
             <article>
               <FileText />
@@ -265,22 +333,30 @@ export function CopdExplorer({
         <section className="copd-prose">
           <h2>확인한 범위까지, 수치로 보여드립니다</h2>
           <p>
-            2026-09-17 CSV와 저장된 검증 플래그를 재집계했습니다. 원문 해석이나
-            AI 라벨 정확도를 새로 전수 검증한 결과는 아닙니다.
+            {study.version}의 실제 CSV와 저장된 검증 플래그를 재집계했습니다. AI
+            라벨 의미의 정확도를 전수 검증한 결과는 아닙니다.
           </p>
           <div className="copd-quality-grid">
             {[
-              ["대조 일치", "1,950 / 1,953", "대조 가능한 사례 중 99.85%"],
-              ["판정 미대조", "129건", "일치·불일치와 별도 구분"],
+              [
+                "판정 대조 일치",
+                `${study.qa.matched.toLocaleString()}건`,
+                `불일치 ${study.qa.mismatch.toLocaleString()}건 · 미대조 ${study.qa.unverified.toLocaleString()}건`,
+              ],
               [
                 "직종 값 채움",
-                "2,043 / 2,082",
-                "98.13% · 정확도가 아닌 채움 비율",
+                `${study.occupation_filled.toLocaleString()} / ${study.cases.toLocaleString()}`,
+                "정확도가 아닌 입력값 존재 여부",
               ],
               [
                 "측정치 수 불일치",
-                "2개 사례",
-                "사례 표 합계 650 · 측정 파일 646",
+                `${study.count_mismatches}개 사례`,
+                `측정치 ${study.measurements.toLocaleString()}행 · ${study.measured_cases}개 사례`,
+              ],
+              [
+                "표준 라벨 후보",
+                `${study.labels.toLocaleString()}개`,
+                "전부 미검토 후보 · 사건 수와 구분",
               ],
             ].map(([title, value, note]) => (
               <article key={title}>
@@ -292,18 +368,19 @@ export function CopdExplorer({
           </div>
           <h3>추가 검토가 필요한 부분</h3>
           <ul>
-            <li>판정 대조 불일치 3건과 미대조 129건을 결과에서 구분합니다.</li>
             <li>
-              노출 측정치는 79개 사례에만 있습니다. 측정치가 없다는 것은 노출이
-              없다는 뜻이 아닙니다.
+              원문·AI 추출·후보 코드·검토 상태를 구분하세요. 매핑 후보는 확정
+              판정이 아닙니다.
             </li>
             <li>
-              본인 사업장·유사 사업장·문헌 수치를 구분하고, 다른 단위를 한
-              평균으로 합치지 않습니다.
+              측정치·근무시간이 없다고 노출·업무 부담이 없었던 것은 아닙니다.
             </li>
             <li>
-              원문·요약의 공개 범위와 익명화 검토가 완료되기 전에는 원본을
-              배포하지 않습니다.
+              사례별 판정 대조 플래그는 표준 라벨의 검수 상태와 별개입니다.
+            </li>
+            <li>
+              원문·요약·다운로드는 인증된 검토 화면에서 제공합니다. 최종
+              라이선스와 내용 검수는 진행 중입니다.
             </li>
           </ul>
         </section>
@@ -321,47 +398,99 @@ export function CopdExplorer({
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>cases.csv</td>
-                  <td>2,082행 · 20열</td>
-                  <td>사례와 가공 라벨</td>
-                </tr>
-                <tr>
-                  <td>case_texts.csv</td>
-                  <td>2,082행 · 3열</td>
-                  <td>판정문 원문</td>
-                </tr>
-                <tr>
-                  <td>exposure_measurements.csv</td>
-                  <td>646행 · 23열</td>
-                  <td>노출 측정치와 맥락</td>
-                </tr>
-                <tr>
-                  <td>embeddings.parquet</td>
-                  <td>2,082건 · 모델별 768차원</td>
-                  <td>검색 인덱스</td>
-                </tr>
+                {[
+                  [
+                    "cases.csv",
+                    `${study.cases.toLocaleString()}행 · ${study.case_columns}열`,
+                    "사례와 가공 라벨",
+                  ],
+                  [
+                    "case_texts.csv",
+                    `${study.cases.toLocaleString()}행`,
+                    "마스킹 판정문",
+                  ],
+                  [
+                    "exposure_measurements.csv",
+                    `${study.measurements.toLocaleString()}행`,
+                    "노출 측정치와 맥락",
+                  ],
+                  [
+                    "worktime.csv / worktime_records.csv",
+                    `${study.worktime_cases}사례 / ${study.worktime_records.toLocaleString()}행`,
+                    "근무시간 요약과 근거",
+                  ],
+                  [
+                    "standard_labels.jsonl",
+                    `${study.labels.toLocaleString()}개 후보`,
+                    "표준 코드 후보와 원문 근거",
+                  ],
+                  [
+                    "metadata.jsonl",
+                    `${study.cases.toLocaleString()}행`,
+                    "사례별 가공·연결 메타데이터",
+                  ],
+                ].map(([file, count, purpose]) => (
+                  <tr key={file}>
+                    <td>{file}</td>
+                    <td>{count}</td>
+                    <td>{purpose}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
           <p>
-            세 CSV는 사건번호로 연결합니다. 행 순서로 연결하지 않습니다. 검색용
-            벡터는 문서와 같은 모델·설정으로 만든 질의와 비교해야 합니다.
+            표와 JSONL은 사건번호로 연결합니다. 자연어 검색은 직종·유해인자·AI 요약을
+            바탕으로 관련 사례를 찾습니다. 원문 전체의 단어 포함 여부는 키워드 검색으로 확인하세요.
           </p>
-          {enabled ? <section aria-label="원본 파일 다운로드">
-            <h3>원본 다운로드 · 내부 검토용</h3>
-            <p>인증된 이용자에게 제공하는 실제 연구자료입니다. 전체 ZIP에는 반입 원본과 활용 예제가 함께 들어 있습니다. 공개 범위·라이선스·가공 라벨은 검토 중입니다.</p>
-            {fileError && <p role="alert">{fileError}</p>}
-            {!downloads.length && !fileError && <p role="status">파일 목록을 불러오는 중입니다.</p>}
-            <ul className="copd-downloads">{downloads.map(file => <li key={file.id}>
-              <div><strong>{file.name}</strong><span>{(file.bytes / 1_000_000).toFixed(2)} MB</span></div>
-              <button className="button secondary" disabled={Boolean(fileBusy)} onClick={() => void downloadFile(file.id)}>
-                {fileBusy === file.id ? "주소 준비 중…" : `${file.name} 다운로드`}
-              </button>
-              <details><summary>파일 검증값 SHA-256</summary><code>{file.sha256}</code></details>
-            </li>)}</ul>
-            <p className="copd-caption">다운로드 주소는 60초간 유효하며 Supabase Storage에서 직접 전송됩니다. 만료되면 버튼을 다시 누르세요.</p>
-          </section> : <a className="button secondary" href="/demo/copd/?tab=files">인증된 화면에서 원본 다운로드 →</a>}
+          {enabled ? (
+            <section aria-label="원본 파일 다운로드">
+              <h3>원본 다운로드 · 내부 검토용</h3>
+              <p>
+                인증된 이용자에게 제공하는 실제 연구자료입니다. 전체 ZIP에는
+                반입 원본과 활용 예제가 함께 들어 있습니다. 공개
+                범위·라이선스·가공 라벨은 검토 중입니다.
+              </p>
+              {fileError && <p role="alert">{fileError}</p>}
+              {!downloads.length && !fileError && (
+                <p role="status">파일 목록을 불러오는 중입니다.</p>
+              )}
+              <ul className="copd-downloads">
+                {downloads.map((file) => (
+                  <li key={file.id}>
+                    <div>
+                      <strong>{file.name}</strong>
+                      <span>{(file.bytes / 1_000_000).toFixed(2)} MB</span>
+                    </div>
+                    <button
+                      className="button secondary"
+                      disabled={Boolean(fileBusy)}
+                      onClick={() => void downloadFile(file.id)}
+                    >
+                      {fileBusy === file.id
+                        ? "주소 준비 중…"
+                        : `${file.name} 다운로드`}
+                    </button>
+                    <details>
+                      <summary>파일 검증값 SHA-256</summary>
+                      <code>{file.sha256}</code>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+              <p className="copd-caption">
+                다운로드 주소는 60초간 유효하며 Supabase Storage에서 직접
+                전송됩니다. 만료되면 버튼을 다시 누르세요.
+              </p>
+            </section>
+          ) : (
+            <a
+              className="button secondary"
+              href={`${studyDemo(study.id)}?tab=files`}
+            >
+              인증된 화면에서 원본 다운로드 →
+            </a>
+          )}
           <p className="copd-caption">Hugging Face 게시 계획 없음.</p>
         </section>
       )}
@@ -381,7 +510,7 @@ export function CopdExplorer({
                 id="copd-query"
                 value={filters.q}
                 onChange={(e) => set("q", e.target.value)}
-                placeholder="직종 또는 유해인자 입력"
+                placeholder="궁금한 작업 상황을 문장으로 입력하세요"
                 maxLength={300}
                 disabled={!enabled || !!busy}
               />
@@ -397,20 +526,29 @@ export function CopdExplorer({
                   disabled={!enabled || !!busy}
                   onChange={(e) => set("mode", e.target.value)}
                 >
+                  <option value="hybrid">자연어 · 하이브리드</option>
                   <option value="keyword">키워드 · 원문 포함</option>
-                  <option value="local">로컬 의미 검색</option>
-                  <option value="gemini">Gemini 의미 검색</option>
                 </select>
               </label>
               <label>
                 청구 연도
                 <select
+                  multiple
+                  size={4}
+                  aria-label="청구 연도"
                   value={filters.year}
                   disabled={!enabled || !!busy}
-                  onChange={(e) => set("year", e.target.value)}
+                  onChange={(e) =>
+                    set(
+                      "year",
+                      Array.from(
+                        e.target.selectedOptions,
+                        (option) => option.value,
+                      ),
+                    )
+                  }
                 >
-                  <option value="">전체 연도</option>
-                  {[2016, 2017, 2018, 2019, 2020, 2021].map((y) => (
+                  {study.years.map((y) => (
                     <option key={y}>{y}</option>
                   ))}
                 </select>
@@ -418,11 +556,21 @@ export function CopdExplorer({
               <label>
                 원문 기반 판정
                 <select
+                  multiple
+                  size={4}
+                  aria-label="원문 기반 판정"
                   value={filters.approval}
                   disabled={!enabled || !!busy}
-                  onChange={(e) => set("approval", e.target.value)}
+                  onChange={(e) =>
+                    set(
+                      "approval",
+                      Array.from(
+                        e.target.selectedOptions,
+                        (option) => option.value,
+                      ),
+                    )
+                  }
                 >
-                  <option value="">전체 판정</option>
                   {["인정", "불인정", "일부인정"].map((s) => (
                     <option key={s}>{s}</option>
                   ))}
@@ -431,11 +579,21 @@ export function CopdExplorer({
               <label>
                 AI 표준 직종
                 <select
+                  multiple
+                  size={4}
+                  aria-label="AI 표준 직종"
                   value={filters.occupation}
                   disabled={!enabled || !!busy}
-                  onChange={(e) => set("occupation", e.target.value)}
+                  onChange={(e) =>
+                    set(
+                      "occupation",
+                      Array.from(
+                        e.target.selectedOptions,
+                        (option) => option.value,
+                      ),
+                    )
+                  }
                 >
-                  <option value="">전체 직종</option>
                   {occupations.map((s) => (
                     <option key={s}>{s}</option>
                   ))}
@@ -444,11 +602,21 @@ export function CopdExplorer({
               <label>
                 판정 대조
                 <select
+                  multiple
+                  size={4}
+                  aria-label="판정 대조"
                   value={filters.qa}
                   disabled={!enabled || !!busy}
-                  onChange={(e) => set("qa", e.target.value)}
+                  onChange={(e) =>
+                    set(
+                      "qa",
+                      Array.from(
+                        e.target.selectedOptions,
+                        (option) => option.value,
+                      ),
+                    )
+                  }
                 >
-                  <option value="">전체 상태</option>
                   <option value="matched">일치</option>
                   <option value="mismatch">불일치</option>
                   <option value="unverified">미대조</option>
@@ -456,11 +624,14 @@ export function CopdExplorer({
               </label>
             </div>
             <p className="copd-caption">
-              {filters.mode === "gemini"
-                ? "Gemini에는 검색어만 전송합니다. 개인 식별정보를 검색어에 입력하지 마세요."
-                : filters.mode === "local"
-                  ? "로컬 검색 모델이 의미가 가까운 사례와 키워드 결과를 함께 찾습니다."
-                  : "공백으로 구분한 검색어를 모두 포함하는 사례를 찾습니다. 비워두면 필터에 맞는 목록을 봅니다."}
+              필터는 여러 항목을 선택할 수 있습니다. 같은 필터는 OR, 서로 다른
+              필터는 AND로 적용합니다. 선택하지 않으면 전체입니다. PC에서는 Ctrl
+              또는 ⌘ 키와 클릭으로 선택을 추가·해제합니다.
+            </p>
+            <p className="copd-caption">
+              {filters.mode === "hybrid"
+                ? "작업 상황이나 질문을 문장으로 입력하세요. 서버 안에서 의미와 키워드를 함께 비교해 관련 후보를 최대 200건 보여줍니다. 비워두면 필터에 맞는 전체 목록을 봅니다."
+                : "공백으로 구분한 검색어를 모두 포함하는 사례를 찾습니다. 비워두면 필터에 맞는 목록을 봅니다."}
             </p>
           </form>
           {error && (
@@ -493,8 +664,8 @@ export function CopdExplorer({
                 <div className="copd-result-count">
                   <strong>{results.total.toLocaleString()}건</strong>
                   <span>
-                    {["local", "gemini"].includes(results.ranking)
-                      ? `의미 검색 후보 · 필터 대상 ${results.filtered_total.toLocaleString()}건`
+                    {["hybrid", "local", "gemini"].includes(results.ranking)
+                      ? `자연어 관련 후보 · 필터 대상 ${results.filtered_total.toLocaleString()}건 · 관련성은 원문에서 확인하세요`
                       : "조건에 맞는 사례"}
                   </span>
                 </div>
@@ -583,6 +754,7 @@ export function CopdExplorer({
                         ["text", "원문"],
                         ["ai", "AI 요약·라벨"],
                         ["exposure", "노출 측정치"],
+                        ["evidence", "라벨·근무시간"],
                       ].map(([k, l]) => (
                         <button
                           key={k}
@@ -639,6 +811,16 @@ export function CopdExplorer({
                           </div>
                         )}
                       </>
+                    )}
+                    {detailTab === "evidence" && (
+                      <SanjeEvidence
+                        key={detail.accnum}
+                        apiBase={apiBase}
+                        id={detail.accnum}
+                        labels={detail.standard_labels}
+                        worktime={detail.worktime}
+                        worktimeRows={detail.worktime_rows}
+                      />
                     )}
                     {detailTab === "exposure" &&
                       (!detail.measurement_rows.length ? (

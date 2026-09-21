@@ -3,21 +3,21 @@ test("public home and catalog show published resources, with working search", as
   page,
 }) => {
   await page.goto("/");
-  await expect(page.locator(".dataset-card")).toHaveCount(1);
+  await expect(page.locator(".dataset-card")).toHaveCount(2);
   await expect(
-    page.locator(".dataset-card").filter({ hasText: "COPD 산재 판정 사례" }),
+    page.locator(".dataset-card").filter({ hasText: "산재 판정사례" }),
   ).toHaveCount(1);
   await expect(page.getByText("건설현장 안전보호구 이미지")).toHaveCount(0);
   await page.getByRole("textbox", { name: "데이터 검색어" }).fill("COPD");
   await page.getByRole("button", { name: "검색", exact: true }).click();
   await expect(page.locator(".dataset-card")).toHaveCount(1);
   await page
-    .getByRole("heading", { name: "COPD 산재 판정 사례" })
+    .getByRole("heading", { name: "산재 판정사례", exact: true })
     .getByRole("link")
     .click();
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "COPD 산재 판정 사례",
-  );
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("산재 판정사례");
+  await page.getByRole("link", {name:"COPD 자료 소개", exact:true}).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("COPD 산재 판정 사례");
   await expect(
     page.getByRole("link", { name: "COPD 검색 DEMO 열기" }),
   ).toHaveAttribute("href", "/demo/copd/");
@@ -29,11 +29,11 @@ test("catalog filters preserve URL and empty results can be reset", async ({
   await page.getByRole("radio", { name: "산업보건" }).check();
   await page.getByRole("button", { name: "필터 적용" }).click();
   await expect(page).toHaveURL(/category=/);
-  await expect(page.locator(".dataset-card")).toHaveCount(1);
+  await expect(page.locator(".dataset-card")).toHaveCount(2);
   await page.goto("/datasets?q=unmatchedzzzz");
   await expect(page.getByText("조건에 맞는 데이터가 없어요")).toBeVisible();
   await page.getByRole("link", { name: "전체 데이터 보기" }).click();
-  await expect(page.locator(".dataset-card")).toHaveCount(1);
+  await expect(page.locator(".dataset-card")).toHaveCount(2);
 });
 test("explicit DEMO sample downloads still return real sample bytes", async ({
   request,

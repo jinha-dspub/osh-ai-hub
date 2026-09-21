@@ -382,14 +382,22 @@ export function sampleCsv(dataset: Dataset): string {
 
 // Public metadata only. Case text remains behind the authenticated demo gateway.
 export const copdDataset: Dataset = {
-  isReal: true,
-  slug: "copd",
-  title: "COPD 산재 판정 사례",
-  description: "만성폐쇄성폐질환 산재 판정문과 직종·유해인자·노출 측정자료를 함께 탐색합니다. 실제 자료이며 공개 범위와 가공 라벨을 검수 중입니다.",
-  category: "산업보건", format: "CSV", kind: "text",
-  tags: ["COPD", "만성폐쇄성폐질환", "산재 판정", "직종", "분진"],
-  updated: "2026-09-17", year: 2021, api: false, ai: false, accent: "blue",
-  sample: [], variables: [],
+  isReal: true, slug: "copd", title: "COPD 산재 판정 사례",
+  description: "COPD 2,049개 사례의 원문·가공 라벨·측정치·근무시간을 함께 확인합니다.",
+  category: "산업보건", format: "CSV", kind: "text", tags: ["COPD", "만성폐쇄성폐질환", "산재 판정"],
+  updated: "2026-09-20", year: 2021, api: false, ai: false, accent: "blue", sample: [], variables: [],
+};
+export const sanjeDataset: Dataset = {
+  isReal: true, slug: "sanje", title: "산재 판정사례",
+  description: "COPD·뇌심혈관·암·감염성질환·난청·근골격계·기타 7개 질환군의 61,566개 사례를 살펴봅니다. 연구자 윤진하 · 연세대학교 산업보건연구소.",
+  category: "산업보건", format: "CSV", kind: "text", tags: ["산재 판정", "COPD", "만성폐쇄성폐질환", "뇌심혈관", "암", "감염성질환", "난청", "근골격계", "분진"],
+  updated: "2026-09-20", year: 2021, api: false, ai: false, accent: "blue", sample: [], variables: [],
+};
+export const oshmasterDataset: Dataset = {
+  isReal: true, slug: "oshmaster", title: "산업안전보건 표준분류 마스터",
+  description: "19개 표준 식별자의 원 코드 98,638개와 동의어·판본별 계층을 탐색합니다. 질병·직업·산업·유해인자 분류를 연구자료에 연결하세요.",
+  category: "산업보건", format: "CSV", kind: "text", tags: ["OSHMASTER", "표준분류", "코드북", "KCD", "KSCO", "KSIC", "직업", "유해인자"],
+  updated: "2026-09-21", year: 2026, api: false, ai: false, accent: "blue", sample: [], variables: [],
 };
 export const familyDesignDataset: Dataset = {
   isReal: true,
@@ -411,6 +419,6 @@ export const openDataGuideDataset: Dataset = {
 };
 export const collaborationTemplates = [openDataGuideDataset, familyDesignDataset];
 export function visibleDatasets(admin = false): Dataset[] {
-  const published = [copdDataset];
+  const published = [sanjeDataset, oshmasterDataset];
   return admin ? [...published, ...datasets] : published;
 }

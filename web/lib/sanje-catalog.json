@@ -1,0 +1,261 @@
+{
+  "id": "sanje",
+  "title": "산재 판정사례",
+  "version": "2026-09-19.v1",
+  "version_date": "2026-09-19",
+  "researcher": "윤진하",
+  "affiliation": "연세대학교 산업보건연구소",
+  "source_url": "https://jilbyungcase.comwel.or.kr/",
+  "groups": [
+    {
+      "id": "copd",
+      "name": "COPD",
+      "title": "COPD 산재 판정 사례",
+      "cases": 2049,
+      "measurements": 611,
+      "measured_cases": 75,
+      "worktime_cases": 37,
+      "worktime_records": 44,
+      "labels": 18001,
+      "years": [
+        "2016",
+        "2017",
+        "2018",
+        "2019",
+        "2020",
+        "2021"
+      ],
+      "qa": {
+        "matched": 1919,
+        "unverified": 129,
+        "mismatch": 1
+      },
+      "occupation_filled": 2010,
+      "count_mismatches": 0,
+      "case_columns": 21,
+      "version": "2026-09-19.v1",
+      "version_date": "2026-09-19",
+      "researcher": "윤진하",
+      "affiliation": "연세대학교 산업보건연구소",
+      "search_modes": [
+        "hybrid",
+        "keyword"
+      ]
+    },
+    {
+      "id": "cardio",
+      "name": "뇌심혈관",
+      "title": "뇌심혈관 산재 판정 사례",
+      "cases": 10542,
+      "measurements": 1082,
+      "measured_cases": 390,
+      "worktime_cases": 1744,
+      "worktime_records": 7980,
+      "labels": 109027,
+      "years": [
+        "2016",
+        "2017",
+        "2018",
+        "2019",
+        "2020",
+        "2021"
+      ],
+      "qa": {
+        "matched": 9997,
+        "mismatch": 69,
+        "unverified": 476
+      },
+      "occupation_filled": 10515,
+      "count_mismatches": 0,
+      "case_columns": 21,
+      "version": "2026-09-19.v1",
+      "version_date": "2026-09-19",
+      "researcher": "윤진하",
+      "affiliation": "연세대학교 산업보건연구소",
+      "search_modes": [
+        "hybrid",
+        "keyword"
+      ]
+    },
+    {
+      "id": "cancer",
+      "name": "암",
+      "title": "암 산재 판정 사례",
+      "cases": 1871,
+      "measurements": 3010,
+      "measured_cases": 453,
+      "worktime_cases": 100,
+      "worktime_records": 138,
+      "labels": 25724,
+      "years": [
+        "2015",
+        "2016",
+        "2017",
+        "2018",
+        "2019",
+        "2020",
+        "2021"
+      ],
+      "qa": {
+        "matched": 1868,
+        "mismatch": 1,
+        "unverified": 2
+      },
+      "occupation_filled": 1842,
+      "count_mismatches": 0,
+      "case_columns": 21,
+      "version": "2026-09-19.v1",
+      "version_date": "2026-09-19",
+      "researcher": "윤진하",
+      "affiliation": "연세대학교 산업보건연구소",
+      "search_modes": [
+        "hybrid",
+        "keyword"
+      ]
+    },
+    {
+      "id": "infection",
+      "name": "감염성질환",
+      "title": "감염성질환 산재 판정 사례",
+      "cases": 1309,
+      "measurements": 106,
+      "measured_cases": 23,
+      "worktime_cases": 101,
+      "worktime_records": 264,
+      "labels": 12129,
+      "years": [
+        "2016",
+        "2017",
+        "2018",
+        "2019",
+        "2020",
+        "2021"
+      ],
+      "qa": {
+        "matched": 1252,
+        "unverified": 48,
+        "mismatch": 9
+      },
+      "occupation_filled": 1308,
+      "count_mismatches": 0,
+      "case_columns": 21,
+      "version": "2026-09-19.v1",
+      "version_date": "2026-09-19",
+      "researcher": "윤진하",
+      "affiliation": "연세대학교 산업보건연구소",
+      "search_modes": [
+        "hybrid",
+        "keyword"
+      ]
+    },
+    {
+      "id": "hearing",
+      "name": "난청",
+      "title": "난청 산재 판정 사례",
+      "cases": 134,
+      "measurements": 306,
+      "measured_cases": 66,
+      "worktime_cases": 12,
+      "worktime_records": 40,
+      "labels": 1800,
+      "years": [
+        "2016",
+        "2017",
+        "2018",
+        "2019",
+        "2020",
+        "2021"
+      ],
+      "qa": {
+        "matched": 130,
+        "mismatch": 3,
+        "unverified": 1
+      },
+      "occupation_filled": 134,
+      "count_mismatches": 0,
+      "case_columns": 21,
+      "version": "2026-09-19.v1",
+      "version_date": "2026-09-19",
+      "researcher": "윤진하",
+      "affiliation": "연세대학교 산업보건연구소",
+      "search_modes": [
+        "hybrid",
+        "keyword"
+      ]
+    },
+    {
+      "id": "musculoskeletal",
+      "name": "근골격계",
+      "title": "근골격계 산재 판정 사례",
+      "cases": 41906,
+      "measurements": 26,
+      "measured_cases": 24,
+      "worktime_cases": 2529,
+      "worktime_records": 2910,
+      "labels": 525822,
+      "years": [
+        "2015",
+        "2016",
+        "2017",
+        "2018",
+        "2019",
+        "2020",
+        "2021"
+      ],
+      "qa": {
+        "matched": 38990,
+        "unverified": 2115,
+        "mismatch": 801
+      },
+      "occupation_filled": 41677,
+      "count_mismatches": 0,
+      "case_columns": 21,
+      "version": "2026-09-19.v1",
+      "version_date": "2026-09-19",
+      "researcher": "윤진하",
+      "affiliation": "연세대학교 산업보건연구소",
+      "search_modes": [
+        "hybrid",
+        "keyword"
+      ]
+    },
+    {
+      "id": "other",
+      "name": "기타",
+      "title": "기타 산재 판정 사례",
+      "cases": 3755,
+      "measurements": 930,
+      "measured_cases": 187,
+      "worktime_cases": 352,
+      "worktime_records": 1163,
+      "labels": 38868,
+      "years": [
+        "2015",
+        "2016",
+        "2017",
+        "2018",
+        "2019",
+        "2020",
+        "2021"
+      ],
+      "qa": {
+        "matched": 3603,
+        "unverified": 145,
+        "mismatch": 7
+      },
+      "occupation_filled": 3736,
+      "count_mismatches": 0,
+      "case_columns": 21,
+      "version": "2026-09-19.v1",
+      "version_date": "2026-09-19",
+      "researcher": "윤진하",
+      "affiliation": "연세대학교 산업보건연구소",
+      "search_modes": [
+        "hybrid",
+        "keyword"
+      ]
+    }
+  ],
+  "total_cases": 61566,
+  "update_plan": "미정"
+}

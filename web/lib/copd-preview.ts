@@ -1,5 +1,5 @@
 // Approved public preview: only four selected fields from the first three CSV rows.
-// Snapshot: 2026-09-17 import. Never import the full private dataset into web/.
+// Snapshot: 2026-09-19.v1; hazards display | as comma. Verified unchanged fields. Never import the full private dataset into web/.
 export const copdPreview = [
   {
     "year": "2016",

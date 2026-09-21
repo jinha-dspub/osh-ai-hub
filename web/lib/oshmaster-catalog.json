@@ -1,0 +1,33 @@
+{
+  "id": "oshmaster",
+  "title": "산업안전보건 표준분류 마스터",
+  "version": "2026-09-21.1",
+  "version_date": "2026-09-21",
+  "codes": 98638,
+  "unified_codes": 80593,
+  "standards": 19,
+  "scopes": 53,
+  "preview": [
+    {
+      "std": "KCD",
+      "std_version": "9차_2026",
+      "axis": "DISEASE",
+      "code": "C33",
+      "label": "기관의 악성 신생물"
+    },
+    {
+      "std": "KCD",
+      "std_version": "9차_2026",
+      "axis": "DISEASE",
+      "code": "C34",
+      "label": "기관지 및 폐의 악성 신생물"
+    },
+    {
+      "std": "KCD",
+      "std_version": "9차_2026",
+      "axis": "DISEASE",
+      "code": "C34.0",
+      "label": "주기관지의 악성 신생물"
+    }
+  ]
+}

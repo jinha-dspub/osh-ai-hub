@@ -23,17 +23,21 @@ export default async function Tools() {
       />
       <div className="container section">
         <div className="tool-grid">
+          <article className="tool-card"><span className="badge">실제 코드집 · 검토 중</span><h3>표준분류 마스터 검색</h3><p>질병·직업·유해인자 코드와 동의어를 찾고 판본별 상하위 범위를 확인합니다.</p><Link href="/demo/oshmaster/" className="button secondary">표준분류 검색 DEMO <ArrowUpRight size={14}/></Link></article>
           <article className="tool-card">
             <Search size={29} />
             <div>
               <span className="badge">실제 자료 · 검수 중</span>
             </div>
-            <h3>COPD 산재 판정 사례 검색</h3>
+            <h3>산재 판정사례 · 7개 질환 검색</h3>
             <p>
-              직종·유해인자로 사례를 찾고 원문과 AI 라벨을 비교합니다. 검색
+              COPD·뇌심혈관·암·감염성질환·난청·근골격계·기타 사례의 원문과 근거를 비교합니다. 검색
               DEMO에서 사례를 살펴볼 수 있습니다.
             </p>
-            <Link href="/demo/copd/" className="button secondary">
+            <Link href="/demo/sanje/" className="button secondary">
+              전체 질환 검색 DEMO <ArrowUpRight size={14} />
+            </Link>
+            <Link href="/demo/copd/" className="text-link">
               COPD 검색 DEMO <ArrowUpRight size={14} />
             </Link>
           </article>

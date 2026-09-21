@@ -192,6 +192,10 @@ class Dataset:
 
 @lru_cache(maxsize=1)
 def dataset():
+    from app import sanje
+
+    if sanje.enabled():
+        return sanje.dataset("copd")
     try:
         return Dataset(Path(os.environ.get("COPD_DATA_DIR", ROOT / "opendata/copd")))
     except (OSError, ValueError, KeyError, TypeError, RuntimeError, sqlite3.Error):
@@ -261,7 +265,10 @@ def info():
 @router.post("/search")
 def search(body: SearchInput):
     try:
-        return dataset().search(body, embed)
+        from app import sanje
+
+        data = dataset()
+        return data.search(body) if isinstance(data, sanje.Dataset) else data.search(body, embed)
     except HTTPException:
         raise
     except (OSError, ValueError, KeyError, TypeError, RuntimeError, sqlite3.Error):
@@ -286,7 +293,10 @@ def detail(accnum: str):
 
 @router.post("/explain")
 def explain(body: ExplainInput):
-    data = dataset()
+    return explain_for(dataset(), body)
+
+
+def explain_for(data, body: ExplainInput):
     if body.accnum not in data.cases:
         raise HTTPException(404, "사례를 찾을 수 없습니다.")
     if not MODEL_LOCK.acquire(blocking=False):

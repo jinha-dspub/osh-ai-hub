@@ -95,7 +95,7 @@ export function DatasetArt({
       ) : dataset.kind === "design" ? (
         <div className="art-code"><Palette size={48} /><span>같은 색상 · 폰트 · 컴포넌트</span><div className="family-art-swatches" aria-hidden="true"><i /><i /><i /><i /></div></div>
       ) : dataset.isReal ? (
-        <div className="art-code"><FileText size={56} /><span>COPD · 판정 사례</span><span>원문 · 직종 · 유해인자</span></div>
+        <div className="art-code"><FileText size={56} /><span>{dataset.slug === "oshmaster" ? "OSHMASTER · 표준분류" : dataset.slug === "sanje" ? "SANJE · 7개 질환군" : "COPD · 판정 사례"}</span><span>{dataset.slug === "oshmaster" ? "코드 · 동의어 · 계층" : "원문 · 직종 · 유해인자"}</span></div>
       ) : dataset.kind === "statistics" ? (
         <>
           <div className="art-bars">

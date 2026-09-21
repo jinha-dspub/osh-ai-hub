@@ -139,7 +139,7 @@ export default async function Home() {
           <div className="section-notice">
             <span className="badge">실제 자료 · 검수 중</span>
             <span>
-              COPD 산재 판정 사례를 살펴보세요. 원문은 인증된 검토 화면에서 내려받을 수 있습니다.
+              산재 판정사례 7개 질환군을 살펴보세요. 원문은 인증된 검토 화면에서 내려받을 수 있습니다.
             </span>
           </div>
           <div className="dataset-grid">
@@ -238,7 +238,7 @@ export default async function Home() {
             </Link>
             <Link href="/datasets">
               <span className="badge">데이터 안내</span>
-              <h3>COPD 산재 판정 사례와 활용 방법을 살펴보세요</h3>
+              <h3>산재 판정사례 7개 질환군과 활용 방법을 살펴보세요</h3>
               <time>2026.09.17</time>
               <MoveUpRight size={18} />
             </Link>

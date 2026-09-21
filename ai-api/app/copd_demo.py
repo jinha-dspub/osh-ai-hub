@@ -10,7 +10,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 
-from app.copd import ExplainInput, SearchInput, detail, explain, info, search
+from app import sanje
+from app.copd import ExplainInput, SearchInput, detail, explain, explain_for, info, search
 from app.storage import DownloadInput, files, signed_download
 
 PREFIX = "/demo/copd"
@@ -83,7 +84,9 @@ def page():
 
 
 @app.get(PREFIX + "/api")
-def read_api(action: str, id: str = ""):
+def read_api(action: str, id: str = "", page: int = 1):
+    if sanje.enabled():
+        return read_sanje("copd", action, id, page)
     if action == "info":
         return info()
     if action == "files":
@@ -106,6 +109,8 @@ async def write_api(request: Request, action: str):
         # AI work runs in a thread so health/static requests remain responsive.
         from starlette.concurrency import run_in_threadpool
 
+        if sanje.enabled():
+            return await dispatch_sanje("copd", action, body)
         if action == "download":
             return await run_in_threadpool(signed_download, DownloadInput.model_validate_json(body))
         if action == "search":
@@ -120,3 +125,61 @@ async def write_api(request: Request, action: str):
 app.mount(
     PREFIX + "/assets", StaticFiles(directory=STATIC / "assets", check_dir=False), name="assets"
 )
+
+
+def read_sanje(group: str, action: str, id: str = "", page: int = 1):
+    sanje.group_id(group)
+    if action == "files":
+        return sanje.files(group)
+    data = sanje.dataset(group)
+    if action == "info":
+        return data.info()
+    if action == "case" and 0 < len(id) <= 100:
+        return data.detail(id)
+    if action == "labels" and 0 < len(id) <= 100:
+        return data.labels(id, page)
+    raise HTTPException(400, "지원하지 않는 요청입니다.")
+
+
+async def dispatch_sanje(group, action, body):
+    from starlette.concurrency import run_in_threadpool
+
+    sanje.group_id(group)
+    if action == "download":
+        return await run_in_threadpool(
+            sanje.signed_download, group, DownloadInput.model_validate_json(body)
+        )
+    if action == "search":
+        query = sanje.SearchInput.model_validate_json(body)
+        return await run_in_threadpool(lambda: sanje.dataset(group).search(query))
+    if action == "explain":
+        query = ExplainInput.model_validate_json(body)
+        return await run_in_threadpool(lambda: explain_for(sanje.dataset(group), query))
+    raise HTTPException(400, "지원하지 않는 요청입니다.")
+
+
+@app.api_route("/demo/sanje/{group}/", methods=["GET", "HEAD"])
+def sanje_page(group: str):
+    sanje.group_id(group)
+    return page()
+
+
+@app.get("/demo/sanje/{group}/api")
+def sanje_read_api(group: str, action: str, id: str = "", page: int = 1):
+    return read_sanje(group, action, id, page)
+
+
+@app.post("/demo/sanje/{group}/api")
+async def sanje_write_api(group: str, action: str, request: Request):
+    sanje.group_id(group)
+    if request.headers.get("content-type") != "application/json":
+        raise HTTPException(415, "JSON 요청이 필요합니다.")
+    body = b""
+    async for chunk in request.stream():
+        body += chunk
+        if len(body) > 8192:
+            raise HTTPException(413, "입력 용량을 초과했습니다.")
+    try:
+        return await dispatch_sanje(group, action, body)
+    except ValidationError:
+        raise HTTPException(422, "입력 조건을 확인해 주세요.") from None
