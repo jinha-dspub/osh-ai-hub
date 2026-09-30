@@ -669,6 +669,8 @@ def upload_finish(upload_id, key):
 
 
 # ---- dataset download (private object storage, never proxied) -------------
+# Routes withdrawn 2026-09-30 until the AIHub redistribution scope is settled;
+# the helpers stay for the next release (scripts/upload_lanyard_storage.py).
 
 DATASET_VERSION = "2026-09-30.1"
 DATASET_MANIFEST = ROOT / "local_asset/lanyard-storage-manifest.json"
@@ -922,15 +924,6 @@ def register(app):
         key = client_key(request)
         data = upload_finish(body.id, key)
         return await run_in_threadpool(analyze, data, key)
-
-    @app.get(PREFIX + "/api/files")
-    def read_files():
-        return dataset_files()
-
-    @app.post(PREFIX + "/api/download")
-    async def post_download(request: Request):
-        body = await json_body(request, storage.DownloadInput)
-        return await run_in_threadpool(dataset_download, body.id)
 
     @app.post(PREFIX + "/api/review")
     async def post_review(request: Request):

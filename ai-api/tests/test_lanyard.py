@@ -361,44 +361,10 @@ def test_overlapping_duplicate_lanyards_keep_the_more_confident():
     assert lanyard.dedupe([twin, other, same]) == [same, other]
 
 
-def test_dataset_download_requires_verified_manifest_and_known_file(tmp_path, monkeypatch):
+def test_dataset_download_is_withdrawn():
     client = gateway()
-    monkeypatch.setattr(lanyard, "DATASET_MANIFEST", tmp_path / "missing.json")
-    assert client.get("/demo/lanyard/api/files").status_code == 503
-    cfg = {"url": "https://demo.supabase.co", "bucket": "lanyard-research"}
-    cfg["prefix"] = f"lanyard/{lanyard.DATASET_VERSION}"
-    monkeypatch.setattr(lanyard, "dataset_settings", lambda: cfg)
-    manifest = tmp_path / "manifest.json"
-    row = {"id": "labels-json", "name": "DEMO.json", "bytes": 1, "sha256": "0" * 64}
-    good = {**row, "object": f"{cfg['prefix']}/abc/DEMO.json"}
-    manifest.write_text(
-        json.dumps(
-            {
-                "version": lanyard.DATASET_VERSION,
-                "verified": True,
-                "bucket": cfg["bucket"],
-                "project": cfg["url"],
-                "files": [good, {**row, "id": "escape", "object": "copd/secret.zip"}],
-            }
-        )
-    )
-    monkeypatch.setattr(lanyard, "DATASET_MANIFEST", manifest)
-    listed = client.get("/demo/lanyard/api/files").json()
-    assert listed["files"][0] == row  # object keys never reach the browser
-    signed = []
-    monkeypatch.setattr(lanyard.storage, "private_bucket", lambda settings: None)
-
-    def sign(settings, route, payload):
-        signed.append(route)
-        return {"signedURL": "/" + route + "?token=DEMO"}
-
-    monkeypatch.setattr(lanyard.storage, "storage_request", sign)
-    ok = post(client, "download", {"id": "labels-json"}).json()
-    assert ok["url"].endswith("&download=DEMO.json") and ok["expires_in"] == 60
-    assert post(client, "download", {"id": "nope"}).status_code == 404
-    assert post(client, "download", {"id": "escape"}).status_code == 503
-    assert post(client, "download", {"id": "../x"}).status_code == 422
-    assert signed == [f"object/sign/lanyard-research/{good['object']}"]
+    assert client.get("/demo/lanyard/api/files").status_code in {404, 405}
+    assert post(client, "download", {"id": "labels-json"}).status_code in {404, 405}
 
 
 def test_sync_moves_pending_backfills_old_runs_and_locks_past_days(tmp_path):

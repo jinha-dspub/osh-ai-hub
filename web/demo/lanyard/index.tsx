@@ -152,67 +152,6 @@ function Overlay({ result, image, workers }: { result: Result; image: string; wo
   );
 }
 
-type DatasetFile = { id: string; name: string; bytes: number; sha256: string };
-const FILE_LABEL: Record<string, string> = {
-  "labels-json": "JSON · 전체 라벨 한 파일",
-  "labels-zip": "ZIP · JSON + 세트별 CSV + README",
-};
-
-function DatasetDownloads() {
-  const [files, setFiles] = useState<DatasetFile[] | null>(null);
-  const [version, setVersion] = useState("");
-  const [error, setError] = useState("");
-  const [busyId, setBusyId] = useState("");
-  useEffect(() => {
-    fetch("/demo/lanyard/api/files")
-      .then(async (r) => {
-        const data = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error(data.error || "파일 목록을 불러오지 못했습니다.");
-        setFiles(data.files); setVersion(data.version);
-      })
-      .catch((e: Error) => setError(e.message));
-  }, []);
-  async function download(id: string) {
-    setBusyId(id); setError("");
-    try {
-      const { url } = await post<{ url: string }>("download", JSON.stringify({ id }), "application/json");
-      window.location.assign(url);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusyId("");
-    }
-  }
-  return (
-    <section id="files" className="ly-panel ly-files" aria-labelledby="files-title">
-      <h2 id="files-title"><Download size={24} aria-hidden="true" />데이터셋 받기{version && ` · ${version}`}</h2>
-      <p>
-        연구팀이 검토한 라벨 7개 세트(1,636건)입니다. 사진과 AIHub 원본 라벨은 AIHub 이용약관상 포함하지 않으며,
-        AIHub에서 신청한 뒤 사진 파일명·죔줄 번호로 맞춰 쓰면 됩니다.
-      </p>
-      {error && <p role="alert" className="ly-error">{error}</p>}
-      {!files && !error && <p className="ly-help">파일 목록을 불러오고 있습니다.</p>}
-      {files && (
-        <ul className="ly-file-list">
-          {files.map((f) => (
-            <li key={f.id}>
-              <div>
-                <strong>{FILE_LABEL[f.id] ?? f.name}</strong>
-                <span>{f.name} · {(f.bytes / 1024 / 1024).toFixed(1)}MB</span>
-                <code title="SHA-256">{f.sha256.slice(0, 16)}…</code>
-              </div>
-              <button className="button secondary" disabled={busyId === f.id} onClick={() => void download(f.id)}>
-                {busyId === f.id ? "링크 준비 중" : "받기"}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      <p className="ly-help">받기를 누르면 60초 동안 유효한 다운로드 주소로 이동합니다.</p>
-    </section>
-  );
-}
-
 function LanyardApp() {
   const [file, setFile] = useState<File | null>(null);
   const [inputError, setInputError] = useState("");
@@ -433,7 +372,6 @@ function LanyardApp() {
           </p>
         </section>
       </div>
-      <DatasetDownloads />
       <p className="ly-limit">
         전체 이용자의 하루 AI 사용량을 함께 제한합니다. 한도에 도달하면 2단계 확인을 쉬고 1단계 판정은 계속 이용할 수 있습니다.{" "}
         <a href="https://osh.ai.kr/datasets/lanyard">자료·모델 소개 <ArrowUpRight size={14} aria-hidden="true" /></a>
