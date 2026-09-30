@@ -41,6 +41,10 @@ def fake_rules():
 def isolated(tmp_path, monkeypatch):
     monkeypatch.setenv("AI_BUDGET_DB", str(tmp_path / "budget.sqlite"))
     monkeypatch.setenv("LANYARD_STORE_DIR", str(tmp_path / "store"))
+    (tmp_path / "nas").mkdir()
+    (tmp_path / "nas" / "README.md").write_text("DEMO NAS")
+    monkeypatch.setenv("NAS_DATA", str(tmp_path / "nas"))  # never write the real NAS in tests
+    monkeypatch.setattr(lanyard, "today", lambda: "2026-09-30")
     monkeypatch.setenv("OSH_PUBLIC_DEMOS", "lanyard")
     monkeypatch.delenv("COPD_ALLOW_LOCAL_PREVIEW", raising=False)
     monkeypatch.setattr(budget, "day", lambda: "2026-09-30")
@@ -184,21 +188,49 @@ def test_chunks_fit_gateway_limit_and_are_ordered_and_bound():
     assert post(client, "upload/chunk", over).status_code == 413
 
 
-def test_every_run_and_photo_is_kept_without_exif(tmp_path):
+def project(tmp_path):
+    return tmp_path / "nas" / lanyard.PROJECT
+
+
+def test_originals_go_to_nas_raw_and_labels_to_processed(tmp_path):
     client = gateway()
     first = upload(client).json()
     assert first["summary"] == {"체결": 0, "미체결": 1, "거치": 0, "불명": 1}
     assert first["lanyards"][0]["harness_box"] == [5, 5, 60, 60]
     second = upload(client, data=photo(exif=True)).json()
-    images = sorted((tmp_path / "store" / "images").rglob("*.jpg"))
+    raw = project(tmp_path) / "raw/osh-uploads-20260930"
+    labels = project(tmp_path) / "processed/osh-labels-20260930-v1"
+    images = sorted(raw.glob("*.jpg"))
     assert sorted(p.stem for p in images) == sorted([first["id"], second["id"]])
     assert not any(Image.open(p).getexif() for p in images)  # EXIF removed before storage
+    assert "외부 공유 금지" in (raw / "MANIFEST.md").read_text()
+    assert (labels / "README.md").exists() and not list(raw.glob("*.json"))
+    stage1 = json.loads((labels / f"{first['id']}.stage1.json").read_text())
+    assert stage1["image"] == f"raw/osh-uploads-20260930/{first['id']}.jpg"
+    assert stage1["summary"] == first["summary"] and len(stage1["lanyards"]) == 2
+    assert not (tmp_path / "store" / "images").exists()  # no second local copy
     rows = sqlite3.connect(tmp_path / "store" / "runs.sqlite").execute(
         "SELECT id,image_kept FROM runs ORDER BY id"
     )
     assert rows.fetchall() == sorted([(first["id"], 1), (second["id"], 1)])
+    body = {"id": first["id"], "verdict": "wrong", "note": "DEMO 메모"}
+    post(client, "feedback", body)
+    post(client, "feedback", {**body, "verdict": "correct"})
+    notes = sorted(labels.glob(f"{first['id']}.feedback-*.json"))
+    assert [json.loads(p.read_text())["verdict"] for p in notes] == ["wrong", "correct"]
     consent = post(client, "upload/start", {"size": 10, "keep": False})
     assert consent.status_code == 422  # no per-upload storage option any more
+
+
+def test_archive_never_overwrites_and_waits_locally_when_nas_is_down(tmp_path):
+    lanyard.archive("raw", "2026-09-30", "DEMO.jpg", b"first")
+    lanyard.archive("raw", "2026-09-30", "DEMO.jpg", b"second")
+    assert (project(tmp_path) / "raw/osh-uploads-20260930/DEMO.jpg").read_bytes() == b"first"
+    (tmp_path / "nas" / "README.md").unlink()
+    lanyard.archive_json("2026-09-30", "DEMO.stage1.json", {"id": "DEMO"})
+    waiting = tmp_path / "store/nas-pending" / lanyard.PROJECT / "processed/osh-labels-20260930-v1"
+    assert json.loads((waiting / "DEMO.stage1.json").read_text()) == {"id": "DEMO"}
+    assert not (project(tmp_path) / "processed").exists()
 
 
 class FakeMessages:
@@ -228,7 +260,7 @@ WORKERS = (
 )
 
 
-def test_review_resolves_only_unknown_shape_and_settles_usage(monkeypatch):
+def test_review_resolves_only_unknown_shape_and_settles_usage(tmp_path, monkeypatch):
     messages = use_claude(monkeypatch, WORKERS)
     client = gateway()
     run = upload(client).json()
@@ -240,6 +272,8 @@ def test_review_resolves_only_unknown_shape_and_settles_usage(monkeypatch):
     ]
     assert result["workers"][0]["fall_risk"] is True
     assert result["workers"][0]["has_lanyard"] is True
+    saved = project(tmp_path) / f"processed/osh-labels-20260930-v1/{run['id']}.stage2.json"
+    assert json.loads(saved.read_text())["model"] == lanyard.VLM_MODEL
     with budget.database() as db:
         assert budget.used_by(db, "2026-09-30", lanyard.PROVIDER) == lanyard.vlm_cost(
             types.SimpleNamespace(input_tokens=3000, output_tokens=900)
@@ -365,3 +399,46 @@ def test_dataset_download_requires_verified_manifest_and_known_file(tmp_path, mo
     assert post(client, "download", {"id": "escape"}).status_code == 503
     assert post(client, "download", {"id": "../x"}).status_code == 422
     assert signed == [f"object/sign/lanyard-research/{good['object']}"]
+
+
+def test_sync_moves_pending_backfills_old_runs_and_locks_past_days(tmp_path):
+    import importlib.util
+
+    script = lanyard.Path(lanyard.__file__).parents[1] / "scripts/sync_lanyard_nas.py"
+    spec = importlib.util.spec_from_file_location("sync_lanyard_nas", script)
+    sync = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sync)
+    (tmp_path / "nas" / "README.md").unlink()
+    run = upload(gateway()).json()  # NAS down: photo and stage1 wait locally
+    (tmp_path / "nas" / "README.md").write_text("DEMO NAS")
+    assert sync.flush_pending() == 2
+    raw = project(tmp_path) / "raw/osh-uploads-20260930"
+    assert (raw / f"{run['id']}.jpg").exists() and (raw / "MANIFEST.md").exists()
+    assert not list((tmp_path / "store/nas-pending").rglob("*.jpg"))
+    # A run from before NAS archiving: local image + DB row only.
+    old = tmp_path / "store/images/2026-09-29"
+    old.mkdir(parents=True)
+    (old / ("a" * 32 + ".jpg")).write_bytes(b"DEMO old photo")
+    with lanyard.runs_db() as db:
+        db.execute(
+            "INSERT INTO runs VALUES (?,?,?,?,?,?,?,?,NULL,NULL,NULL)",
+            (
+                "a" * 32,
+                "2026-09-29T10:00:00+09:00",
+                lanyard.RELEASE,
+                4,
+                3,
+                "0",
+                1,
+                json.dumps({"lanyards": [], "harnesses": []}),
+            ),
+        )
+    assert sync.backfill() == 1
+    past = project(tmp_path) / "raw/osh-uploads-20260929"
+    assert (past / ("a" * 32 + ".jpg")).read_bytes() == b"DEMO old photo"
+    assert not (old / ("a" * 32 + ".jpg")).exists()
+    labels = project(tmp_path) / "processed/osh-labels-20260929-v1"
+    assert json.loads((labels / ("a" * 32 + ".stage1.json")).read_text())["summary"]["체결"] == 0
+    assert sync.backfill() == 0  # idempotent
+    assert sync.lock_finished_days() > 0
+    assert not (past.stat().st_mode & 0o222) and raw.stat().st_mode & 0o200  # today stays open

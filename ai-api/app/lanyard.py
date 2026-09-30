@@ -480,10 +480,86 @@ def runs_db():
         db.close()
 
 
-def keep_image(run_id, jpeg):
-    folder = store_dir() / "images" / today()
-    folder.mkdir(mode=0o700, parents=True, exist_ok=True)
-    (folder / f"{run_id}.jpg").write_bytes(jpeg)
+# ---- research archive on the NAS -------------------------------------------
+# Uploaded originals and our labels go to separate per-day NAS folders:
+#   raw/osh-uploads-YYYYMMDD/<id>.jpg                     (+ MANIFEST.md)
+#   processed/osh-labels-YYYYMMDD-v1/<id>.stage1.json      (+ stage2, feedback-N, README.md)
+# Files are only ever added, never overwritten. If the NAS is down the file waits in
+# local_asset/lanyard-runs/nas-pending/ and scripts/sync_lanyard_nas.py moves it later.
+
+RAW_MANIFEST = """# MANIFEST
+- 출처: OSH AI Hub 안전대 체결 라벨링 데이터셋 판정 화면 이용자 업로드 (tools.osh.ai.kr/demo/lanyard/)
+- 입수일: {day} / 입수자: osh-demo 서비스(.6) 자동 적재
+- 라이선스·반출 제한: 이용자 사진. 작업자 얼굴 등 개인 식별 정보가 있을 수 있음 — 외부 공유 금지.
+  저장 사실은 판정 화면과 소개 페이지 첫 안내로 고지함.
+- 규모: 하루 단위 폴더. 파일명 = 판정 id. 긴 변 1,600px 이하 JPG, EXIF 제거
+- 비고: 같은 id의 라벨은 processed/osh-labels-{stamp}-v1/. 다음 날 sync_lanyard_nas.py가 쓰기 권한을 뗀다.
+"""
+LABEL_README = """# osh-labels-{stamp}-v1
+
+OSH AI Hub 안전대 체결 판정 화면이 {day}에 만든 라벨. 사진은 raw/osh-uploads-{stamp}/<id>.jpg.
+
+- `<id>.stage1.json` — 배포본·사진 크기·sha256, 1단계 검출(죔줄 7점·안전대 박스·검출 신뢰도)과 형태 규칙 판정
+- `<id>.stage2.json` — Claude 확인 결과(작업자·고리·위치)와 최종 판정. 성공한 경우에만 있음
+- `<id>.feedback-N.json` — 이용자 의견(correct/wrong/unsure, 메모)
+- 모두 AI 판정이며 사람 검토 전 자료다. 좌표는 raw 사진의 픽셀.
+"""
+
+
+def nas_root():
+    return Path(os.environ.get("NAS_DATA", "/nas"))
+
+
+def archive_path(kind, day, name):
+    stamp = day.replace("-", "")
+    folder = f"raw/osh-uploads-{stamp}" if kind == "raw" else f"processed/osh-labels-{stamp}-v1"
+    return Path(PROJECT) / folder / name
+
+
+def put_new(path: Path, data: bytes):
+    """Create path with data; never replace an existing file (link is atomic and exclusive)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    temp.write_bytes(data)
+    try:
+        os.link(temp, path)
+    except FileExistsError:
+        pass
+    finally:
+        temp.unlink(missing_ok=True)
+
+
+def folder_note(relative: Path, day):
+    stamp = day.replace("-", "")
+    if relative.parts[1] == "raw":
+        return "MANIFEST.md", RAW_MANIFEST.format(day=day, stamp=stamp)
+    return "README.md", LABEL_README.format(day=day, stamp=stamp)
+
+
+def archive(kind, day, name, data: bytes):
+    relative = archive_path(kind, day, name)
+    note_name, note = folder_note(relative, day)
+    try:
+        if os.environ.get("LANYARD_NAS_ARCHIVE", "true") != "true":
+            raise OSError("NAS archive disabled")
+        if not (nas_root() / "README.md").exists():
+            raise OSError("NAS not mounted")
+        target = nas_root() / relative
+        if not (target.parent / note_name).exists():
+            put_new(target.parent / note_name, note.encode("utf-8"))
+        put_new(target, data)
+    except OSError:
+        put_new(store_dir() / "nas-pending" / relative, data)
+
+
+def archive_json(day, name, value):
+    archive("labels", day, name, json.dumps(value, ensure_ascii=False, indent=1).encode("utf-8"))
+
+
+def run_day(run_id):
+    with runs_db() as db:
+        row = db.execute("SELECT created FROM runs WHERE id=?", (run_id,)).fetchone()
+    return row[0][:10] if row else today()
 
 
 # ---- per-client limits and pending stage-2 images --------------------------
@@ -725,7 +801,24 @@ def analyze(data: bytes, key: str):
                 json.dumps(stage1, ensure_ascii=False),
             ),
         )
-    keep_image(run_id, jpeg)
+    day = today()
+    archive("raw", day, f"{run_id}.jpg", jpeg)
+    archive_json(
+        day,
+        f"{run_id}.stage1.json",
+        {
+            "id": run_id,
+            "created": datetime.now(KST).isoformat(timespec="seconds"),
+            "release": RELEASE,
+            "image": f"raw/osh-uploads-{day.replace('-', '')}/{run_id}.jpg",
+            "width": width,
+            "height": height,
+            "sha256": hashlib.sha256(jpeg).hexdigest(),
+            "keypoints": "polyline[0]=attachment end, polyline[6]=hook end",
+            **stage1,
+            "summary": summary(lanyards),
+        },
+    )
     remember(run_id, jpeg, key)
     return {
         "id": run_id,
@@ -764,6 +857,18 @@ def review(run_id: str, key: str):
                 run_id,
             ),
         )
+    archive_json(
+        run_day(run_id),
+        f"{run_id}.stage2.json",
+        {
+            "id": run_id,
+            "model": VLM_MODEL,
+            "workers": people,
+            "lanyards": lanyards,
+            "summary": summary(lanyards),
+            "usage": usage,
+        },
+    )
     return {
         "id": run_id,
         "model": VLM_MODEL,
@@ -840,20 +945,21 @@ def register(app):
         with runs_db() as db:
             if not db.execute("SELECT 1 FROM runs WHERE id=?", (body.id,)).fetchone():
                 raise HTTPException(404, "판정 기록을 찾을 수 없습니다.")
-            if (
-                db.execute("SELECT COUNT(*) FROM feedback WHERE run_id=?", (body.id,)).fetchone()[0]
-                >= 3
-            ):
+            done = db.execute(
+                "SELECT COUNT(*) FROM feedback WHERE run_id=?", (body.id,)
+            ).fetchone()[0]
+            if done >= 3:
                 raise HTTPException(429, "이 판정에는 의견을 더 남길 수 없습니다.")
+            created = datetime.now(KST).isoformat(timespec="seconds")
+            note = body.note.strip()
             db.execute(
-                "INSERT INTO feedback VALUES (?,?,?,?)",
-                (
-                    body.id,
-                    datetime.now(KST).isoformat(timespec="seconds"),
-                    body.verdict,
-                    body.note.strip(),
-                ),
+                "INSERT INTO feedback VALUES (?,?,?,?)", (body.id, created, body.verdict, note)
             )
+        archive_json(
+            run_day(body.id),
+            f"{body.id}.feedback-{done + 1}.json",
+            {"id": body.id, "created": created, "verdict": body.verdict, "note": note},
+        )
         return {"ok": True}
 
     app.mount(

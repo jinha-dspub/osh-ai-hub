@@ -56,22 +56,19 @@
 
 ## 축적 데이터
 
-`.6`의 `local_asset/lanyard-runs/`(git 제외, 0700):
+이용자가 올린 원본과 우리가 만든 라벨을 NAS의 다른 폴더에 하루 단위로 나눠 쌓는다(2026-09-30부터).
 
-| 파일 | 내용 |
+| NAS 위치 (`/nas/보호구체결현황파악/`) | 내용 |
 |---|---|
-| `runs.sqlite` `runs` | 판정 id, 시각, 배포본, 크기, 사진 sha256, 보관 여부, 1단계 결과, 2단계 결과·상태, 토큰 사용량 |
-| `runs.sqlite` `feedback` | 판정 id, 시각, correct/wrong/unsure, 메모(300자) |
-| `images/YYYY-MM-DD/<id>.jpg` | 판정에 쓴 모든 사진 (EXIF 제거). 2026-09-30 이전 테스트분은 보관 안 함 |
+| `raw/osh-uploads-YYYYMMDD/<id>.jpg` + `MANIFEST.md` | 이용자가 올린 원본(긴 변 1,600px, EXIF 제거). 외부 공유 금지 |
+| `processed/osh-labels-YYYYMMDD-v1/<id>.stage1.json` + `README.md` | 1단계 검출·형태 규칙 판정, 사진 경로·sha256 |
+| `…/<id>.stage2.json` | Claude 확인 결과와 최종 판정(성공한 경우만) |
+| `…/<id>.feedback-N.json` | 이용자 의견 |
 
-NAS 규칙 3에 따라 서비스가 계속 쓰는 DB는 NAS에 두지 않는다. 모은 자료를 연구에 쓸 때는 서비스를 멈추지 않고 사본을 떠서 올린다:
-
-```bash
-sqlite3 local_asset/lanyard-runs/runs.sqlite ".backup /tmp/lanyard-runs-$(date +%Y%m%d).sqlite"
-nas-put 보호구체결현황파악 raw <사본 폴더> osh-uploads   # raw/osh-uploads-YYYYMMDD/ + MANIFEST.md
-```
-
-MANIFEST에는 “이용자 업로드 · 화면 첫 안내로 저장 고지 · 개인 식별 가능 사진 포함 가능 · 외부 공유 금지”를 적는다.
+- 파일은 추가만 하고 덮어쓰지 않는다(`os.link`로 배타적 생성). 날짜가 지난 `raw` 폴더는 `scripts/sync_lanyard_nas.py`가 쓰기 권한을 뗀다(NAS 규칙 1).
+- NAS가 끊겨 있으면 같은 경로로 `.6`의 `local_asset/lanyard-runs/nas-pending/`에 두고, `sync_lanyard_nas.py`가 나중에 옮긴다.
+- 서비스 운영 DB `local_asset/lanyard-runs/runs.sqlite`(판정 기록·의견·토큰 사용량, 한도 계산용)는 NAS 규칙 3에 따라 `.6` 로컬에 둔다.
+- 2026-09-30 NAS 적재 전의 판정 기록은 개발 중 AIHub 예시 사진으로 만든 시험분이라 NAS로 옮기지 않았다. 옮기려면 `sync_lanyard_nas.py`(backfill 포함)를 실행한다.
 
 ## 화면 구성
 
