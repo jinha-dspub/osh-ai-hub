@@ -65,15 +65,26 @@ async function shrink(file: File) {
   return { blob, url: canvas.toDataURL("image/jpeg", 0.85), width: canvas.width, height: canvas.height };
 }
 
+const wait = (ms: number) => new Promise((done) => setTimeout(done, ms));
+
 async function post<T>(path: string, body: BodyInit, type: string): Promise<T> {
-  const response = await fetch(`/demo/lanyard/api/${path}`, {
-    method: "POST",
-    body,
-    headers: { "Content-Type": type },
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || "요청을 처리하지 못했습니다. 다시 시도해 주세요.");
-  return data as T;
+  // The .3 gateway rate-limits bursts with a non-JSON 429 before the request reaches the
+  // server, so waiting and resending is safe. JSON 429s are the app's own daily limits.
+  for (let attempt = 0; ; attempt++) {
+    const response = await fetch(`/demo/lanyard/api/${path}`, {
+      method: "POST",
+      body,
+      headers: { "Content-Type": type },
+    });
+    const json = (response.headers.get("content-type") || "").includes("application/json");
+    if (response.status === 429 && !json && attempt < 8) {
+      await wait(Math.min(8000, 500 * 2 ** attempt));
+      continue;
+    }
+    const data = json ? await response.json().catch(() => ({})) : {};
+    if (!response.ok) throw new Error(data.error || "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    return data as T;
+  }
 }
 
 function base64(bytes: Uint8Array) {
@@ -97,6 +108,7 @@ async function sendPhoto(blob: Blob, keep: boolean, progress: (sent: number, tot
     } catch {
       await post("upload/chunk", body, json); // one retry; the server ignores a replayed chunk
     }
+    await wait(60); // stay under the gateway's burst limit instead of hitting it every photo
     progress(Math.min(bytes.length, offset + start.chunk_bytes), bytes.length);
   }
   return post<Result>("upload/finish", JSON.stringify({ id: start.id }), json);
