@@ -60,9 +60,9 @@ async function shrink(file: File) {
   canvas.height = Math.round(bitmap.height * scale);
   canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
-  const blob = await new Promise<Blob | null>((done) => canvas.toBlob(done, "image/jpeg", 0.9));
+  const blob = await new Promise<Blob | null>((done) => canvas.toBlob(done, "image/jpeg", 0.85));
   if (!blob) throw new Error("사진을 변환하지 못했습니다.");
-  return { blob, url: canvas.toDataURL("image/jpeg", 0.9), width: canvas.width, height: canvas.height };
+  return { blob, url: canvas.toDataURL("image/jpeg", 0.85), width: canvas.width, height: canvas.height };
 }
 
 async function post<T>(path: string, body: BodyInit, type: string): Promise<T> {
@@ -74,6 +74,32 @@ async function post<T>(path: string, body: BodyInit, type: string): Promise<T> {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || "요청을 처리하지 못했습니다. 다시 시도해 주세요.");
   return data as T;
+}
+
+function base64(bytes: Uint8Array) {
+  let text = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    text += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(text);
+}
+
+// The /demo gateway accepts at most 16 KB per request, so the photo goes up in chunks.
+async function sendPhoto(blob: Blob, keep: boolean, progress: (sent: number, total: number) => void) {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  const json = "application/json";
+  const start = await post<{ id: string; chunk_bytes: number }>(
+    "upload/start", JSON.stringify({ size: bytes.length, keep }), json);
+  for (let seq = 0, offset = 0; offset < bytes.length; seq++, offset += start.chunk_bytes) {
+    const body = JSON.stringify({ id: start.id, seq, data: base64(bytes.subarray(offset, offset + start.chunk_bytes)) });
+    try {
+      await post("upload/chunk", body, json);
+    } catch {
+      await post("upload/chunk", body, json); // one retry; the server ignores a replayed chunk
+    }
+    progress(Math.min(bytes.length, offset + start.chunk_bytes), bytes.length);
+  }
+  return post<Result>("upload/finish", JSON.stringify({ id: start.id }), json);
 }
 
 function Overlay({ result, image, workers }: { result: Result; image: string; workers: Worker[] }) {
@@ -160,11 +186,15 @@ function LanyardApp() {
     setError(""); setReviewError(""); setResult(null); setWorkers([]); setReviewed(false);
     setFeedback(""); setNote(""); setSent(false);
     setStage("analyzing");
-    setStatus("1단계: 사진에서 죔줄과 안전대를 찾고 있습니다.");
+    setStatus("사진을 준비하고 있습니다.");
     try {
       const small = await shrink(file);
       setImage(small.url);
-      const first = await post<Result>(`analyze?keep=${keep}`, small.blob, "image/jpeg");
+      const first = await sendPhoto(small.blob, keep, (sent, total) => {
+        setStatus(sent < total
+          ? `사진 전송 중 ${Math.round((sent / total) * 100)}% (${Math.round(sent / 1024)} / ${Math.round(total / 1024)}KB)`
+          : "1단계: 사진에서 죔줄과 안전대를 찾고 있습니다.");
+      });
       setResult(first);
       if (!first.lanyards.length) {
         setStage("done");

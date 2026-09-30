@@ -1,5 +1,7 @@
+import base64
 import hashlib
 import io
+import random
 import sqlite3
 import types
 
@@ -45,6 +47,7 @@ def isolated(tmp_path, monkeypatch):
     monkeypatch.setattr(lanyard, "service_prompt", lambda: "DEMO prompt")
     lanyard.counters.clear()
     lanyard.pending.clear()
+    lanyard.uploads.clear()
 
     def detect(image):
         lanyards = [
@@ -58,7 +61,9 @@ def isolated(tmp_path, monkeypatch):
 
 def photo(exif=False):
     out = io.BytesIO()
-    image = Image.new("RGB", (400, 300), "white")
+    # Noise so the JPEG spans several 11 KB chunks.
+    rng = random.Random(0)
+    image = Image.frombytes("RGB", (400, 300), bytes(rng.randrange(256) for _ in range(360000)))
     if exif:
         data = image.getexif()
         data[0x010F] = "DEMO-camera"
@@ -72,12 +77,26 @@ def gateway(peer="192.168.0.3"):
     return TestClient(app, client=(peer, 1234))
 
 
-def upload(client, data=None, keep=False, headers=None):
+def post(client, path, body, headers=None):
     return client.post(
-        f"/demo/lanyard/api/analyze?keep={'true' if keep else 'false'}",
-        content=photo() if data is None else data,
-        headers={"Content-Type": "image/jpeg", **ORIGIN, **(headers or {})},
+        f"/demo/lanyard/api/{path}", json=body, headers={**ORIGIN, **(headers or {})}
     )
+
+
+def upload(client, data=None, keep=False, headers=None):
+    """Chunked upload exactly as the browser does it under the .3 16k body limit."""
+    data = photo() if data is None else data
+    start = post(client, "upload/start", {"size": len(data), "keep": keep}, headers)
+    if start.status_code != 200:
+        return start
+    upload_id, size = start.json()["id"], start.json()["chunk_bytes"]
+    for seq, offset in enumerate(range(0, len(data), size)):
+        chunk = base64.b64encode(data[offset : offset + size]).decode()
+        response = post(
+            client, "upload/chunk", {"id": upload_id, "seq": seq, "data": chunk}, headers
+        )
+        assert response.status_code == 200, response.text
+    return post(client, "upload/finish", {"id": upload_id}, headers)
 
 
 def test_public_path_opens_only_listed_demo_through_gateway(monkeypatch):
@@ -123,16 +142,45 @@ def test_release_files_must_match_pinned_hashes(tmp_path, monkeypatch):
 
 def test_upload_validation():
     client = gateway()
+    assert len(photo()) > 2 * lanyard.CHUNK_BYTES
     assert upload(client, headers={"Origin": "https://evil.test"}).status_code == 403
-    wrong_type = client.post(
-        "/demo/lanyard/api/analyze",
-        content=photo(),
+    text = client.post(
+        "/demo/lanyard/api/upload/start",
+        content="{}",
         headers={"Content-Type": "text/plain", **ORIGIN},
     )
-    assert wrong_type.status_code == 415
+    assert text.status_code == 415
     assert upload(client, data=b"not an image").status_code == 415
-    assert upload(client, data=b"x" * (lanyard.MAX_UPLOAD + 1)).status_code == 413
-    assert upload(client, data=b"").status_code == 422
+    too_big = post(client, "upload/start", {"size": lanyard.MAX_UPLOAD + 1})
+    assert too_big.status_code == 422
+    assert post(client, "upload/start", {"size": 0}).status_code == 422
+
+
+def test_chunks_fit_gateway_limit_and_are_ordered_and_bound():
+    client = gateway()
+    data = photo()
+    upload_id = post(client, "upload/start", {"size": len(data)}).json()["id"]
+    first = base64.b64encode(data[: lanyard.CHUNK_BYTES]).decode()
+    body = {"id": upload_id, "seq": 0, "data": first}
+    assert len(str(body).encode()) < lanyard.BODY_LIMIT < 16 * 1024
+    assert post(client, "upload/chunk", body).json()["received"] == lanyard.CHUNK_BYTES
+    assert post(client, "upload/chunk", body).json()["received"] == lanyard.CHUNK_BYTES  # replay
+    skip = {"id": upload_id, "seq": 5, "data": first}
+    assert post(client, "upload/chunk", skip).status_code == 409
+    other = post(client, "upload/chunk", {**body, "seq": 1}, {"X-Forwarded-For": "203.0.113.9"})
+    assert other.status_code == 404
+    oversized = base64.b64encode(b"x" * (lanyard.CHUNK_BYTES + 3)).decode()
+    assert post(client, "upload/chunk", {**body, "seq": 1, "data": oversized}).status_code == 422
+    assert post(client, "upload/finish", {"id": upload_id}).status_code == 422  # incomplete
+    huge = client.post(
+        "/demo/lanyard/api/upload/chunk",
+        content=b"{" + b" " * lanyard.BODY_LIMIT + b"}",
+        headers={"Content-Type": "application/json", **ORIGIN},
+    )
+    assert huge.status_code == 413
+    small = post(client, "upload/start", {"size": 10}).json()["id"]
+    over = {"id": small, "seq": 0, "data": base64.b64encode(b"x" * 11).decode()}
+    assert post(client, "upload/chunk", over).status_code == 413
 
 
 def test_run_is_logged_and_photo_kept_only_with_consent(tmp_path):

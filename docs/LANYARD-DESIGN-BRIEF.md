@@ -1,6 +1,6 @@
 # 안전대 죔줄 체결 판정 디자인 브리프
 
-상태: Hub 공개(2026-09-30) · 판정 화면 로그인 없는 접속은 .3 nginx 적용 대기 · 2단계는 Anthropic 크레딧 대기
+상태: 공개(2026-09-30) · 판정 화면은 .3 기준 DEMO 인증으로 접속 · 2단계는 Anthropic 크레딧 대기
 작성일: 2026-09-30
 기준: [OSH AI Hub 디자인 가이드](DESIGN-GUIDELINES.md)
 
@@ -23,20 +23,20 @@
 
 | 항목 | 결정 내용 |
 |---|---|
-| 입력 자료·형식·용량 | JPG·PNG·WEBP 20MB 이하 선택 → 브라우저에서 긴 변 1,600px JPG로 줄여 전송(서버 한도 4MB). 서버가 다시 인코딩해 EXIF 제거 |
+| 입력 자료·형식·용량 | JPG·PNG·WEBP 20MB 이하 선택 → 브라우저에서 긴 변 1,600px JPG(품질 0.85)로 줄여 11KB 조각으로 전송(.3 `/demo/` 요청 본문 16k 한도 그대로 사용, 음성 DEMO와 같은 방식). 조각은 순서·크기·업로드한 기기를 검사하고 재전송은 한 번만 반영. 전체 한도 4MB. 서버가 다시 인코딩해 EXIF 제거 |
 | 주요 행동 버튼 | `체결 상태 판정` |
 | 결과 형식 | 사진 위 죔줄 선·안전대 점선·작업자 네모, 판정별 개수, 죔줄별 표(최종·1단계·근거), Claude가 본 작업자 목록 |
 | 다운로드 내용 | 없음 |
 | 근거·출처 표시 | 판정 근거 코드(형태 규칙 R1~R7, Claude 체인), 배포본 이름 |
 | 자료 전송·보관·삭제 | 1단계는 .6 서버 안에서만 처리. 2단계 선택 시 사진을 Anthropic으로 전송. 판정 기록(좌표·판정·의견)은 사진 없이 .6 로컬 SQLite에 저장. 사진은 보관 동의 시에만 .6 로컬에 저장. 2단계용 사진은 메모리에 최대 15분, 한 번 쓰면 삭제 |
-| 로그인·권한 | 로그인 없음(공개). .3을 거친 요청만 받음 |
+| 로그인·권한 | 지금은 다른 DEMO와 같은 .3 Basic 인증(DEMO 계정). 로그인 없는 공개는 선택 사항: .3이 nginx-lanyard.conf를 적용하면 코드 변경 없이 열린다(`OSH_PUBLIC_DEMOS=lanyard`). .3을 거친 요청만 받음 |
 
 ## 실제 연결 범위
 
 - 실제로 작동하는 기능: 1단계 검출·형태 규칙(GPU 사진당 약 0.01초, 첫 요청은 CUDA 초기화로 약 1.3초 — .6 로컬 측정. GPU 여유 메모리가 2GB 미만이거나 메모리 부족이면 CPU 약 0.5초로 전환), 판정 기록·사진 보관·의견 저장, 사용량 한도
 - DEMO 자료·예시 결과: 없음. 모든 결과는 이용자가 올린 사진의 실제 판정
 - 연결 준비 중인 기능: 2단계 Claude 확인 — 코드와 테스트는 완료, 실제 호출은 2026-09-30 `credit balance is too low`(400)로 실패. 크레딧 충전 후 실제 사진 1장으로 확인 필요
-- 확인하지 못한 외부 동작: Vercel 재작성 경로의 업로드 본문 한도·응답 시간, .3 nginx 공개 경로, Claude 응답 품질·시간
+- 확인하지 못한 외부 동작: 실제 osh.ai.kr → .3 → .6 경로의 조각 업로드 속도(사진 1장 약 40~80회 요청), Vercel 재작성 응답 시간, Claude 응답 품질·시간
 
 ## 판정 구조
 
@@ -98,7 +98,9 @@ MANIFEST에는 “이용자 업로드 · 보관 동의분만 · 개인 식별 �
 
 ## 공개 절차
 
-1. Anthropic 크레딧 충전 → 로컬 미리보기에서 2단계 1회 확인.
-2. `.6`: `ai-api/.venv`에 `pip install -e '.[lanyard]'`(패키지는 2026-09-30 설치 완료), `npm run build:lanyard-demo --workspace web`, `ai-api/deploy/osh-demo.service`를 `~/.config/systemd/user/`에 반영 후 `systemctl --user daemon-reload && systemctl --user restart osh-demo`.
-3. `.3`: [nginx-lanyard.conf](../ai-api/deploy/nginx-lanyard.conf)를 `/demo/` location보다 앞에 추가, `nginx -t` 후 reload. 확인: 로그인 없이 `https://tools.osh.ai.kr/demo/lanyard/` 200, `/demo/copd/`는 여전히 401.
-4. Hub: `web/lib/catalog.ts`의 `lanyardPublic = true` → 커밋·Vercel 배포. 그 전까지 도구 카드·소개 페이지는 관리자에게만 보인다.
+.3 기준(Basic 인증, 요청 본문 16k)에 맞춰 조각 업로드로 바꿨으므로 .3 변경 없이 연다.
+
+1. `.6`: 패키지(`.[lanyard]`, torch 2.11.0+cu128)는 2026-09-30 설치 완료. `npm run build:lanyard-demo --workspace web`, `ai-api/deploy/osh-demo.service`를 `~/.config/systemd/user/`에 반영 후 `systemctl --user daemon-reload && systemctl --user restart osh-demo`.
+2. Hub: `lanyardPublic = true`(2026-09-30 main 반영) — 도구 카드·소개 페이지는 모두에게 보이고, 판정 화면은 DEMO 계정으로 연다.
+3. Anthropic 크레딧 충전 → 실제 사진으로 2단계 1회 확인. 그 전에는 1단계 결과만 표시된다.
+4. (선택) 로그인 없는 공개: .3 담당자가 [nginx-lanyard.conf](../ai-api/deploy/nginx-lanyard.conf)를 `/demo/` location보다 앞에 추가. 확인: 로그인 없이 `https://tools.osh.ai.kr/demo/lanyard/` 200, `/demo/copd/`는 여전히 401.

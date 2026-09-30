@@ -49,6 +49,12 @@ PINNED = {
 DETECTOR = {"imgsz": 1600, "conf": 0.25}  # manifest detector.setting
 LANYARD, HARNESS = 0, 1
 MAX_UPLOAD = 4 * 1024 * 1024
+# .3 nginx caps every /demo/ request body at 16k, so photos arrive in chunks.
+BODY_LIMIT = 16_000
+CHUNK_BYTES = 11_000
+CHUNK_B64 = 4 * math.ceil(CHUNK_BYTES / 3)
+UPLOAD_TTL = 5 * 60
+UPLOADS_MAX = 16
 MAX_EDGE = 1600
 MAX_PIXELS = 40_000_000
 VLM_MODEL = "claude-sonnet-5-5"  # manifest vlm_prompt.default_model
@@ -507,12 +513,84 @@ def take(run_id, key):
         return item[1]
 
 
+uploads: dict[str, dict] = {}
+
+
+def upload_start(body, key):
+    with state_lock:
+        now = time.monotonic()
+        for old in [k for k, v in uploads.items() if v["expires"] < now]:
+            del uploads[old]
+        if len(uploads) >= UPLOADS_MAX:
+            raise HTTPException(503, "판정 요청이 많습니다. 잠시 후 다시 시도해 주세요.")
+        upload_id = uuid.uuid4().hex
+        uploads[upload_id] = {
+            "key": key,
+            "size": body.size,
+            "keep": body.keep,
+            "data": bytearray(),
+            "seq": 0,
+            "expires": now + UPLOAD_TTL,
+        }
+    return {"id": upload_id, "chunk_bytes": CHUNK_BYTES}
+
+
+def own_upload(upload_id, key):
+    item = uploads.get(upload_id)
+    if not item or item["expires"] < time.monotonic() or item["key"] != key:
+        raise HTTPException(404, "업로드가 만료되었습니다. 사진을 다시 올려 주세요.")
+    return item
+
+
+def upload_chunk(body, key):
+    import base64
+    import binascii
+
+    try:
+        chunk = base64.b64decode(body.data, validate=True)
+    except (ValueError, binascii.Error):
+        raise HTTPException(422, "사진 조각 형식을 확인해 주세요.") from None
+    with state_lock:
+        item = own_upload(body.id, key)
+        if body.seq < item["seq"]:
+            return {"received": len(item["data"])}  # A retried chunk never appends twice.
+        if body.seq != item["seq"]:
+            raise HTTPException(409, "사진 조각 순서를 확인해 주세요.")
+        if not chunk or len(chunk) > CHUNK_BYTES or len(item["data"]) + len(chunk) > item["size"]:
+            raise HTTPException(413, "사진 크기가 처음 알린 값과 다릅니다.")
+        item["data"].extend(chunk)
+        item["seq"] += 1
+        return {"received": len(item["data"])}
+
+
+def upload_finish(upload_id, key):
+    with state_lock:
+        item = own_upload(upload_id, key)
+        if len(item["data"]) != item["size"]:
+            raise HTTPException(422, "사진 전송이 끝나지 않았습니다. 다시 올려 주세요.")
+        del uploads[upload_id]
+    return bytes(item["data"]), item["keep"]
+
+
 # ---- request handlers ------------------------------------------------------
 
 
 class Review(BaseModel):
     model_config = ConfigDict(extra="forbid")
     id: str = Field(pattern=r"^[0-9a-f]{32}$")
+
+
+class UploadStart(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    size: int = Field(ge=1, le=MAX_UPLOAD)
+    keep: bool = False
+
+
+class UploadChunk(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    id: str = Field(pattern=r"^[0-9a-f]{32}$")
+    seq: int = Field(ge=0)
+    data: str = Field(min_length=4, max_length=CHUNK_B64)
 
 
 class Feedback(BaseModel):
@@ -527,14 +605,14 @@ async def read_body(request: Request, limit: int):
     async for chunk in request.stream():
         raw.extend(chunk)
         if len(raw) > limit:
-            raise HTTPException(413, "사진 용량이 너무 큽니다. 4MB 이하로 올려 주세요.")
+            raise HTTPException(413, "요청 크기를 초과했습니다.")
     return bytes(raw)
 
 
 async def json_body(request: Request, model):
     if request.headers.get("content-type", "").split(";")[0] != "application/json":
         raise HTTPException(415, "JSON 요청이 필요합니다.")
-    raw = await read_body(request, 2048)
+    raw = await read_body(request, BODY_LIMIT)
     try:
         return model.model_validate_json(raw)
     except ValidationError:
@@ -644,15 +722,22 @@ def register(app):
     def read_status():
         return status()
 
-    @app.post(PREFIX + "/api/analyze")
-    async def post_analyze(request: Request, keep: bool = False):
-        if request.headers.get("content-type", "") not in {"image/jpeg", "image/png", "image/webp"}:
-            raise HTTPException(415, "JPG·PNG·WEBP 사진만 판정할 수 있습니다.")
-        data = await read_body(request, MAX_UPLOAD)
-        if not data:
-            raise HTTPException(422, "사진을 선택해 주세요.")
+    @app.post(PREFIX + "/api/upload/start")
+    async def post_upload_start(request: Request):
+        body = await json_body(request, UploadStart)
         key = client_key(request)
         count(key, "analyze", per_client_limits()[0])
+        return upload_start(body, key)
+
+    @app.post(PREFIX + "/api/upload/chunk")
+    async def post_upload_chunk(request: Request):
+        return upload_chunk(await json_body(request, UploadChunk), client_key(request))
+
+    @app.post(PREFIX + "/api/upload/finish")
+    async def post_upload_finish(request: Request):
+        body = await json_body(request, Review)
+        key = client_key(request)
+        data, keep = upload_finish(body.id, key)
         return await run_in_threadpool(analyze, data, keep, key)
 
     @app.post(PREFIX + "/api/review")
