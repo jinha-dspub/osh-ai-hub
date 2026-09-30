@@ -135,28 +135,28 @@ export default async function LanyardPage() {
           </p>
           <div className="osh-grid">
             <article className="osh-card">
-              <h3>사람 검토 라벨 · 1,636건</h3>
+              <h3>사람 검토 라벨 · 연구팀 판정·교정 1,636건</h3>
               <p>
                 학습·검토에 쓴 7개 세트. JSON(1.4MB)과 ZIP(JSON + 세트별 CSV + README, 0.3MB). 죔줄 7점·안전대
                 박스와 사람 판정·메모가 들어 있습니다.
               </p>
             </article>
             <article className="osh-card">
-              <h3>AI 라벨 · 사진 13,549장</h3>
+              <h3>AI 자동 판정 라벨 · 사람 검토 전 13,549장</h3>
               <p>
                 사람이 답하지 않은 학습 사진 전체에 1단계 검출기와 형태 규칙이 붙인 라벨(ZIP 1.6MB). 죔줄 16,158개·
                 안전대 22,105개, 검출 신뢰도·점별 신뢰도·판정 근거와 아래 신뢰 범위를 함께 제공합니다.
               </p>
             </article>
           </div>
-          <h3 className="osh-heading">AI 라벨 신뢰 범위</h3>
+          <h3 className="osh-heading">AI 자동 판정 라벨의 신뢰 범위</h3>
           <p className="osh-copy">
             검출 신뢰도는 점수이지 정확도가 아닙니다. 사람 검토 세트 ①(죔줄 455개, 검출기 학습에 쓰지 않은
             사진)에 같은 모델을 돌려 구간별로 사람 판정과 비교했습니다. 114개는 검출되지 않았습니다. 사람은
             ‘거치’를 많이 골라(256개) 3종 판정 일치율은 낮고, 실제 쓰임에 가까운 ‘체결 여부’(체결 vs
             미체결·거치) 일치율은 89~96%입니다.
           </p>
-          <div className="table-scroll" tabIndex={0} role="region" aria-label="AI 라벨 신뢰 범위">
+          <div className="table-scroll" tabIndex={0} role="region" aria-label="AI 자동 판정 라벨의 신뢰 범위">
             <table className="data-table">
               <thead>
                 <tr>

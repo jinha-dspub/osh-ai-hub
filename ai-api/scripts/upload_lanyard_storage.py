@@ -32,24 +32,35 @@ def main():
     output = root / "local_asset/lanyard-upload"
     output.mkdir(exist_ok=True)
     version = lanyard.DATASET_VERSION
+    # (id, source file, published name). Names say who made the labels; the NAS
+    # packages keep their original file names.
     selected = [
-        ("labels-json", source / f"lanyard-labels-{version}.json"),
-        ("labels-zip", source / f"lanyard-labels-{version}.zip"),
+        (
+            "labels-json",
+            source / f"lanyard-labels-{version}.json",
+            f"lanyard-human-reviewed-labels-{version}.json",
+        ),
+        (
+            "labels-zip",
+            source / f"lanyard-labels-{version}.zip",
+            f"lanyard-human-reviewed-labels-{version}.zip",
+        ),
         # AI-only labels for all training photos (scripts/build_lanyard_ai_labels.py).
         (
             "ai-labels-zip",
             root / "local_asset/lanyard-ai-labels" / version / f"lanyard-ai-labels-{version}.zip",
+            f"lanyard-ai-auto-labels-unreviewed-{version}.zip",
         ),
     ]
     files = []
-    for identifier, path in selected:
+    for identifier, path, name in selected:
         checksum = digest(path)
-        key = f"{cfg['prefix']}/{checksum[:16]}/{path.name}"
+        key = f"{cfg['prefix']}/{checksum[:16]}/{name}"
         upload(cfg, path, key, output)
         files.append(
             {
                 "id": identifier,
-                "name": path.name,
+                "name": name,
                 "object": key,
                 "bytes": path.stat().st_size,
                 "sha256": checksum,
