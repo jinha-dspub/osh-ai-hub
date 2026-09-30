@@ -31,7 +31,7 @@ export default async function Tools() {
               <div>
                 <span className="badge">AI 판정 · 연구용{lanyardPublic ? "" : " · 관리자 확인 중"}</span>
               </div>
-              <h3>안전대 죔줄 체결 판정</h3>
+              <h3>안전대 체결 라벨링 데이터셋</h3>
               <p>
                 현장 사진을 올리면 작업자 안전대의 죔줄이 구조물에 걸려 있는지 AI가 판정합니다.
                 정확도 평가 수치는 아직 공개하지 않았습니다.

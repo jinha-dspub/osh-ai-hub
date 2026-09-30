@@ -4,7 +4,7 @@ import { isAdmin } from "@/lib/admin";
 import { lanyardPublic } from "@/lib/catalog";
 import "../../../../design/osh-family/osh-family.css";
 export const dynamic = "force-dynamic";
-export const metadata = { title: "안전대 죔줄 체결 판정" };
+export const metadata = { title: "안전대 체결 라벨링 데이터셋" };
 
 // Counts come from the NAS release and labeling archive README (2026-09-30).
 const labelingSets = [
@@ -34,7 +34,7 @@ export default async function LanyardPage() {
         </Link>
         <header className="osh-section">
           <span className="osh-badge">AI 판정 · 연구용 · 정확도 검증 전</span>
-          <h1 className="osh-title">안전대 죔줄 체결 판정</h1>
+          <h1 className="osh-title">안전대 체결 라벨링 데이터셋</h1>
           <p className="osh-copy">
             공사현장 사진에서 작업자 안전대의 죔줄을 찾아, 안전고리가 구조물에 걸려 있는지
             판정합니다. 추락 위험 위치의 미체결 작업자를 빠르게 찾는 연구용 도구입니다.

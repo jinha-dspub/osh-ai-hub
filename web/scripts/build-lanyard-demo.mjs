@@ -21,6 +21,6 @@ await build({
 });
 await writeFile(
   `${output}/index.html`,
-  `<!doctype html><html lang="ko"><head><meta charset="utf-8"><base href="/demo/lanyard/"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>안전대 죔줄 체결 판정 | OSH AI Hub</title><link rel="stylesheet" href="./assets/app.css"></head><body><div id="root"></div><script type="module" src="./assets/app.js"></script></body></html>`,
+  `<!doctype html><html lang="ko"><head><meta charset="utf-8"><base href="/demo/lanyard/"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>안전대 체결 라벨링 데이터셋 | OSH AI Hub</title><link rel="stylesheet" href="./assets/app.css"></head><body><div id="root"></div><script type="module" src="./assets/app.js"></script></body></html>`,
 );
 console.log("Lanyard standalone UI built in ai-api/static/lanyard");

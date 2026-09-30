@@ -247,7 +247,7 @@ function LanyardApp() {
     <main className="container ly-page">
       <header>
         <span className="badge">AI 판정 · 연구용 · 정확도 검증 전</span>
-        <h1>안전대 죔줄 체결 판정</h1>
+        <h1>안전대 체결 라벨링 데이터셋</h1>
         <p>현장 사진을 올리면 작업자 안전대의 죔줄이 구조물에 걸려 있는지 AI가 판정합니다.</p>
         <p className="ly-notice">
           <strong>자료 처리 안내</strong> — 올린 사진과 판정 결과는 판정 모델 개선 연구를 위해 OSH AI Hub 서버에
