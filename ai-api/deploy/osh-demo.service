@@ -2,6 +2,8 @@
 Description=OSH shared demo gateway on 192.168.0.6:8103
 Requires=osh-ollama.service
 After=osh-ollama.service
+# Lanyard analyzer reads its release from /nas/보호구체결현황파악/serving/current.
+RequiresMountsFor=/nas
 
 [Service]
 Type=simple
@@ -9,6 +11,12 @@ WorkingDirectory=/home/shield/osh-ai-hub/ai-api
 ExecStart=/home/shield/osh-ai-hub/ai-api/.venv/bin/python -m uvicorn app.demo_gateway:app --host 192.168.0.6 --port 8103 --no-access-log
 Environment=COPD_ALLOW_LOCAL_PREVIEW=false
 Environment=OMP_NUM_THREADS=4
+Environment=NAS_DATA=/nas
+# Opens only /demo/lanyard/ without the Basic-auth user; .3 must still be the peer.
+Environment=OSH_PUBLIC_DEMOS=lanyard
+# auto = GPU with most free memory (torch cu128 for driver 570), CPU if none is free.
+Environment=LANYARD_DEVICE=auto
+Environment=LANYARD_DAILY_KRW=3000
 Restart=on-failure
 RestartSec=5
 UMask=0077

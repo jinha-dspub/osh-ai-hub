@@ -57,14 +57,25 @@ def used(db, today):
     ).fetchone()[0]
 
 
-def reserve(provider: str, amount: int):
+def used_by(db, today, provider):
+    return db.execute(
+        "SELECT COALESCE(SUM(amount),0) FROM charges "
+        "WHERE provider=? AND (started=? OR finished=? OR finished IS NULL)",
+        (provider, today, today),
+    ).fetchone()[0]
+
+
+def reserve(provider: str, amount: int, provider_limit: int | None = None):
+    """provider_limit caps one service's share so a public tool cannot drain the shared limit."""
     if amount <= 0:
         raise ValueError("Positive reservation required")
     with database() as db:
         today = day()
         if db.execute("SELECT frozen FROM guard WHERE id=1").fetchone()[0]:
             raise HTTPException(503, "AI 사용량 점검 중입니다. 일반 검색을 이용해 주세요.")
-        if used(db, today) + amount > DAILY_LIMIT:
+        if used(db, today) + amount > DAILY_LIMIT or (
+            provider_limit is not None and used_by(db, today, provider) + amount > provider_limit
+        ):
             raise HTTPException(
                 429, "오늘의 AI 이용 한도에 도달했습니다. 일반 검색은 계속 이용할 수 있습니다."
             )

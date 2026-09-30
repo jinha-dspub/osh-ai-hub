@@ -399,6 +399,14 @@ export const oshmasterDataset: Dataset = {
   category: "산업보건", format: "CSV", kind: "text", tags: ["OSHMASTER", "표준분류", "코드북", "KCD", "KSCO", "KSIC", "직업", "유해인자"],
   updated: "2026-09-21", year: 2026, api: false, ai: false, accent: "blue", sample: [], variables: [],
 };
+export const lanyardDataset: Dataset = {
+  isReal: true, slug: "lanyard", title: "안전대 죔줄 체결 판정",
+  description: "공사현장 사진에서 안전대 죔줄이 구조물에 걸려 있는지 판정합니다. AIHub 공사현장 안전장비 사진으로 학습한 검출기·형태 규칙과 Claude 확인을 결합했습니다.",
+  category: "산업재해", format: "IMAGE", kind: "image", tags: ["안전대", "죔줄", "추락", "PPE", "보호구", "이미지 판정"],
+  updated: "2026-09-30", year: 2026, api: false, ai: true, accent: "blue", sample: [], variables: [],
+};
+// Flip after .3 opens /demo/lanyard/ without Basic auth (docs/LANYARD-DESIGN-BRIEF.md).
+export const lanyardPublic = false;
 export const familyDesignDataset: Dataset = {
   isReal: true,
   slug: "family-design",
@@ -419,6 +427,6 @@ export const openDataGuideDataset: Dataset = {
 };
 export const collaborationTemplates = [openDataGuideDataset, familyDesignDataset];
 export function visibleDatasets(admin = false): Dataset[] {
-  const published = [sanjeDataset, oshmasterDataset];
-  return admin ? [...published, ...datasets] : published;
+  const published = [sanjeDataset, oshmasterDataset, ...(lanyardPublic ? [lanyardDataset] : [])];
+  return admin ? [...published, ...(lanyardPublic ? [] : [lanyardDataset]), ...datasets] : published;
 }

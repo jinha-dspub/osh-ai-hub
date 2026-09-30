@@ -3,9 +3,13 @@ name = "osh-ai-api"
 version = "0.1.0"
 description = "OSH AI Hub inference service foundation"
 requires-python = ">=3.12"
-dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "numpy>=2,<3", "pyarrow>=20,<24", "websockets>=15,<17"]
+dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "numpy>=2,<3", "pyarrow>=20,<24", "websockets>=15,<17", "pillow>=11,<13"]
 
 [project.optional-dependencies]
+# Lanyard analyzer: detector runtime and Claude SDK (dever/claude_client.py).
+# Install torch first from https://download.pytorch.org/whl/cu128 (torch 2.11.0+cu128,
+# torchvision 0.26.0+cu128): driver 570 supports CUDA 12.8, PyPI default wheels need 13.0.
+lanyard = ["ultralytics==8.4.166", "anthropic==1.9.0"]
 dev = ["pytest>=8,<10", "httpx>=0.27,<1", "ruff>=0.12,<1"]
 
 [tool.pytest.ini_options]

@@ -29,6 +29,7 @@ ai-api/models/*
 
 **/chagpt_dspubs.txt
 /ai-api/static/voice/
+/ai-api/static/lanyard/
 
 # Generated OSHMASTER standalone demo assets
 /ai-api/static/oshmaster/

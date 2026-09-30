@@ -1,4 +1,5 @@
 import { isAdmin } from "@/lib/admin";
+import { lanyardPublic } from "@/lib/catalog";
 import Link from "next/link";
 import {
   Mic,
@@ -6,6 +7,7 @@ import {
   HeartPulse,
   FlaskConical,
   ScanLine,
+  ShieldCheck,
   FileText,
   Search,
   ArrowUpRight,
@@ -23,6 +25,25 @@ export default async function Tools() {
       />
       <div className="container section">
         <div className="tool-grid">
+          {(lanyardPublic || admin) && (
+            <article className="tool-card">
+              <ShieldCheck size={29} />
+              <div>
+                <span className="badge">AI 판정 · 연구용{lanyardPublic ? "" : " · 관리자 확인 중"}</span>
+              </div>
+              <h3>안전대 죔줄 체결 판정</h3>
+              <p>
+                현장 사진을 올리면 작업자 안전대의 죔줄이 구조물에 걸려 있는지 AI가 판정합니다.
+                정확도 평가 수치는 아직 공개하지 않았습니다.
+              </p>
+              <Link href="/demo/lanyard/" className="button secondary">
+                체결 판정 열기 <ArrowUpRight size={14} />
+              </Link>
+              <Link href="/datasets/lanyard" className="text-link">
+                자료·모델 소개 <ArrowUpRight size={14} />
+              </Link>
+            </article>
+          )}
           <article className="tool-card"><span className="badge">실제 코드집 · 검토 중</span><h3>표준분류 마스터 검색</h3><p>질병·직업·유해인자 코드와 동의어를 찾고 판본별 상하위 범위를 확인합니다.</p><Link href="/demo/oshmaster/" className="button secondary">표준분류 검색 DEMO <ArrowUpRight size={14}/></Link></article>
           <article className="tool-card">
             <Search size={29} />

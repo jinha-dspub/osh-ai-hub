@@ -19,6 +19,14 @@ STATIC = Path(__file__).resolve().parents[1] / "static/copd"
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
 
+def public_path(path: str):
+    """Demos listed in OSH_PUBLIC_DEMOS open without the Basic-auth user (still only via .3)."""
+    if ".." in path or "//" in path or "\\" in path:
+        return False
+    names = {n.strip() for n in os.environ.get("OSH_PUBLIC_DEMOS", "").split(",") if n.strip()}
+    return any(path.startswith(f"/demo/{name}/") for name in names if name.isalnum())
+
+
 def trusted_request(request: Request):
     try:
         address = ipaddress.ip_address(request.client.host)
@@ -27,6 +35,8 @@ def trusted_request(request: Request):
     except ValueError:
         return False
     if address.is_loopback and os.environ.get("COPD_ALLOW_LOCAL_PREVIEW") == "true":
+        return True
+    if str(address) == "192.168.0.3" and public_path(request.url.path):
         return True
     return str(address) == "192.168.0.3" and bool(
         request.headers.get("x-osh-authenticated-user", "").strip()
