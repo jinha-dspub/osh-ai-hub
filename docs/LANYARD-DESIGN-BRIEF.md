@@ -1,6 +1,6 @@
 # 안전대 죔줄 체결 판정 디자인 브리프
 
-상태: 구현 완료 · 공개 전 (.3 nginx 공개 경로와 Anthropic 크레딧 대기)
+상태: Hub 공개(2026-09-30) · 판정 화면 로그인 없는 접속은 .3 nginx 적용 대기 · 2단계는 Anthropic 크레딧 대기
 작성일: 2026-09-30
 기준: [OSH AI Hub 디자인 가이드](DESIGN-GUIDELINES.md)
 

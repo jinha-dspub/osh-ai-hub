@@ -406,7 +406,7 @@ export const lanyardDataset: Dataset = {
   updated: "2026-09-30", year: 2026, api: false, ai: true, accent: "blue", sample: [], variables: [],
 };
 // Flip after .3 opens /demo/lanyard/ without Basic auth (docs/LANYARD-DESIGN-BRIEF.md).
-export const lanyardPublic = false;
+export const lanyardPublic = true;
 export const familyDesignDataset: Dataset = {
   isReal: true,
   slug: "family-design",

@@ -4,7 +4,7 @@ test("collaboration has its own navigation, templates and real contact address",
   page,
 }, info) => {
   await page.goto("/datasets");
-  await expect(page.locator(".dataset-card")).toHaveCount(2);
+  await expect(page.locator(".dataset-card")).toHaveCount(3);
   await expect(page.locator(".dataset-card").filter({hasText: "Family Design"})).toHaveCount(0);
   await expect(
     page.getByRole("radio", { name: "데이터 제작 가이드" }),

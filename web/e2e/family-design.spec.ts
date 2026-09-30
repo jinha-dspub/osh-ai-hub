@@ -9,6 +9,8 @@ test("catalog filter options stay below headings and inside the sidebar", async 
     : [360, 393]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto("/datasets");
+    // Streamed content sits in a hidden node until React swaps it in; measure after that.
+    await expect(page.locator(".filter-group label").first()).toBeVisible();
     const groups = await page.locator(".filter-group").evaluateAll((elements) =>
       elements.map((group) => {
         const legend = group.querySelector("legend")!.getBoundingClientRect();
