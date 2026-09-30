@@ -18,6 +18,7 @@ import sys
 import threading
 import time
 import types
+import urllib.parse
 import uuid
 from contextlib import contextmanager
 from datetime import datetime
@@ -31,7 +32,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from starlette.concurrency import run_in_threadpool
 
-from app import budget
+from app import budget, storage
 
 PREFIX = "/demo/lanyard"
 ROOT = Path(__file__).resolve().parents[2]
@@ -268,7 +269,27 @@ def run_detector(image):
                     "polyline": [[round(x, 1), round(y, 1)] for x, y in kp],
                 }
             )
-    return lanyards, harnesses
+    return dedupe(lanyards), harnesses
+
+
+DUPLICATE_IOU = 0.5
+
+
+def iou(a, b):
+    x0, y0, x1, y1 = max(a[0], b[0]), max(a[1], b[1]), min(a[2], b[2]), min(a[3], b[3])
+    inter = max(0.0, x1 - x0) * max(0.0, y1 - y0)
+    union = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - inter
+    return inter / union if union > 0 else 0.0
+
+
+def dedupe(lanyards):
+    """The pose model can return one lanyard twice with different keypoints (and verdicts).
+    Keep the more confident of any pair overlapping by DUPLICATE_IOU or more."""
+    kept = []
+    for item in sorted(lanyards, key=lambda x: -x["conf"]):
+        if all(iou(item["box"], other["box"]) < DUPLICATE_IOU for other in kept):
+            kept.append(item)
+    return kept
 
 
 def summary(lanyards):
@@ -571,6 +592,66 @@ def upload_finish(upload_id, key):
     return bytes(item["data"])
 
 
+# ---- dataset download (private object storage, never proxied) -------------
+
+DATASET_VERSION = "2026-09-30.1"
+DATASET_MANIFEST = ROOT / "local_asset/lanyard-storage-manifest.json"
+
+
+def dataset_settings():
+    return {
+        **storage.config(),
+        "bucket": "lanyard-research",
+        "prefix": f"lanyard/{DATASET_VERSION}",
+    }
+
+
+def dataset_manifest():
+    try:
+        value = json.loads(DATASET_MANIFEST.read_text())
+        if (
+            value.get("verified") is not True
+            or value.get("version") != DATASET_VERSION
+            or not value.get("files")
+        ):
+            raise ValueError("Unverified release")
+        return value
+    except (OSError, ValueError, TypeError):
+        raise HTTPException(503, "데이터셋 파일을 준비 중입니다.") from None
+
+
+def dataset_files():
+    value = dataset_manifest()
+    keys = ("id", "name", "bytes", "sha256")
+    return {
+        "version": DATASET_VERSION,
+        "files": [{k: row[k] for k in keys} for row in value["files"]],
+    }
+
+
+def dataset_download(file_id):
+    cfg, data = dataset_settings(), dataset_manifest()
+    if data.get("project") != cfg["url"] or data.get("bucket") != cfg["bucket"]:
+        raise HTTPException(503, "저장소 구성을 확인 중입니다.")
+    item = next((r for r in data["files"] if r["id"] == file_id), None)
+    if not item:
+        raise HTTPException(404, "등록된 파일이 아닙니다.")
+    key = item["object"]
+    if (
+        not key.startswith(cfg["prefix"] + "/")
+        or ".." in key
+        or not re.fullmatch(r"[A-Za-z0-9/_.-]+", key)
+    ):
+        raise HTTPException(503, "파일 경로를 확인 중입니다.")
+    storage.private_bucket(cfg)
+    route = "object/sign/" + cfg["bucket"] + "/" + key
+    signed = storage.storage_request(cfg, route, {"expiresIn": 60}).get("signedURL", "")
+    if not signed.startswith("/" + route + "?"):
+        raise HTTPException(503, "다운로드 주소를 확인 중입니다.")
+    name = urllib.parse.quote(item["name"], safe="")
+    return {"url": cfg["url"] + "/storage/v1" + signed + "&download=" + name, "expires_in": 60}
+
+
 # ---- request handlers ------------------------------------------------------
 
 
@@ -736,6 +817,15 @@ def register(app):
         key = client_key(request)
         data = upload_finish(body.id, key)
         return await run_in_threadpool(analyze, data, key)
+
+    @app.get(PREFIX + "/api/files")
+    def read_files():
+        return dataset_files()
+
+    @app.post(PREFIX + "/api/download")
+    async def post_download(request: Request):
+        body = await json_body(request, storage.DownloadInput)
+        return await run_in_threadpool(dataset_download, body.id)
 
     @app.post(PREFIX + "/api/review")
     async def post_review(request: Request):

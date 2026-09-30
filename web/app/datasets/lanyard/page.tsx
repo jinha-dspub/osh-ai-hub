@@ -102,8 +102,8 @@ export default async function LanyardPage() {
             필요하면 AIHub에서 직접 신청해야 합니다.
           </p>
           <p className="osh-copy">
-            연구팀은 이 자료에서 과제별로 사람이 다시 검토한 라벨링 세트를 만들었습니다. 가공
-            데이터의 공개 범위와 형식은 정리 중입니다.
+            연구팀은 이 자료에서 과제별로 사람이 다시 검토한 라벨링 세트를 만들었습니다. 아래
+            ‘데이터셋 받기’에서 JSON과 CSV로 받을 수 있습니다.
           </p>
           <div className="table-scroll" tabIndex={0} role="region" aria-label="라벨링 세트">
             <table className="data-table">
@@ -118,6 +118,22 @@ export default async function LanyardPage() {
             </table>
           </div>
           <p className="osh-help">일치도 평가 세트(⑥)는 진행 중이라 표에서 뺐습니다.</p>
+        </section>
+        <section className="osh-section">
+          <h2 className="osh-heading">데이터셋 받기</h2>
+          <p className="osh-copy">
+            버전 2026-09-30.1 · 7개 세트 1,636건. <strong>JSON</strong>(전체 라벨 한 파일, 1.4MB)과{" "}
+            <strong>ZIP</strong>(JSON + 세트별 CSV + README, 0.3MB)을 제공합니다. 각 항목에는 AIHub 사진
+            파일명·라벨 파일명·죔줄 번호, 자동 변환 죔줄 7점과 안전대 박스, 사람 판정·메모가 들어 있습니다.
+          </p>
+          <p className="osh-copy">
+            사진과 AIHub 원본 라벨, 라벨링 도구 원본(작업자 계정 번호 포함), 이용자가 올린 사진은
+            포함하지 않습니다. 라벨 파일의 재배포·상업 이용 조건은 확정 전이며, 연구에 쓸 때는 출처를
+            밝혀 주세요.
+          </p>
+          <a className="osh-button osh-button--secondary" href="/demo/lanyard/#files">
+            데이터셋 받기
+          </a>
         </section>
         <section className="osh-section">
           <h2 className="osh-heading">한계와 자료 처리</h2>

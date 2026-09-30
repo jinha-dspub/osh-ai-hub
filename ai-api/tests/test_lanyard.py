@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import io
+import json
 import random
 import sqlite3
 import types
@@ -317,3 +318,50 @@ def test_feedback_requires_known_run_and_is_bounded():
     )
     bad = {**body, "verdict": "maybe"}
     assert client.post("/demo/lanyard/api/feedback", json=bad, headers=ORIGIN).status_code == 422
+
+
+def test_overlapping_duplicate_lanyards_keep_the_more_confident():
+    same = {"box": [981.8, 477.6, 1007.9, 527.5], "conf": 0.304, "polyline": [[0, 0]] * 7}
+    twin = {"box": [981.6, 476.2, 1014.6, 553.3], "conf": 0.278, "polyline": [[1, 1]] * 7}
+    other = {"box": [1447.7, 232.6, 1592.0, 429.8], "conf": 0.293, "polyline": [[2, 2]] * 7}
+    assert lanyard.dedupe([twin, other, same]) == [same, other]
+
+
+def test_dataset_download_requires_verified_manifest_and_known_file(tmp_path, monkeypatch):
+    client = gateway()
+    monkeypatch.setattr(lanyard, "DATASET_MANIFEST", tmp_path / "missing.json")
+    assert client.get("/demo/lanyard/api/files").status_code == 503
+    cfg = {"url": "https://demo.supabase.co", "bucket": "lanyard-research"}
+    cfg["prefix"] = f"lanyard/{lanyard.DATASET_VERSION}"
+    monkeypatch.setattr(lanyard, "dataset_settings", lambda: cfg)
+    manifest = tmp_path / "manifest.json"
+    row = {"id": "labels-json", "name": "DEMO.json", "bytes": 1, "sha256": "0" * 64}
+    good = {**row, "object": f"{cfg['prefix']}/abc/DEMO.json"}
+    manifest.write_text(
+        json.dumps(
+            {
+                "version": lanyard.DATASET_VERSION,
+                "verified": True,
+                "bucket": cfg["bucket"],
+                "project": cfg["url"],
+                "files": [good, {**row, "id": "escape", "object": "copd/secret.zip"}],
+            }
+        )
+    )
+    monkeypatch.setattr(lanyard, "DATASET_MANIFEST", manifest)
+    listed = client.get("/demo/lanyard/api/files").json()
+    assert listed["files"][0] == row  # object keys never reach the browser
+    signed = []
+    monkeypatch.setattr(lanyard.storage, "private_bucket", lambda settings: None)
+
+    def sign(settings, route, payload):
+        signed.append(route)
+        return {"signedURL": "/" + route + "?token=DEMO"}
+
+    monkeypatch.setattr(lanyard.storage, "storage_request", sign)
+    ok = post(client, "download", {"id": "labels-json"}).json()
+    assert ok["url"].endswith("&download=DEMO.json") and ok["expires_in"] == 60
+    assert post(client, "download", {"id": "nope"}).status_code == 404
+    assert post(client, "download", {"id": "escape"}).status_code == 503
+    assert post(client, "download", {"id": "../x"}).status_code == 422
+    assert signed == [f"object/sign/lanyard-research/{good['object']}"]

@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { useEffect, useRef, useState } from "react";
-import { ImageUp, ScanSearch, ShieldCheck, ArrowUpRight } from "lucide-react";
+import { ImageUp, ScanSearch, ShieldCheck, ArrowUpRight, Download } from "lucide-react";
 import "../../app/globals.css";
 import "./lanyard.css";
 
@@ -152,6 +152,67 @@ function Overlay({ result, image, workers }: { result: Result; image: string; wo
   );
 }
 
+type DatasetFile = { id: string; name: string; bytes: number; sha256: string };
+const FILE_LABEL: Record<string, string> = {
+  "labels-json": "JSON · 전체 라벨 한 파일",
+  "labels-zip": "ZIP · JSON + 세트별 CSV + README",
+};
+
+function DatasetDownloads() {
+  const [files, setFiles] = useState<DatasetFile[] | null>(null);
+  const [version, setVersion] = useState("");
+  const [error, setError] = useState("");
+  const [busyId, setBusyId] = useState("");
+  useEffect(() => {
+    fetch("/demo/lanyard/api/files")
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.error || "파일 목록을 불러오지 못했습니다.");
+        setFiles(data.files); setVersion(data.version);
+      })
+      .catch((e: Error) => setError(e.message));
+  }, []);
+  async function download(id: string) {
+    setBusyId(id); setError("");
+    try {
+      const { url } = await post<{ url: string }>("download", JSON.stringify({ id }), "application/json");
+      window.location.assign(url);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusyId("");
+    }
+  }
+  return (
+    <section id="files" className="ly-panel ly-files" aria-labelledby="files-title">
+      <h2 id="files-title"><Download size={24} aria-hidden="true" />데이터셋 받기{version && ` · ${version}`}</h2>
+      <p>
+        연구팀이 검토한 라벨 7개 세트(1,636건)입니다. 사진과 AIHub 원본 라벨은 AIHub 이용약관상 포함하지 않으며,
+        AIHub에서 신청한 뒤 사진 파일명·죔줄 번호로 맞춰 쓰면 됩니다.
+      </p>
+      {error && <p role="alert" className="ly-error">{error}</p>}
+      {!files && !error && <p className="ly-help">파일 목록을 불러오고 있습니다.</p>}
+      {files && (
+        <ul className="ly-file-list">
+          {files.map((f) => (
+            <li key={f.id}>
+              <div>
+                <strong>{FILE_LABEL[f.id] ?? f.name}</strong>
+                <span>{f.name} · {(f.bytes / 1024 / 1024).toFixed(1)}MB</span>
+                <code title="SHA-256">{f.sha256.slice(0, 16)}…</code>
+              </div>
+              <button className="button secondary" disabled={busyId === f.id} onClick={() => void download(f.id)}>
+                {busyId === f.id ? "링크 준비 중" : "받기"}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="ly-help">받기를 누르면 60초 동안 유효한 다운로드 주소로 이동합니다.</p>
+    </section>
+  );
+}
+
 function LanyardApp() {
   const [file, setFile] = useState<File | null>(null);
   const [inputError, setInputError] = useState("");
@@ -163,6 +224,7 @@ function LanyardApp() {
   const [result, setResult] = useState<Result | null>(null);
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [reviewed, setReviewed] = useState(false);
+  const [fileName, setFileName] = useState("");
   const [feedback, setFeedback] = useState("");
   const [note, setNote] = useState("");
   const [sent, setSent] = useState(false);
@@ -186,6 +248,7 @@ function LanyardApp() {
       return;
     }
     setFile(next);
+    setFileName(next.name);
     setStage("ready");
     setStatus("선택한 사진을 확인하고 ‘체결 상태 판정’을 눌러 주세요.");
   }
@@ -229,6 +292,32 @@ function LanyardApp() {
       setStage("error");
       setStatus("판정하지 못했습니다. 선택한 사진은 그대로 남아 있어 다시 시도할 수 있습니다.");
     }
+  }
+
+  function downloadJson() {
+    if (!result) return;
+    const data = {
+      program: "안전대 체결 라벨링 데이터셋",
+      notice: "AI 생성 판정 · 정확도 검증 전 · 현장 안전 점검을 대신하지 않음",
+      run_id: result.id,
+      release: result.release,
+      downloaded_at: new Date().toISOString(),
+      source_file: fileName,
+      image: { width: result.width, height: result.height, coordinates: "pixels of the uploaded image" },
+      summary: result.summary,
+      lanyards: result.lanyards,
+      harnesses: result.harnesses,
+      stage2: reviewed
+        ? { status: "ok", model: "claude-sonnet-5-5", workers }
+        : { status: reviewError ? "failed" : "not_run", error: reviewError || null, workers: [] },
+      keypoints: "polyline[0] = attachment end, polyline[6] = hook end (7 points)",
+    };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `lanyard-${result.id}.json`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   async function sendFeedback() {
@@ -289,13 +378,14 @@ function LanyardApp() {
             )}
             <div className="table-scroll" tabIndex={0} role="region" aria-label="죔줄별 판정">
               <table className="data-table">
-                <thead><tr><th>번호</th><th>최종 판정</th><th>1단계 형태</th><th>근거</th></tr></thead>
+                <thead><tr><th>번호</th><th>최종 판정</th><th>1단계 형태</th><th>검출 신뢰도</th><th>근거</th></tr></thead>
                 <tbody>
                   {result.lanyards.map((l) => (
                     <tr key={l.id}>
                       <td>{l.id}</td>
                       <td><strong>{l.final.label}</strong></td>
                       <td>{l.shape.label}</td>
+                      <td>{l.conf.toFixed(2)}</td>
                       <td>{SOURCE[l.final.source] ?? l.final.source} · {l.shape.why.join(", ")}</td>
                     </tr>
                   ))}
@@ -315,6 +405,11 @@ function LanyardApp() {
             </div>
           )}
           {result && stage === "done" && (
+            <button className="button secondary ly-download" onClick={downloadJson}>
+              <Download size={18} aria-hidden="true" />판정 결과 JSON 받기
+            </button>
+          )}
+          {result && stage === "done" && (
             <fieldset className="ly-feedback">
               <legend>판정이 맞나요? (선택, 모델 개선에 쓰입니다)</legend>
               <div className="ly-choices">
@@ -332,12 +427,13 @@ function LanyardApp() {
             </fieldset>
           )}
           <p className="ly-limit">
-            AI 생성 판정이며 틀릴 수 있습니다. 1단계는 AIHub 공사현장 안전장비 사진으로 학습한 검출기와 형태 규칙,
+            검출 신뢰도는 검출기가 낸 점수이며 정확도가 아닙니다. AI 생성 판정이며 틀릴 수 있습니다. 1단계는 AIHub 공사현장 안전장비 사진으로 학습한 검출기와 형태 규칙,
             2단계는 Claude의 사진 판독입니다. 정확도 평가 수치는 아직 공개하지 않았습니다. 현장 안전 점검을 대신하지 않습니다.
             {result && <> · 모델 {result.release}</>}
           </p>
         </section>
       </div>
+      <DatasetDownloads />
       <p className="ly-limit">
         전체 이용자의 하루 AI 사용량을 함께 제한합니다. 한도에 도달하면 2단계 확인을 쉬고 1단계 판정은 계속 이용할 수 있습니다.{" "}
         <a href="https://osh.ai.kr/datasets/lanyard">자료·모델 소개 <ArrowUpRight size={14} aria-hidden="true" /></a>
