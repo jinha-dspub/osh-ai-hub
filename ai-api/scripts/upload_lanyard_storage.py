@@ -35,6 +35,11 @@ def main():
     selected = [
         ("labels-json", source / f"lanyard-labels-{version}.json"),
         ("labels-zip", source / f"lanyard-labels-{version}.zip"),
+        # AI-only labels for all training photos (scripts/build_lanyard_ai_labels.py).
+        (
+            "ai-labels-zip",
+            root / "local_asset/lanyard-ai-labels" / version / f"lanyard-ai-labels-{version}.zip",
+        ),
     ]
     files = []
     for identifier, path in selected:

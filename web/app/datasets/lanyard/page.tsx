@@ -17,6 +17,14 @@ const labelingSets = [
   ["⑤ 안전고리 A/B", 150],
 ] as const;
 
+// confidence.json of lanyard-ai-labels-2026-09-30.1 (set ①, 455 lanyards, none used in training).
+const confidenceBands = [
+  ["0.25–0.40", 85, "24% (17/71)", "96% (68/71)", 12],
+  ["0.40–0.60", 112, "16% (16/99)", "90% (89/99)", 10],
+  ["0.60–0.80", 81, "48% (30/63)", "89% (56/63)", 15],
+  ["0.80–1.00", 63, "96% (46/48)", "96% (46/48)", 15],
+] as const;
+
 const labels = [
   ["체결", "안전고리가 작업자 몸 밖의 고정 구조물(난간·파이프·비계·보·와이어)에 걸려 있음"],
   ["미체결", "안전고리가 어디에도 걸려 있지 않음(늘어짐·바닥·손에 듦)"],
@@ -122,14 +130,50 @@ export default async function LanyardPage() {
         <section className="osh-section">
           <h2 className="osh-heading">데이터셋 받기</h2>
           <p className="osh-copy">
-            버전 2026-09-30.1 · 7개 세트 1,636건. <strong>JSON</strong>(전체 라벨 한 파일, 1.4MB)과{" "}
-            <strong>ZIP</strong>(JSON + 세트별 CSV + README, 0.3MB)을 제공합니다. 각 항목에는 AIHub 사진
-            파일명·라벨 파일명·죔줄 번호, 자동 변환 죔줄 7점과 안전대 박스, 사람 판정·메모가 들어 있습니다.
+            버전 2026-09-30.1 · 모두 라벨만 담았고 사진은 없습니다. AIHub에서 사진을 신청한 뒤 사진 파일명으로
+            맞춰 쓰세요.
           </p>
+          <div className="osh-grid">
+            <article className="osh-card">
+              <h3>사람 검토 라벨 · 1,636건</h3>
+              <p>
+                학습·검토에 쓴 7개 세트. JSON(1.4MB)과 ZIP(JSON + 세트별 CSV + README, 0.3MB). 죔줄 7점·안전대
+                박스와 사람 판정·메모가 들어 있습니다.
+              </p>
+            </article>
+            <article className="osh-card">
+              <h3>AI 라벨 · 사진 13,549장</h3>
+              <p>
+                사람이 답하지 않은 학습 사진 전체에 1단계 검출기와 형태 규칙이 붙인 라벨(ZIP 1.6MB). 죔줄 16,158개·
+                안전대 22,105개, 검출 신뢰도·점별 신뢰도·판정 근거와 아래 신뢰 범위를 함께 제공합니다.
+              </p>
+            </article>
+          </div>
+          <h3 className="osh-heading">AI 라벨 신뢰 범위</h3>
           <p className="osh-copy">
-            사진과 AIHub 원본 라벨, 라벨링 도구 원본(작업자 계정 번호 포함), 이용자가 올린 사진은
-            포함하지 않습니다. 라벨 파일의 재배포·상업 이용 조건은 확정 전이며, 연구에 쓸 때는 출처를
-            밝혀 주세요.
+            검출 신뢰도는 점수이지 정확도가 아닙니다. 사람 검토 세트 ①(죔줄 455개, 검출기 학습에 쓰지 않은
+            사진)에 같은 모델을 돌려 구간별로 사람 판정과 비교했습니다. 114개는 검출되지 않았습니다. 사람은
+            ‘거치’를 많이 골라(256개) 3종 판정 일치율은 낮고, 실제 쓰임에 가까운 ‘체결 여부’(체결 vs
+            미체결·거치) 일치율은 89~96%입니다.
+          </p>
+          <div className="table-scroll" tabIndex={0} role="region" aria-label="AI 라벨 신뢰 범위">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>검출 신뢰도</th><th>죔줄</th><th>판정 일치율(3종)</th><th>체결 여부 일치율</th><th>AI 불명</th>
+                </tr>
+              </thead>
+              <tbody>
+                {confidenceBands.map(([band, count, three, clipped, unknown]) => (
+                  <tr key={band}><td>{band}</td><td>{count}</td><td>{three}</td><td>{clipped}</td><td>{unknown}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="osh-help">
+            괄호는 (일치 / 사람과 AI가 모두 판정한 죔줄). 사람 검토 455개 기준의 참고값이며 전체 정확도 평가가
+            아닙니다. 이용자가 올린 사진과 라벨링 도구 원본(작업자 계정 번호 포함)은 포함하지 않습니다. 라벨
+            파일의 재배포·상업 이용 조건은 확정 전이며, 연구에 쓸 때는 출처를 밝혀 주세요.
           </p>
           <a className="osh-button osh-button--secondary" href="/demo/lanyard/#files">
             데이터셋 받기
@@ -138,8 +182,8 @@ export default async function LanyardPage() {
         <section className="osh-section">
           <h2 className="osh-heading">한계와 자료 처리</h2>
           <p className="osh-copy">
-            AI 판정은 틀릴 수 있으며 현장 안전 점검을 대신하지 않습니다. 정확도 평가 수치는
-            검토를 마친 뒤 공개합니다. 사진은 긴 변 1,600픽셀로 줄이고 위치정보(EXIF)를 뺀 뒤
+            AI 판정은 틀릴 수 있으며 현장 안전 점검을 대신하지 않습니다. 사람 판정과의 일치율은 위
+            신뢰 범위 표를 참고하세요. 전체 정확도 평가는 검토를 마친 뒤 공개합니다. 사진은 긴 변 1,600픽셀로 줄이고 위치정보(EXIF)를 뺀 뒤
             처리합니다.
           </p>
           <p className="osh-copy">

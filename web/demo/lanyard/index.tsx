@@ -156,6 +156,7 @@ type DatasetFile = { id: string; name: string; bytes: number; sha256: string };
 const FILE_LABEL: Record<string, string> = {
   "labels-json": "JSON · 전체 라벨 한 파일",
   "labels-zip": "ZIP · JSON + 세트별 CSV + README",
+  "ai-labels-zip": "AI 라벨 · 사진 13,549장 + 신뢰 범위 (사람 검토 전)",
 };
 
 function DatasetDownloads() {
@@ -187,7 +188,7 @@ function DatasetDownloads() {
     <section id="files" className="ly-panel ly-files" aria-labelledby="files-title">
       <h2 id="files-title"><Download size={24} aria-hidden="true" />데이터셋 받기{version && ` · ${version}`}</h2>
       <p>
-        연구팀이 검토한 라벨 7개 세트(1,636건)입니다. 사진과 AIHub 원본 라벨은 AIHub 이용약관상 포함하지 않으며,
+        사람이 검토한 라벨 7개 세트(1,636건)와, 사람이 답하지 않은 학습 사진 13,549장의 AI 라벨(검출 신뢰도·신뢰 범위 포함)입니다. 모두 라벨만 담았습니다. 사진과 AIHub 원본 라벨은 AIHub 이용약관상 포함하지 않으며,
         AIHub에서 신청한 뒤 사진 파일명·죔줄 번호로 맞춰 쓰면 됩니다.
       </p>
       {error && <p role="alert" className="ly-error">{error}</p>}
