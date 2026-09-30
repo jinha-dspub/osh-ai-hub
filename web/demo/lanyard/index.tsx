@@ -32,7 +32,6 @@ type Result = {
   lanyards: Lanyard[];
   harnesses: number[][];
   summary: Record<Label, number>;
-  image_kept: boolean;
 };
 type Stage = "idle" | "ready" | "analyzing" | "reviewing" | "done" | "error";
 
@@ -96,11 +95,11 @@ function base64(bytes: Uint8Array) {
 }
 
 // The /demo gateway accepts at most 16 KB per request, so the photo goes up in chunks.
-async function sendPhoto(blob: Blob, keep: boolean, progress: (sent: number, total: number) => void) {
+async function sendPhoto(blob: Blob, progress: (sent: number, total: number) => void) {
   const bytes = new Uint8Array(await blob.arrayBuffer());
   const json = "application/json";
   const start = await post<{ id: string; chunk_bytes: number }>(
-    "upload/start", JSON.stringify({ size: bytes.length, keep }), json);
+    "upload/start", JSON.stringify({ size: bytes.length }), json);
   for (let seq = 0, offset = 0; offset < bytes.length; seq++, offset += start.chunk_bytes) {
     const body = JSON.stringify({ id: start.id, seq, data: base64(bytes.subarray(offset, offset + start.chunk_bytes)) });
     try {
@@ -156,8 +155,6 @@ function Overlay({ result, image, workers }: { result: Result; image: string; wo
 function LanyardApp() {
   const [file, setFile] = useState<File | null>(null);
   const [inputError, setInputError] = useState("");
-  const [useClaude, setUseClaude] = useState(true);
-  const [keep, setKeep] = useState(false);
   const [stage, setStage] = useState<Stage>("idle");
   const [status, setStatus] = useState("사진을 선택하면 판정을 시작할 수 있습니다.");
   const [error, setError] = useState("");
@@ -202,7 +199,7 @@ function LanyardApp() {
     try {
       const small = await shrink(file);
       setImage(small.url);
-      const first = await sendPhoto(small.blob, keep, (sent, total) => {
+      const first = await sendPhoto(small.blob, (sent, total) => {
         setStatus(sent < total
           ? `사진 전송 중 ${Math.round((sent / total) * 100)}% (${Math.round(sent / 1024)} / ${Math.round(total / 1024)}KB)`
           : "1단계: 사진에서 죔줄과 안전대를 찾고 있습니다.");
@@ -211,11 +208,6 @@ function LanyardApp() {
       if (!first.lanyards.length) {
         setStage("done");
         setStatus("죔줄을 찾지 못했습니다. 작업자와 죔줄이 크게 보이는 사진으로 다시 시도해 보세요.");
-        return;
-      }
-      if (!useClaude) {
-        setStage("done");
-        setStatus(`1단계 판정을 마쳤습니다. 죔줄 ${first.lanyards.length}개를 찾았습니다.`);
         return;
       }
       setStage("reviewing");
@@ -257,6 +249,11 @@ function LanyardApp() {
         <span className="badge">AI 판정 · 연구용 · 정확도 검증 전</span>
         <h1>안전대 죔줄 체결 판정</h1>
         <p>현장 사진을 올리면 작업자 안전대의 죔줄이 구조물에 걸려 있는지 AI가 판정합니다.</p>
+        <p className="ly-notice">
+          <strong>자료 처리 안내</strong> — 올린 사진과 판정 결과는 판정 모델 개선 연구를 위해 OSH AI Hub 서버에
+          저장됩니다. 2단계 확인을 위해 사진이 Anthropic(Claude)으로 전송되며, 외부 AI의 데이터 처리는 제공자 정책을
+          따릅니다. 얼굴·이름표 등 개인을 알아볼 수 있는 부분이 없는 사진을 사용해 주세요.
+        </p>
       </header>
       <div className="ly-grid">
         <section className="ly-panel" aria-labelledby="input-title">
@@ -271,18 +268,6 @@ function LanyardApp() {
             {file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)}MB` : "선택한 사진이 없습니다."}
           </p>
           {inputError && <p role="alert" className="ly-error">{inputError}</p>}
-          <label className="ly-check">
-            <input type="checkbox" checked={useClaude} disabled={busy} onChange={(e) => setUseClaude(e.target.checked)} />
-            <span><strong>2단계 Claude 확인 사용</strong> — 사진을 Anthropic(Claude)으로 보내 안전고리 위치와 추락 위험 위치를 한 번 더 확인합니다.</span>
-          </label>
-          <label className="ly-check">
-            <input type="checkbox" checked={keep} disabled={busy} onChange={(e) => setKeep(e.target.checked)} />
-            <span><strong>(선택) 사진 보관 동의</strong> — 판정 모델 개선 연구를 위해 사진을 OSH AI Hub 서버에 보관하는 데 동의합니다.</span>
-          </label>
-          <p className="ly-privacy">
-            판정 결과(좌표·판정·의견)는 사진 없이 기록되어 모델 개선에 쓰입니다. 사진은 보관에 동의한 경우에만 저장합니다.
-            얼굴·이름표 등 개인을 알아볼 수 있는 사진은 가급적 올리지 마세요. 외부 AI의 데이터 처리는 제공자 정책을 따릅니다.
-          </p>
           <button className="button" disabled={!file || busy} onClick={() => void run()}>
             <ScanSearch size={20} aria-hidden="true" />체결 상태 판정
           </button>

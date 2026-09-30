@@ -83,10 +83,10 @@ def post(client, path, body, headers=None):
     )
 
 
-def upload(client, data=None, keep=False, headers=None):
+def upload(client, data=None, headers=None):
     """Chunked upload exactly as the browser does it under the .3 16k body limit."""
     data = photo() if data is None else data
-    start = post(client, "upload/start", {"size": len(data), "keep": keep}, headers)
+    start = post(client, "upload/start", {"size": len(data)}, headers)
     if start.status_code != 200:
         return start
     upload_id, size = start.json()["id"], start.json()["chunk_bytes"]
@@ -183,19 +183,21 @@ def test_chunks_fit_gateway_limit_and_are_ordered_and_bound():
     assert post(client, "upload/chunk", over).status_code == 413
 
 
-def test_run_is_logged_and_photo_kept_only_with_consent(tmp_path):
+def test_every_run_and_photo_is_kept_without_exif(tmp_path):
     client = gateway()
-    plain = upload(client).json()
-    assert plain["summary"] == {"체결": 0, "미체결": 1, "거치": 0, "불명": 1}
-    assert plain["lanyards"][0]["harness_box"] == [5, 5, 60, 60]
-    kept = upload(client, data=photo(exif=True), keep=True).json()
-    images = list((tmp_path / "store" / "images").rglob("*.jpg"))
-    assert [p.stem for p in images] == [kept["id"]]
-    assert not Image.open(images[0]).getexif()  # EXIF removed before storage
+    first = upload(client).json()
+    assert first["summary"] == {"체결": 0, "미체결": 1, "거치": 0, "불명": 1}
+    assert first["lanyards"][0]["harness_box"] == [5, 5, 60, 60]
+    second = upload(client, data=photo(exif=True)).json()
+    images = sorted((tmp_path / "store" / "images").rglob("*.jpg"))
+    assert sorted(p.stem for p in images) == sorted([first["id"], second["id"]])
+    assert not any(Image.open(p).getexif() for p in images)  # EXIF removed before storage
     rows = sqlite3.connect(tmp_path / "store" / "runs.sqlite").execute(
-        "SELECT id,image_kept FROM runs ORDER BY image_kept"
+        "SELECT id,image_kept FROM runs ORDER BY id"
     )
-    assert rows.fetchall() == [(plain["id"], 0), (kept["id"], 1)]
+    assert rows.fetchall() == sorted([(first["id"], 1), (second["id"], 1)])
+    consent = post(client, "upload/start", {"size": 10, "keep": False})
+    assert consent.status_code == 422  # no per-upload storage option any more
 
 
 class FakeMessages:

@@ -39,6 +39,13 @@ export default async function LanyardPage() {
             공사현장 사진에서 작업자 안전대의 죔줄을 찾아, 안전고리가 구조물에 걸려 있는지
             판정합니다. 추락 위험 위치의 미체결 작업자를 빠르게 찾는 연구용 도구입니다.
           </p>
+          <p className="osh-copy">
+            <strong>
+              판정에 사용한 사진과 판정 결과는 모델 개선 연구를 위해 OSH AI Hub 서버에 저장되며,
+              2단계 확인을 위해 Anthropic(Claude)으로 전송됩니다.
+            </strong>{" "}
+            얼굴·이름표 등 개인을 알아볼 수 있는 부분이 없는 사진을 사용해 주세요.
+          </p>
           <p className="osh-help">배포본 lanyard-analyzer-20260930-v1 · 2026-09-30</p>
           <a className="osh-button" href="/demo/lanyard/">
             체결 판정 열기 →
@@ -56,9 +63,9 @@ export default async function LanyardPage() {
               </p>
             </article>
             <article className="osh-card">
-              <h3>2단계 · Claude 확인 (선택)</h3>
+              <h3>2단계 · Claude 확인</h3>
               <p>
-                이용자가 선택하면 사진을 Anthropic Claude로 보내 작업자별 안전고리 위치와 추락
+                사진을 Anthropic Claude로 보내 작업자별 안전고리 위치와 추락
                 위험 위치를 판독합니다. 형태 규칙이 ‘불명’으로 남긴 죔줄에만 Claude의 답을
                 반영하고, 형태 규칙이 내린 판정은 바꾸지 않습니다.
               </p>
@@ -120,9 +127,9 @@ export default async function LanyardPage() {
             처리합니다.
           </p>
           <p className="osh-copy">
-            판정 결과(좌표·판정·의견)는 사진 없이 기록됩니다. 사진은 이용자가 보관에 동의한
-            경우에만 서버에 저장합니다. 2단계를 선택하면 사진이 Anthropic으로 전송되며, 외부
-            AI의 데이터 처리는 제공자 정책을 따릅니다.
+            판정에 사용한 사진(위치정보 제거)과 판정 결과·의견은 모두 OSH AI Hub 서버에 저장되어
+            모델 개선 연구에 쓰입니다. 2단계 확인을 위해 사진이 Anthropic으로 전송되며, 외부 AI의
+            데이터 처리는 제공자 정책을 따릅니다.
           </p>
         </section>
       </div>

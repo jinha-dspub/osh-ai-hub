@@ -527,7 +527,6 @@ def upload_start(body, key):
         uploads[upload_id] = {
             "key": key,
             "size": body.size,
-            "keep": body.keep,
             "data": bytearray(),
             "seq": 0,
             "expires": now + UPLOAD_TTL,
@@ -569,7 +568,7 @@ def upload_finish(upload_id, key):
         if len(item["data"]) != item["size"]:
             raise HTTPException(422, "사진 전송이 끝나지 않았습니다. 다시 올려 주세요.")
         del uploads[upload_id]
-    return bytes(item["data"]), item["keep"]
+    return bytes(item["data"])
 
 
 # ---- request handlers ------------------------------------------------------
@@ -583,7 +582,6 @@ class Review(BaseModel):
 class UploadStart(BaseModel):
     model_config = ConfigDict(extra="forbid")
     size: int = Field(ge=1, le=MAX_UPLOAD)
-    keep: bool = False
 
 
 class UploadChunk(BaseModel):
@@ -619,7 +617,8 @@ async def json_body(request: Request, model):
         raise HTTPException(422, "입력 조건을 확인해 주세요.") from None
 
 
-def analyze(data: bytes, keep: bool, key: str):
+def analyze(data: bytes, key: str):
+    """Every uploaded photo is kept for research; the page says so before upload."""
     image, jpeg = load_image(data)
     if not detect_slots.acquire(timeout=20):
         raise HTTPException(503, "판정 요청이 많습니다. 잠시 후 다시 시도해 주세요.")
@@ -641,12 +640,11 @@ def analyze(data: bytes, keep: bool, key: str):
                 width,
                 height,
                 hashlib.sha256(jpeg).hexdigest(),
-                int(keep),
+                1,
                 json.dumps(stage1, ensure_ascii=False),
             ),
         )
-    if keep:
-        keep_image(run_id, jpeg)
+    keep_image(run_id, jpeg)
     remember(run_id, jpeg, key)
     return {
         "id": run_id,
@@ -656,7 +654,6 @@ def analyze(data: bytes, keep: bool, key: str):
         "lanyards": lanyards,
         "harnesses": harnesses,
         "summary": summary(lanyards),
-        "image_kept": keep,
     }
 
 
@@ -737,8 +734,8 @@ def register(app):
     async def post_upload_finish(request: Request):
         body = await json_body(request, Review)
         key = client_key(request)
-        data, keep = upload_finish(body.id, key)
-        return await run_in_threadpool(analyze, data, keep, key)
+        data = upload_finish(body.id, key)
+        return await run_in_threadpool(analyze, data, key)
 
     @app.post(PREFIX + "/api/review")
     async def post_review(request: Request):
