@@ -85,12 +85,14 @@ def test_criteria_and_downloads(release):
     assert body["checklist"][0]["id"] == "DEMO-01"
     assert body["purposes"][0]["id"] == "물품"
     assert "RELEASE.md" not in body["downloads"] and "readiness.zip" in body["downloads"]
+    assert "README.md" not in body["downloads"]
     got = client().get(DOWNLOAD + "data/criteria_scoring.csv", headers=HEADERS)
     assert got.status_code == 200 and got.headers["content-disposition"].startswith("attachment")
 
 
 @pytest.mark.parametrize(
-    "name", ["RELEASE.md", "../RELEASE.md", "data/../../etc/passwd", "data/missing.csv"]
+    "name",
+    ["RELEASE.md", "README.md", "../RELEASE.md", "data/../../etc/passwd", "data/missing.csv"],
 )
 def test_only_pinned_files_download(release, name):
     assert client().get(DOWNLOAD + name, headers=HEADERS).status_code in {403, 404}

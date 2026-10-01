@@ -1116,9 +1116,6 @@ function App() {
                       </li>
                     ))}
                   </ul>
-                  <p className="osh-help">
-                    README.md에 각 파일의 뜻과 판정 규칙, 한계가 있습니다.
-                  </p>
                 </div>
               )}
             </section>

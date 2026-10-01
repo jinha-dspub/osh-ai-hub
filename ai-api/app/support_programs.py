@@ -196,6 +196,8 @@ def jsonl_programs():
     return [json.loads(line) for line in dataset_files()["data/programs.jsonl"].splitlines()]
 
 
+# README·체크섬 목록 stay inside the zips only (owner's decision 2026-10-01).
+NOT_OFFERED = {"README.md", "files.csv"}
 DOWNLOAD_TYPES = {
     ".zip": "application/zip",
     ".csv": "text/csv; charset=utf-8",
@@ -407,7 +409,7 @@ def register(app):
             files = dataset_files()
         except (OSError, ValueError, KeyError):
             raise HTTPException(503, "데이터셋을 불러오지 못했습니다.") from None
-        if name not in files:
+        if name not in files or name.rsplit("/", 1)[-1] in NOT_OFFERED:
             raise HTTPException(404, "없는 파일입니다.")
         filename = name.rsplit("/", 1)[-1]
         headers = {"Content-Disposition": f'attachment; filename="{filename}"'}

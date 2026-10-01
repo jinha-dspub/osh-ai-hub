@@ -133,8 +133,10 @@ def test_dataset_files_download_as_attachments(release):
     assert zipped.headers["content-disposition"].startswith("attachment")
     lines = client.get(DOWNLOAD + "data/programs.jsonl", headers=HEADERS)
     assert lines.status_code == 200 and "DEMO 환기장치" in lines.text
-    head = client.head(DOWNLOAD + "README.md", headers=HEADERS)
-    assert head.status_code == 200 and head.headers["content-length"] == "6"
+    head = client.head(DOWNLOAD + "data/programs.jsonl", headers=HEADERS)
+    assert head.status_code == 200 and int(head.headers["content-length"]) == len(lines.content)
+    # Notes stay inside the zip only.
+    assert client.get(DOWNLOAD + "README.md", headers=HEADERS).status_code == 404
 
 
 @pytest.mark.parametrize(
@@ -157,7 +159,7 @@ def test_changed_dataset_is_refused(release):
     extra.write_text("DEMO")
     clear_caches()
     client = TestClient(app, client=("192.168.0.3", 1234))
-    response = client.get(DOWNLOAD + "README.md", headers=HEADERS)
+    response = client.get(DOWNLOAD + "data/programs.jsonl", headers=HEADERS)
     assert response.status_code == 503
 
 

@@ -37,6 +37,8 @@ DATASET = "public-ohs-readiness-0.1"
 # except RELEASE.md (written by nas-put). A new release needs a new digest here.
 DIGEST = "be3704b5e99d921e605717f9d8af7b47c25d58edc5c3eb53559271d8bb739827"
 DOWNLOAD_TYPES = sp.DOWNLOAD_TYPES
+# Notes that travel inside the zips but are not offered as separate downloads.
+NOT_OFFERED = sp.NOT_OFFERED
 
 MODEL = shared.MODEL
 USD_PER_MTOK = shared.USD_PER_MTOK
@@ -93,7 +95,10 @@ def criteria():
         "threshold_rows": table("duty_thresholds.csv"),
         "sources": table("sources.csv"),
         "downloads": sorted(
-            n for n in data if n.endswith((".csv", ".jsonl", ".json", ".zip", ".md"))
+            n
+            for n in data
+            if n.endswith((".csv", ".jsonl", ".json", ".zip"))
+            and n.rsplit("/", 1)[-1] not in NOT_OFFERED
         ),
     }
 
@@ -267,7 +272,7 @@ def register(app):
             data = files()
         except (OSError, ValueError):
             raise HTTPException(503, "자료를 불러오지 못했습니다.") from None
-        if name not in data or name == "RELEASE.md":
+        if name not in data or name.rsplit("/", 1)[-1] in {"RELEASE.md", *NOT_OFFERED}:
             raise HTTPException(404, "없는 파일입니다.")
         filename = name.rsplit("/", 1)[-1]
         headers = {"Content-Disposition": f'attachment; filename="{filename}"'}

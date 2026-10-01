@@ -22,11 +22,7 @@ const sections: readonly {
     title: "입찰·계약 안전보건 판정기준",
     lead: "공공기관 입찰과 계약에서 업체의 안전보건이 어떻게 평가되는지, 원문 인용과 함께 정리한 기준입니다. 점검 도구가 이 파일만으로 판정합니다.",
     files: [
-      [
-        "전체 (zip)",
-        "public-ohs-readiness-0.1.zip",
-        "아래 파일 모두 + README·체크섬",
-      ],
+      ["전체 (zip)", "public-ohs-readiness-0.1.zip", "아래 파일 모두"],
       [
         "입찰 점수기준",
         "data/criteria_scoring.csv",
@@ -209,10 +205,6 @@ export default async function PublicOhsPage() {
               </div>
             </div>
           ))}
-          <p className="osh-help">
-            각 zip의 README.md에 파일 구성, 값의 뜻, 판정 규칙과 한계가
-            있습니다.
-          </p>
         </section>
 
         <section className="osh-section">

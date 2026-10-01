@@ -20,7 +20,7 @@ const downloads = [
   [
     "전체 데이터셋 (zip)",
     `${DATASET}.zip`,
-    "아래 파일 모두 + README·데이터 사전·체크섬, 약 80KB",
+    "아래 파일 모두와 데이터 사전, 약 80KB",
   ],
   [
     "AI용 JSONL",
@@ -134,9 +134,9 @@ export default async function SupportProgramsPage() {
             ))}
           </div>
           <p className="osh-help">
-            판 {DATASET} (2026-10-01) · 원 패키지 v0.7 + Hub 라벨 · 구성과 칸
-            설명은 압축 안 README.md와 data_dictionary.csv에 있습니다.
-            신청기간·예산은 담지 않으니 각 사업의 공식 링크에서 확인하세요.
+            판 {DATASET} (2026-10-01) · 원 패키지 v0.7 + Hub 라벨 · 칸 설명은
+            압축 안 data_dictionary.csv에 있습니다. 신청기간·예산은 담지 않으니
+            각 사업의 공식 링크에서 확인하세요.
           </p>
         </section>
         <section className="osh-section">
