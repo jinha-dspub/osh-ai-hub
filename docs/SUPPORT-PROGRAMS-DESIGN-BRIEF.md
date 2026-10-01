@@ -1,6 +1,6 @@
 # 안전보건 지원사업 찾기 디자인 브리프
 
-상태: v2(분류 9개 · 검색 순위 · AI 조건 채우기) 구현 완료 · 운영 반영 대기
+상태: v2(분류 9개 · 검색 순위 · AI 조건 채우기) 운영 중 (2026-10-01 14:51 UTC 관문 재시작, Vercel 598ee7e)
 작성일: 2026-10-01 · v2 개정: 2026-10-01
 기준: [OSH AI Hub 디자인 가이드](DESIGN-GUIDELINES.md) · 인수 검토: [SUPPORT-PROGRAMS-INTAKE-REVIEW.md](SUPPORT-PROGRAMS-INTAKE-REVIEW.md)
 
@@ -62,4 +62,4 @@
 - 모바일·키보드·대비 확인: 1440px·360px 가로 넘침 0, 모든 입력에 레이블, 분류·받는 방식 버튼 `aria-pressed`, 요약 `aria-live`, AI 제안 `role=status`
 - 코드·브라우저 검증 결과: vitest 판정 규칙(패키지 수치 재현)·로그 묶음/재전송, pytest 관문·해시·열 제한·로그 적재/거부/한도·NAS 잠금, lint·typecheck·build, Playwright 흐름과 가짜 NAS 적재 확인
 - v2 검증: vitest(검색 순위·동의어·분류/받는 방식 집계·스키마 3, v2 판본의 분류 9개 건수), pytest(분류 결합·누락 시 503, 스키마 3 수용/거부, AI 근거 검증·마스킹·한도·실패 기록·예산 정산), 미리보기 관문(127.0.0.1, 임시 NAS)에서 Playwright로 검색 → AI 제안 → 적용 → 수정 → 기록 확인, 실제 Claude 호출 약 3초
-- 운영 배포 여부: 하지 않음(NAS v2 게시·`current` 전환·관문 재시작·빌드는 담당자 실행)
+- 운영 배포 여부: 2026-10-01 반영. NAS `current` → v2, 화면 판본 `react-66f69f9b10`, 공개 주소에서 요건표 API `release=20261001-v2`·AI 요청 검증(422) 확인. 실제 AI 요청은 공개 주소에서 보내지 않았다(시험 기록이 수요 로그에 섞이지 않도록)

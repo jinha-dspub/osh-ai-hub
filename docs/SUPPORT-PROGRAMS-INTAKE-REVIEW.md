@@ -68,7 +68,7 @@
 
 ## 남은 일
 
-0. v2 운영 반영(담당자 실행): ① `nas-put osh-support-programs serving <v1 사본 + categories.csv 폴더> osh-support-programs` → ② `cd /nas/osh-support-programs/serving && ln -sfn osh-support-programs-20261001-v2 current` → ③ `npm run build:support-programs-demo --workspace web` → ④ `systemctl --user restart osh-demo` 후 `/health` 200 확인 → ⑤ 소개 페이지는 Hub 배포. ②를 ④보다 먼저 하면 v1 코드도 같은 `programs.csv`·`items.csv`를 읽으므로 문제가 없다. ③과 ④ 사이에는 새 화면이 옛 API를 보게 되므로 바로 이어서 한다.
+0. v2 운영 반영 — 2026-10-01 완료(`current` → v2, 14:51 UTC 관문 재시작). 다음 판본도 같은 순서: ① `nas-put osh-support-programs serving <v1 사본 + categories.csv 폴더> osh-support-programs` → ② `cd /nas/osh-support-programs/serving && ln -sfn osh-support-programs-20261001-v2 current` → ③ `npm run build:support-programs-demo --workspace web` → ④ `systemctl --user restart osh-demo` 후 `/health` 200 확인 → ⑤ 소개 페이지는 Hub 배포. ②를 ④보다 먼저 하면 v1 코드도 같은 `programs.csv`·`items.csv`를 읽으므로 문제가 없다. ③과 ④ 사이에는 새 화면이 옛 API를 보게 되므로 바로 이어서 한다.
 
 1. 운영 반영: 커밋 → `.6` 관문(`osh-demo`) 재시작 → Hub 배포. 이 작업에서는 하지 않았다. 반영과 동시에 DEMO·요건표·로그 수신이 공개된다.
 2. `sync_support_programs_nas.py` 정기 실행(타이머) 등록 여부.
