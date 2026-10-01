@@ -8,6 +8,7 @@ import {
   normalize,
   score,
   searchText,
+  shuffleKeys,
   wayOf,
   type Condition,
   type Program,
@@ -194,6 +195,37 @@ describe("support programme rules", () => {
     expect(searched.eligible.map((j) => j.row["사업ID"])).toEqual(["DEMO-02"]);
     expect(searched.categoryMatches["설비개선"]).toBe(1);
     expect(evaluate(programs, text, base).eligible).toEqual([]);
+  });
+
+  it("shuffles only inside a match and verdict tier", () => {
+    const programs = [
+      row({ 사업ID: "DEMO-01" }),
+      row({ 사업ID: "DEMO-02" }),
+      row({ 사업ID: "DEMO-03", 근로자수_상한_미만: "10" }), // 제외 for 30 workers
+      row({ 사업ID: "DEMO-04", 지역: "울산" }), // 지역사업
+      row({ 사업ID: "DEMO-05", 세부사업명: "DEMO 환기" }),
+    ];
+    const text = searchText(programs, []);
+    const picks = { categories: ["설비개선"], ways: [] };
+    const order = (keys: Record<string, number>) =>
+      evaluate(programs, text, { ...base, query: "환기" }, picks, keys);
+    const a = order({ "DEMO-01": 0.1, "DEMO-02": 0.9, "DEMO-05": 0.99 });
+    const b = order({ "DEMO-01": 0.9, "DEMO-02": 0.1, "DEMO-05": 0.01 });
+    const ids = (o: ReturnType<typeof order>) =>
+      o.eligible.map((j) => j.row["사업ID"]);
+    // The match stays first and the regional one stays last; only 01/02 swap.
+    expect(ids(a)).toEqual(["DEMO-05", "DEMO-01", "DEMO-02", "DEMO-04"]);
+    expect(ids(b)).toEqual(["DEMO-05", "DEMO-02", "DEMO-01", "DEMO-04"]);
+    expect(a.excluded.map((j) => j.row["사업ID"])).toEqual(["DEMO-03"]);
+    let n = 0;
+    const keys = shuffleKeys(programs, () => ++n / 10);
+    expect(keys).toEqual({
+      "DEMO-01": 0.1,
+      "DEMO-02": 0.2,
+      "DEMO-03": 0.3,
+      "DEMO-04": 0.4,
+      "DEMO-05": 0.5,
+    });
   });
 
   it("ignores spaces and reads synonyms in search", () => {

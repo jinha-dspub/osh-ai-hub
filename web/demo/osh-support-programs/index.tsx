@@ -17,6 +17,7 @@ import {
   type Hazard,
   type Item,
   type Judged,
+  shuffleKeys,
   type Picks,
   type Program,
   type Verdict,
@@ -444,9 +445,11 @@ function App() {
     for (const i of data?.품목 ?? []) (map[i["사업ID"]] ??= []).push(i);
     return map;
   }, [data]);
+  // One random order per visit; it stays put while the visitor changes conditions.
+  const shuffle = useMemo(() => (data ? shuffleKeys(data.사업) : {}), [data]);
   const out = useMemo(
-    () => (data ? evaluate(data.사업, text, cond, picks) : undefined),
-    [data, text, cond, picks],
+    () => (data ? evaluate(data.사업, text, cond, picks, shuffle) : undefined),
+    [data, text, cond, picks, shuffle],
   );
   // The visitor changing an AI-filled field is the correction the demand log is after.
   const edited = (fields: FormField[]) => {
@@ -1105,7 +1108,8 @@ function App() {
                         ? `검색어와 맞는 ${out.matches}건을 앞에 두었습니다. `
                         : ""}
                       차례는 확실한 것 → 사업장 상황 조건 → 확인 필요 → 근로자
-                      본인 신청 → 지역 한정입니다.
+                      본인 신청 → 지역 한정이고, 같은 단계 안에서는 방문마다
+                      무작위 순서입니다.
                     </p>
                     <div className="sp-programs">
                       {out.eligible.map((j, index) => (

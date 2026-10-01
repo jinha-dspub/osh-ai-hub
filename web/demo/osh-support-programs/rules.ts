@@ -238,7 +238,7 @@ export function amount(r: Program) {
   return r["지원형태"] === "무상서비스" ? "" : "금액 미기재";
 }
 
-const searchFields = [
+export const searchFields = [
   "사업명",
   "세부사업명",
   "분류",
@@ -267,7 +267,7 @@ const searchFields = [
 ];
 
 // Words people use for the same thing. A term matches when any word of its group is present.
-const synonyms = [
+export const synonyms = [
   ["보호구", "안전장비", "안전용품", "안전모", "안전대"],
   ["에어컨", "냉방", "냉방기"],
   ["더위", "폭염", "온열", "열사병"],
@@ -350,11 +350,21 @@ export type Outcome = {
 };
 
 const rank = (j: Judged) => verdictOrder.indexOf(j.verdict);
-const compare = (x: Judged, y: Judged) =>
+// Tiers: search matches, then verdict. Inside a tier the order is the visitor's shuffle (one
+// random key per programme per visit), so top-of-list position does not bias the demand log.
+// Without a shuffle (tests) the old support-form/agency order is used.
+const comparer = (shuffle?: Record<string, number>) => (x: Judged, y: Judged) =>
   y.match - x.match ||
   rank(x) - rank(y) ||
-  formOrder.indexOf(x.row["지원형태"]) - formOrder.indexOf(y.row["지원형태"]) ||
-  x.row["기관구분"].localeCompare(y.row["기관구분"], "ko");
+  (shuffle
+    ? (shuffle[x.row["사업ID"]] ?? 0) - (shuffle[y.row["사업ID"]] ?? 0)
+    : formOrder.indexOf(x.row["지원형태"]) -
+        formOrder.indexOf(y.row["지원형태"]) ||
+      x.row["기관구분"].localeCompare(y.row["기관구분"], "ko"));
+
+export function shuffleKeys(programs: Program[], random = Math.random) {
+  return Object.fromEntries(programs.map((r) => [r["사업ID"], random()]));
+}
 
 // Tiles ignore the picks and the search. Lists follow the picks; with no pick, only search
 // matches are listed. Matching rows go first.
@@ -363,7 +373,9 @@ export function evaluate(
   text: Record<string, string>,
   a: Condition,
   picks: Picks = { categories: [], ways: [] },
+  shuffle?: Record<string, number>,
 ): Outcome {
+  const compare = comparer(shuffle);
   const workerMode = a.who === "근로자";
   const tiles = { eligible: 0, personal: 0, regional: 0, excluded: 0 };
   const categoryCounts: Record<string, number> = {};
