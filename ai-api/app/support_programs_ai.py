@@ -1,5 +1,6 @@
 """AI 조건 채우기: Claude reads a visitor's own description of their workplace and proposes
-finder conditions.
+finder conditions, with the Hub dataset's one-line description of every programme in its
+(cached) prompt so categories, keywords and related programmes follow the actual table.
 
 The proposal only fills the form. The visitor confirms each field before it applies, and
 eligibility is still judged by the rules in the browser; Claude never says whether a programme
@@ -31,10 +32,16 @@ ROOT = Path(__file__).resolve().parents[2]
 KSIC = ROOT / "web/demo/osh-support-programs/ksic.ts"
 MODEL = "claude-sonnet-5-5"
 USD_PER_MTOK = (2, 10)  # Claude Sonnet 5.5 input/output list price
-MAX_TOKENS = 1200
-# Worst case: ~4,500 prompt + schema tokens, 500 description tokens and the full output cap.
+# Prompt-cache multipliers on the input price for the 1-hour cache (writes 2x, reads 0.1x).
+# Visits are sparse, so a 1-hour cache is written less often than the 5-minute one.
+CACHE_WRITE, CACHE_READ = 2.0, 0.1
+MAX_TOKENS = 1500
+PROMPT_TOKENS = 40_000  # Upper bound for the cached prompt (programme list ~25k measured).
+# Worst case: the whole prompt is written to the cache, plus the description and output cap.
 RESERVE = math.ceil(
-    (5000 * USD_PER_MTOK[0] + MAX_TOKENS * USD_PER_MTOK[1]) * budget.KRW_PER_USD / 1_000_000
+    (PROMPT_TOKENS * CACHE_WRITE * USD_PER_MTOK[0] + MAX_TOKENS * USD_PER_MTOK[1])
+    * budget.KRW_PER_USD
+    / 1_000_000
 )
 PROVIDER = "anthropic-support-programs"
 BODY_LIMIT = 4000
@@ -58,8 +65,10 @@ KEYS = {
     "hazard": "유해인자",
     "categories": "분류",
     "keywords": "키워드",
+    "related": "관련사업",
     "evidence": "근거",
 }
+MAX_RELATED = 5
 ASCII = {v: k for k, v in KEYS.items()}
 
 
@@ -102,6 +111,34 @@ def regions():
     return sorted(wide - {"전국"})
 
 
+def programme_ids():
+    return [r["사업ID"] for r in sp.catalogue()["사업"]]
+
+
+def programme_lines():
+    """One line per programme from the dataset: id, fixed description, item names."""
+    lines = []
+    for p in sp.jsonl_programs():
+        items = ", ".join(i["품목명"] for i in p["품목"][:12])
+        more = f" 외 {len(p['품목']) - 12}종" if len(p["품목"]) > 12 else ""
+        lines.append(f"{p['사업ID']} | {p['설명']}" + (f" | 품목: {items}{more}" if items else ""))
+    return lines
+
+
+@lru_cache(maxsize=1)
+def vocabulary():
+    """Normalised dataset text and synonym words: keywords must hit one of them."""
+    text = squash_search(" ".join(json.dumps(p, ensure_ascii=False) for p in sp.jsonl_programs()))
+    words = sp.dataset_files()["data/synonyms.csv"].decode("utf-8-sig").splitlines()[1:]
+    synonyms = {squash_search(w) for line in words for w in line.split(",", 1)[1].split(";")}
+    return text, synonyms
+
+
+def squash_search(text: str):
+    # Same normalisation as the screen's search (rules.ts normalize).
+    return re.sub(r"[\s·,.()/_-]+", "", text.lower())
+
+
 def tool_schema():
     quote = {"type": "string", "maxLength": 60}
     fields = {
@@ -117,6 +154,11 @@ def tool_schema():
             "maxItems": 3,
         },
         "키워드": {"type": "array", "items": {"type": "string", "maxLength": 15}, "maxItems": 5},
+        "관련사업": {
+            "type": "array",
+            "items": {"type": "string", "enum": programme_ids()},
+            "maxItems": MAX_RELATED,
+        },
         "근거": {
             "type": "object",
             "properties": {ASCII[k]: {**quote, "description": k} for k in [*SCALARS, "분류"]},
@@ -150,8 +192,9 @@ def system_prompt():
 - 유해인자: 소음·분진·유기용제·화학물질·금속가공유·용접흄 등 작업환경측정 대상 인자를 다룬다고 쓰면 Y. 그런 인자가 없다고 명시하면 N.
 - 신청주체: 근로자 본인이 자기가 받을 지원을 찾는 글이면 근로자, 사업주나 안전 담당자 입장이면 사업주.
 - 분류: 설명에서 드러난 필요에 맞는 지원 분류 최대 3개. 필요가 드러나지 않으면 빈 배열. 근거.분류에는 그 필요가 드러난 문구.
-- 키워드: 지원사업 검색에 쓸 짧은 명사 최대 5개(설비·위험요인·작업 이름). 예: 프레스, 지게차, 끼임, 온열, 환기.
-- 지원을 받을 수 있는지, 금액이 얼마인지는 판단하지 않는다.
+- 키워드: 지원사업 검색에 쓸 짧은 명사 최대 5개(설비·위험요인·작업 이름). 아래 지원사업 목록에 실제로 나오는 낱말을 고른다. 예: 프레스, 지게차, 끼임, 온열, 환기.
+- 관련사업: 아래 지원사업 목록에서 설명에 드러난 필요(설비·위험·작업·대상)와 내용이 맞는 사업ID 최대 {MAX_RELATED}개, 가장 맞는 것부터. 맞는 것이 없으면 빈 배열. 규모·업종·지역 요건을 맞추는 것은 화면의 규칙이 하므로 여기서는 내용만 본다.
+- 지원을 받을 수 있는지, 금액이 얼마인지는 판단하지 않는다. 목록의 금액·요건을 설명에 옮겨 적지 않는다.
 
 지원 분류
 {kinds}
@@ -160,7 +203,10 @@ def system_prompt():
 {", ".join(regions())}
 
 KSIC 11차 대·중분류
-{ksic}"""
+{ksic}
+
+지원사업 목록 ({sp.DATASET}, 사업ID | 설명 | 품목)
+{chr(10).join(programme_lines())}"""
 
 
 # ---- privacy and validation -----------------------------------------------------
@@ -218,7 +264,15 @@ def checked(raw: dict, description: str):
         evidence["분류"] = quote.strip()
     words = raw.get("키워드") if isinstance(raw.get("키워드"), list) else []
     clean = [w.strip() for w in words if isinstance(w, str) and 0 < len(w.strip()) <= 15]
-    proposal["키워드"] = list(dict.fromkeys(clean))[:5]
+    # A keyword that finds nothing in the table would only add noise to the search.
+    text, synonyms = vocabulary()
+    useful = [w for w in clean if squash_search(w) in text or squash_search(w) in synonyms]
+    if len(useful) < len(clean):
+        dropped.append("키워드")
+    proposal["키워드"] = list(dict.fromkeys(useful))[:5]
+    known = set(programme_ids())
+    related = raw.get("관련사업") if isinstance(raw.get("관련사업"), list) else []
+    proposal["관련사업"] = [r for r in dict.fromkeys(related) if r in known][:MAX_RELATED]
     return proposal, evidence, dropped
 
 
@@ -235,9 +289,10 @@ def claude_client():
 
 
 def cost(usage):
-    incoming = sum(
-        getattr(usage, key, 0) or 0
-        for key in ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens")
+    incoming = (
+        (getattr(usage, "input_tokens", 0) or 0)
+        + (getattr(usage, "cache_creation_input_tokens", 0) or 0) * CACHE_WRITE
+        + (getattr(usage, "cache_read_input_tokens", 0) or 0) * CACHE_READ
     )
     return max(
         1,
@@ -259,7 +314,11 @@ def call_claude(description: str):
             model=MODEL,
             max_tokens=MAX_TOKENS,
             system=[
-                {"type": "text", "text": system_prompt(), "cache_control": {"type": "ephemeral"}}
+                {
+                    "type": "text",
+                    "text": system_prompt(),
+                    "cache_control": {"type": "ephemeral", "ttl": "1h"},
+                }
             ],
             tools=[tool_schema()],
             # Sonnet 5.5 refuses forced tool choice; the prompt requires exactly one call.
@@ -275,7 +334,12 @@ def call_claude(description: str):
         # Unknown outcome (timeout, network, missing key): keep the reservation.
         raise HTTPException(503, "AI 서버에 연결하지 못했습니다.") from None
     budget.settle(token, cost(response.usage))
-    usage = {"입력": response.usage.input_tokens, "출력": response.usage.output_tokens}
+    usage = {
+        "입력": response.usage.input_tokens,
+        "출력": response.usage.output_tokens,
+        "캐시쓰기": getattr(response.usage, "cache_creation_input_tokens", 0) or 0,
+        "캐시읽기": getattr(response.usage, "cache_read_input_tokens", 0) or 0,
+    }
     if response.stop_reason == "refusal":
         raise HTTPException(422, "AI가 이 설명의 해석을 거절했습니다.")
     for block in response.content:
@@ -362,6 +426,7 @@ def register(app):
             raise HTTPException(422, "설명은 5자 이상 500자 이하로 적어 주세요.") from None
         try:
             sp.catalogue()
-        except (OSError, ValueError):
+            sp.dataset_files()
+        except (OSError, ValueError, KeyError):
             raise HTTPException(503, "자료를 불러오지 못했습니다.") from None
         return await run_in_threadpool(interpret, body, client_key(request))

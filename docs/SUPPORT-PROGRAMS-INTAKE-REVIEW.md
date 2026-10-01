@@ -66,6 +66,15 @@
 - **로그 스키마 3**: `자료판`, 행동 `분류선택·분류해제·받는방식선택·받는방식해제·AI제안·AI적용·AI수정`, 필드 `분류·받는방식·항목·요청ID`. 서버는 스키마 2(갈래선택·범주선택)도 계속 받는다. `build_support_programs_demand.py`가 `interpretations.csv`를 따로 만든다.
 - **확인하지 않은 것**: AI 제안의 정확도(시험 설명 3건만 봄), 공개 트래픽에서의 비용·지연.
 
+## v3 개정 (2026-10-01) — 데이터셋 공개, AI가 데이터셋을 읽음
+
+- **데이터셋 판 0.7-hub.1**: `web/scripts/build-support-programs-dataset.mjs`가 serving v2에서 만든다. 원 요건표 전체(사업 55칸·품목 13칸) + Hub 라벨 8칸, 긴 필터 표, AI용 `programs.jsonl`(사업 1줄, 뜻별 묶음, null·boolean·배열 정리)과 JSON Schema, 분류·받는 방식·KSIC·동의어 표, 데이터 사전, 체크섬. 라벨은 사이트 `rules.ts`를 그대로 불러 계산하고, 생성 때 서비스 요건표와 값이 같은지 검사한다. 파일만으로 원 패키지 기준 판정 수(102·22·40·12 등)와 분류 9개 수가 재현됨을 확인했다.
+- **배치**: 가공본 `processed/osh-support-programs-dataset-20261001-v1/`, 배포 `serving/osh-support-programs-20261001-v3/6_허브판/`(폴더 + zip, 13개 파일 묶음 digest `e603404d…`). `GET /demo/osh-support-programs/download/<이름>`은 이 13개만 내려주고 나머지 경로는 404, 묶음이 바뀌면 503.
+- **라이선스**: 소유자 결정으로 별도 표기를 두지 않는다. README에 "OSH AI Hub 제작, 원문은 각 기관 공개 문서"로 적었다.
+- **AI 강화**: 프롬프트에 `programs.jsonl`의 사업별 `설명`·품목명 114줄을 넣고(약 2.4만 토큰, 1시간 캐시), 도구에 `관련사업`(사업ID enum, 최대 5개)을 더했다. 서버는 없는 ID를 버리고, 키워드는 데이터셋 글이나 동의어에 나오는 말만 남긴다. 화면은 적용 후 "AI가 설명과 관련 있다고 본 사업"을 요건 판정과 함께 보여 주고, 노출은 `범주=AI관련`으로 기록한다.
+- **비용**: 비용 계산을 캐시 단가(쓰기 2배·읽기 0.1배)로 바꿨다. 캐시가 살아 있으면 요청당 약 27원, 한 시간 첫 요청은 약 300원(실측 토큰 기준 추정). 예약은 최악값 약 525원이라 하루 한도 2,000원(`SUPPORT_PROGRAMS_AI_DAILY_KRW`)에서는 이용량이 많으면 일찍 막힐 수 있다.
+- **목록 순서**: 판정 단계 안에서 방문마다 무작위(화면 판본 `react-bcb261e631`부터). 그 전 기록은 고정 순서였다.
+
 ## 남은 일
 
 0. v2 운영 반영 — 2026-10-01 완료(`current` → v2, 14:51 UTC 관문 재시작). 다음 판본도 같은 순서: ① `nas-put osh-support-programs serving <v1 사본 + categories.csv 폴더> osh-support-programs` → ② `cd /nas/osh-support-programs/serving && ln -sfn osh-support-programs-20261001-v2 current` → ③ `npm run build:support-programs-demo --workspace web` → ④ `systemctl --user restart osh-demo` 후 `/health` 200 확인 → ⑤ 소개 페이지는 Hub 배포. ②를 ④보다 먼저 하면 v1 코드도 같은 `programs.csv`·`items.csv`를 읽으므로 문제가 없다. ③과 ④ 사이에는 새 화면이 옛 API를 보게 되므로 바로 이어서 한다.

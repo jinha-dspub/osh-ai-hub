@@ -18,7 +18,8 @@ export type FormField =
   | "기업"
   | "유해인자"
   | "분류"
-  | "키워드";
+  | "키워드"
+  | "관련사업";
 export type LogEvent = {
   행동:
     | "열기"

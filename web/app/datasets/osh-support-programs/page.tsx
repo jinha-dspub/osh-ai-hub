@@ -13,6 +13,32 @@ const evidence = [
   ["언론·민간", 25, "공고 원문 대조가 남아 있음"],
 ] as const;
 
+const DATASET = "osh-support-programs-0.7-hub.1";
+// Served by the /demo gateway from NAS serving/current (pinned set, ai-api/app/support_programs.py).
+const DOWNLOAD = "/demo/osh-support-programs/download/";
+const downloads = [
+  [
+    "전체 데이터셋 (zip)",
+    `${DATASET}.zip`,
+    "아래 파일 모두 + README·데이터 사전·체크섬, 약 80KB",
+  ],
+  [
+    "AI용 JSONL",
+    "data/programs.jsonl",
+    "사업 1건 = JSON 1줄. 라벨·요건·지원내용·품목을 뜻별로 묶음",
+  ],
+  [
+    "사업 표 (CSV)",
+    "data/programs.csv",
+    "사업 114건 × 원 요건 55칸 + Hub 라벨 8칸",
+  ],
+  [
+    "필터 표 (CSV)",
+    "data/program_filters.csv",
+    "사업·필터·값 1,081행. 각 사업이 걸리는 모든 필터 값",
+  ],
+] as const;
+
 export default async function SupportProgramsPage() {
   if (!supportProgramsPublic && !(await isAdmin())) notFound();
   return (
@@ -36,11 +62,21 @@ export default async function SupportProgramsPage() {
             9가지(Hub 분류) · 기준연도 2021–2027 (2026년 106건)
           </p>
           <p className="osh-help">
-            버전 0.7 · 최종 버전 날짜 2026-09-28 · 업데이트 계획 미정
+            원 패키지 0.7 (2026-09-28) · Hub 판 0.7-hub.1 (2026-10-01) ·
+            업데이트 계획 미정
           </p>
-          <a className="osh-button" href="/demo/osh-support-programs/">
-            지원사업 찾기 DEMO 열기 →
-          </a>
+          <div className="osh-actions">
+            <a className="osh-button" href="/demo/osh-support-programs/">
+              지원사업 찾기 DEMO 열기 →
+            </a>
+            <a
+              className="osh-button osh-button--secondary"
+              href={`${DOWNLOAD}${DATASET}.zip`}
+              download
+            >
+              데이터셋 내려받기 (zip)
+            </a>
+          </div>
         </header>
         <section className="osh-section">
           <h2 className="osh-heading">이렇게 활용하세요</h2>
@@ -74,6 +110,33 @@ export default async function SupportProgramsPage() {
             판정은 요건표의 규칙으로만 합니다. AI는 설명을 읽어 조건을 제안할 뿐
             지원 가능 여부를 말하지 않으며, 실제 지원 여부는 각 기관의 공고와
             심사로 정해집니다.
+          </p>
+        </section>
+        <section className="osh-section" id="download">
+          <h2 className="osh-heading">데이터 받기</h2>
+          <p className="osh-copy">
+            지원사업 찾기 화면이 쓰는 자료 전부입니다. 사업 114건마다 원 요건과
+            함께 화면의 분류·받는 방식·신청 주체·업종·지역·유해인자 필터에 어디
+            해당하는지 라벨을 붙였습니다. 이 파일들과 공개된 판정 규칙으로
+            화면을 다시 만들 수 있습니다.
+          </p>
+          <div className="osh-grid">
+            {downloads.map(([label, file, note]) => (
+              <article className="osh-card" key={file}>
+                <h3 className="osh-card-title">{label}</h3>
+                <p>
+                  <a className="osh-link" href={`${DOWNLOAD}${file}`} download>
+                    {file.split("/").pop()}
+                  </a>
+                </p>
+                <p className="osh-help">{note}</p>
+              </article>
+            ))}
+          </div>
+          <p className="osh-help">
+            판 {DATASET} (2026-10-01) · 원 패키지 v0.7 + Hub 라벨 · 구성과 칸
+            설명은 압축 안 README.md와 data_dictionary.csv에 있습니다.
+            신청기간·예산은 담지 않으니 각 사업의 공식 링크에서 확인하세요.
           </p>
         </section>
         <section className="osh-section">
@@ -122,9 +185,9 @@ export default async function SupportProgramsPage() {
             사업은 해마다 바뀝니다.
           </p>
           <p className="osh-copy">
-            원문 제공자는 기관별로 다릅니다. 기관별 이용 조건, 가공 주체,
-            연구책임자·대표 연구자, 공개 문의처는 확인 중입니다. 확인 전까지
-            미리보기 표와 파일 다운로드는 제공하지 않습니다.
+            원문 제공자는 기관별로 다릅니다. 행마다 값을 읽은 근거 URL과 공식
+            링크가 있습니다. 분류·라벨과 데이터셋 구성은 OSH AI Hub가
+            만들었습니다.
           </p>
           <p className="osh-copy">
             DEMO 화면은 수요조사 시험판입니다. 고른 분류·받는 방식, 검색어,

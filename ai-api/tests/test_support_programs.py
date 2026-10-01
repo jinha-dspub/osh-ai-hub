@@ -26,13 +26,44 @@ def write_release(root, extra_column=True):
     return tables
 
 
+def write_dataset(root):
+    """DEMO Hub dataset under 6_허브판/ (zip + files); returns the set digest."""
+    name = support_programs.DATASET
+    line = {
+        "사업ID": "DEMO 사업ID",
+        "설명": "DEMO 환기장치 지원",
+        "품목": [{"품목명": "DEMO 프레스 방호장치"}],
+    }
+    files = {
+        f"{name}.zip": b"PK DEMO",
+        f"{name}/README.md": b"# DEMO",
+        f"{name}/data/programs.jsonl": (json.dumps(line, ensure_ascii=False) + "\n").encode(),
+        f"{name}/data/synonyms.csv": "\ufeff묶음,낱말\r\n1,더위;온열\r\n".encode(),
+    }
+    base = root / support_programs.DATASET_DIR
+    for path, data in files.items():
+        (base / path).parent.mkdir(parents=True, exist_ok=True)
+        (base / path).write_bytes(data)
+    listing = "\n".join(sorted(f"{p}\t{hashlib.sha256(d).hexdigest()}" for p, d in files.items()))
+    return hashlib.sha256(listing.encode()).hexdigest()
+
+
+def clear_caches():
+    from app import support_programs_ai
+
+    support_programs.catalogue.cache_clear()
+    support_programs.dataset_files.cache_clear()
+    support_programs_ai.vocabulary.cache_clear()
+
+
 @pytest.fixture
 def release(tmp_path, monkeypatch):
     monkeypatch.setattr(support_programs, "ROOT", tmp_path)
     monkeypatch.setattr(support_programs, "TABLES", write_release(tmp_path))
-    support_programs.catalogue.cache_clear()
+    monkeypatch.setattr(support_programs, "DATASET_DIGEST", write_dataset(tmp_path))
+    clear_caches()
     yield tmp_path
-    support_programs.catalogue.cache_clear()
+    clear_caches()
 
 
 def test_catalogue_requires_gateway_user(release, monkeypatch):
@@ -87,6 +118,53 @@ def test_missing_release_is_unavailable(tmp_path, monkeypatch):
     client = TestClient(app, client=("192.168.0.3", 1234))
     assert client.get(API, headers=HEADERS).status_code == 503
     support_programs.catalogue.cache_clear()
+
+
+# ---- dataset download ------------------------------------------------------------
+
+DOWNLOAD = support_programs.PREFIX + "/download/"
+
+
+def test_dataset_files_download_as_attachments(release):
+    client = TestClient(app, client=("192.168.0.3", 1234))
+    zipped = client.get(DOWNLOAD + support_programs.DATASET + ".zip", headers=HEADERS)
+    assert zipped.status_code == 200 and zipped.content == b"PK DEMO"
+    assert zipped.headers["content-type"] == "application/zip"
+    assert zipped.headers["content-disposition"].startswith("attachment")
+    lines = client.get(DOWNLOAD + "data/programs.jsonl", headers=HEADERS)
+    assert lines.status_code == 200 and "DEMO 환기장치" in lines.text
+    head = client.head(DOWNLOAD + "README.md", headers=HEADERS)
+    assert head.status_code == 200 and head.headers["content-length"] == "6"
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "../2_자료/data/programs.csv",
+        "data/../../2_자료/data/programs.csv",
+        f"{support_programs.DATASET}/README.md",
+        "data/missing.csv",
+        "%2e%2e/RELEASE.md",
+    ],
+)
+def test_only_listed_dataset_files_are_served(release, name):
+    client = TestClient(app, client=("192.168.0.3", 1234))
+    assert client.get(DOWNLOAD + name, headers=HEADERS).status_code in {403, 404}
+
+
+def test_changed_dataset_is_refused(release):
+    extra = release / support_programs.DATASET_DIR / support_programs.DATASET / "data/extra.csv"
+    extra.write_text("DEMO")
+    clear_caches()
+    client = TestClient(app, client=("192.168.0.3", 1234))
+    response = client.get(DOWNLOAD + "README.md", headers=HEADERS)
+    assert response.status_code == 503
+
+
+def test_download_requires_gateway(release, monkeypatch):
+    monkeypatch.delenv("COPD_ALLOW_LOCAL_PREVIEW", raising=False)
+    direct = TestClient(app, client=("192.168.0.55", 1234))
+    assert direct.get(DOWNLOAD + "README.md", headers=HEADERS).status_code == 403
 
 
 # ---- demand log ----------------------------------------------------------------
@@ -161,7 +239,13 @@ def test_log_schema_3_events(nas):
     events = [
         {"t": 0, "행동": "분류선택", "분류": ["설비개선"]},
         {"t": 10, "행동": "받는방식선택", "받는방식": ["융자"]},
-        {"t": 20, "행동": "AI제안", "요청ID": "0123456789ab", "항목": ["업종", "분류"]},
+        {
+            "t": 20,
+            "행동": "AI제안",
+            "요청ID": "0123456789ab",
+            "항목": ["업종", "분류", "관련사업"],
+            "목록": ["2026-01"],
+        },
         {"t": 30, "행동": "AI적용", "요청ID": "0123456789ab", "항목": ["업종"]},
         {"t": 40, "행동": "AI수정", "요청ID": "0123456789ab", "항목": ["업종"]},
         {"t": 50, "행동": "노출", "목록": ["2026-01"], "분류": ["설비개선", "교육"]},

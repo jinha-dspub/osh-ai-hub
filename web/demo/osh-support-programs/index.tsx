@@ -9,6 +9,7 @@ import {
   amount,
   businessLabel,
   evaluate,
+  judge,
   regions,
   searchText,
   ways,
@@ -46,6 +47,7 @@ type Proposal = {
     유해인자: Hazard;
     분류: string[];
     키워드: string[];
+    관련사업: string[];
   };
   근거: Partial<Record<FormField, string>>;
 };
@@ -75,6 +77,7 @@ function proposedFields(p: Proposal): FormField[] {
     ...scalars,
     ...(p.제안.분류.length ? (["분류"] as const) : []),
     ...(p.제안.키워드.length ? (["키워드"] as const) : []),
+    ...(p.제안.관련사업.length ? (["관련사업"] as const) : []),
   ];
 }
 const industryLabel = (code: string) =>
@@ -88,6 +91,7 @@ function shown(f: FormField, p: Proposal["제안"]) {
   if (f === "유해인자") return p.유해인자 === "Y" ? "있음" : "없음";
   if (f === "분류") return p.분류.join(", ");
   if (f === "키워드") return p.키워드.join(", ");
+  if (f === "관련사업") return `${p.관련사업.length}건 (아래 목록)`;
   return String(p[f]);
 }
 const start: Condition = {
@@ -124,6 +128,7 @@ function ProgramCard({
   count,
   log,
   searched,
+  related,
 }: {
   judged: Judged;
   items: Item[];
@@ -131,6 +136,7 @@ function ProgramCard({
   rank?: number;
   count?: number;
   searched?: boolean;
+  related?: boolean;
   log?: (event: LogEvent, now?: boolean) => void;
 }) {
   const id = judged.row["사업ID"];
@@ -160,6 +166,7 @@ function ProgramCard({
         {searched && judged.match > 0 && (
           <span className="sp-tag sp-tag--match">검색어 일치</span>
         )}
+        {related && <span className="sp-tag sp-tag--info">AI 관련</span>}
         <span className="sp-tag">
           {r["기관구분"] === "지자체"
             ? r["지역"]
@@ -403,6 +410,8 @@ function App() {
   const [accept, setAccept] = useState<Set<FormField>>(new Set());
   // Fields the visitor took from the AI and has not changed since.
   const [aiFields, setAiFields] = useState<Set<FormField>>(new Set());
+  // Programmes the AI found related to the description; judged by the rules like any other.
+  const [related, setRelated] = useState<string[]>([]);
   const aiRequest = useRef("");
   const condRef = useRef(cond);
   const logRef = useRef<ReturnType<typeof createLog>>(undefined);
@@ -438,6 +447,10 @@ function App() {
   }, [reload]);
   const text = useMemo(
     () => (data ? searchText(data.사업, data.품목) : {}),
+    [data],
+  );
+  const rowOf = useMemo(
+    () => Object.fromEntries((data?.사업 ?? []).map((r) => [r["사업ID"], r])),
     [data],
   );
   const itemsOf = useMemo(() => {
@@ -497,7 +510,15 @@ function App() {
       const fields = proposedFields(p);
       setProposal(p);
       setAccept(new Set(fields));
-      record({ 행동: "AI제안", 요청ID: p.요청ID, 항목: fields }, true);
+      record(
+        {
+          행동: "AI제안",
+          요청ID: p.요청ID,
+          항목: fields,
+          목록: p.제안.관련사업,
+        },
+        true,
+      );
     } catch (e) {
       setAiError(
         e instanceof Error && e.name !== "TimeoutError"
@@ -519,6 +540,7 @@ function App() {
     if (accept.has("기업")) patch.business = p.기업;
     if (accept.has("유해인자")) patch.hazard = p.유해인자;
     if (accept.has("키워드")) patch.query = p.키워드.join(" ");
+    setRelated(accept.has("관련사업") ? p.관련사업 : []);
     setCond((c) => ({ ...c, ...patch }));
     if (accept.has("분류")) setPicks((x) => ({ ...x, categories: p.분류 }));
     aiRequest.current = proposal.요청ID;
@@ -635,6 +657,29 @@ function App() {
   const listTitle =
     [...picks.categories, ...picks.ways].join(" · ") || `검색 ‘${query}’`;
   const fields = proposal ? proposedFields(proposal) : [];
+  // Kept in the AI's order (most related first); verdicts come from the same rules.
+  const relatedJudged: Judged[] = related
+    .filter((id) => rowOf[id])
+    .map((id) => {
+      const [judged, why] = judge(rowOf[id], cond);
+      // As in evaluate(): workers see their own programmes as plainly eligible.
+      const verdict =
+        cond.who === "근로자" && judged === "개인대상" ? "해당" : judged;
+      return { row: rowOf[id], verdict, why, match: 0 };
+    });
+  const relatedKey = relatedJudged.map((j) => j.row["사업ID"]).join("|");
+  const lastRelated = useRef("");
+  useEffect(() => {
+    if (!relatedKey || relatedKey === lastRelated.current) return;
+    lastRelated.current = relatedKey;
+    logRef.current?.record({
+      행동: "노출",
+      범주: "AI관련",
+      목록: relatedKey.split("|"),
+      결과건수: relatedKey.split("|").length,
+      요청ID: aiRequest.current,
+    });
+  }, [relatedKey]);
 
   return (
     <div className="osh-app">
@@ -780,6 +825,20 @@ function App() {
                             <span className="osh-help">
                               설명의 ‘{proposal.근거[f]}’에서
                             </span>
+                          )}
+                          {f === "관련사업" && (
+                            <ul className="sp-related-names">
+                              {proposal.제안.관련사업.map((id) => (
+                                <li key={id}>
+                                  {rowOf[id]?.["세부사업명"]}{" "}
+                                  <small>{rowOf[id]?.["사업명"]}</small>
+                                </li>
+                              ))}
+                              <li className="osh-help">
+                                설명과 내용이 맞아 보이는 사업입니다. 받을 수
+                                있는지는 적용 후 요건 규칙으로 판정합니다.
+                              </li>
+                            </ul>
                           )}
                         </li>
                       ))}
@@ -1083,6 +1142,43 @@ function App() {
               )}
             </section>
 
+            {relatedJudged.length > 0 && (
+              <section className="osh-section" aria-labelledby="related">
+                <h2 className="osh-heading" id="related">
+                  AI가 설명과 관련 있다고 본 사업{" "}
+                  <span className="sp-count">{relatedJudged.length}건</span>
+                </h2>
+                <p className="osh-help">
+                  AI가 사업 내용만 보고 고른 것입니다. 받을 수 있는지는 카드의
+                  판정(요건 규칙)을 보세요.{" "}
+                  <button
+                    type="button"
+                    className="osh-link sp-inline-button"
+                    onClick={() => {
+                      edited(["관련사업"]);
+                      setRelated([]);
+                    }}
+                  >
+                    이 목록 닫기
+                  </button>
+                </p>
+                <div className="sp-programs">
+                  {relatedJudged.map((j, index) => (
+                    <ProgramCard
+                      key={j.row["사업ID"]}
+                      judged={j}
+                      items={itemsOf[j.row["사업ID"]] ?? []}
+                      full
+                      rank={index + 1}
+                      count={relatedJudged.length}
+                      log={record}
+                      related
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
             {listing && (
               <section className="osh-section" aria-labelledby="list">
                 <h2 className="osh-heading" id="list">
@@ -1122,6 +1218,7 @@ function App() {
                           count={out.eligible.length}
                           log={record}
                           searched={!!query}
+                          related={related.includes(j.row["사업ID"])}
                         />
                       ))}
                     </div>

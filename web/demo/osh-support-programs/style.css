@@ -442,6 +442,23 @@
   font-weight: 700;
   vertical-align: middle;
 }
+.osh-app .sp-related-names {
+  display: grid;
+  gap: 4px;
+  margin: 4px 0 0 30px;
+  padding: 0;
+  list-style: none;
+}
+.osh-app .sp-related-names small {
+  color: var(--osh-muted);
+}
+.osh-app .sp-inline-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
 .osh-app .sp-ways {
   display: grid;
   gap: 8px;

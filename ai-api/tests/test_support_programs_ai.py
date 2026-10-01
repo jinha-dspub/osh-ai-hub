@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from app import support_programs as sp
 from app import support_programs_ai as ai
 from app.demo_gateway import app
-from tests.test_support_programs import write_release
+from tests.test_support_programs import clear_caches, write_dataset, write_release
 
 URL = sp.PREFIX + "/api/interpret"
 REAL_CALL = ai.call_claude
@@ -34,7 +34,8 @@ def answer(**over):
         "기업": "모름",
         "유해인자": "모름",
         "분류": ["설비개선", "없는분류"],
-        "키워드": ["프레스", " ", "아주아주아주아주아주긴키워드입니다"],
+        "키워드": ["프레스", " ", "아주아주아주아주아주긴키워드입니다", "더위", "우주선"],
+        "관련사업": ["DEMO 사업ID", "2026-99", "DEMO 사업ID"],
         "근거": {"근로자수": "직원 23명", "업종": "금속 부품을 가공", "신청주체": "없는 문구"},
     }
     return {**raw, **over}
@@ -48,11 +49,12 @@ def env(tmp_path, monkeypatch):
     release = tmp_path / "release"
     monkeypatch.setattr(sp, "ROOT", release)
     monkeypatch.setattr(sp, "TABLES", write_release(release))
+    monkeypatch.setattr(sp, "DATASET_DIGEST", write_dataset(release))
     monkeypatch.setenv("NAS_DATA", str(root))
     monkeypatch.setenv("SUPPORT_PROGRAMS_STORE_DIR", str(tmp_path / "local"))
     monkeypatch.setenv("AI_BUDGET_DB", str(tmp_path / "budget.sqlite"))
     monkeypatch.setattr(ai, "_counts", {})
-    sp.catalogue.cache_clear()
+    clear_caches()
     sent = []
 
     def fake(description):
@@ -61,7 +63,7 @@ def env(tmp_path, monkeypatch):
 
     monkeypatch.setattr(ai, "call_claude", fake)
     yield SimpleNamespace(nas=root, sent=sent)
-    sp.catalogue.cache_clear()
+    clear_caches()
 
 
 def stored(root):
@@ -85,7 +87,9 @@ def test_proposal_keeps_only_grounded_choices_and_stores_the_request(env):
     assert proposal["근로자수"] == 23 and proposal["업종"] == "C25"
     assert proposal["신청주체"] == "전체"  # its quote is not in the description
     assert proposal["분류"] == ["설비개선"]
-    assert proposal["키워드"] == ["프레스"]
+    # Keywords must occur in the dataset text or the synonym list.
+    assert proposal["키워드"] == ["프레스", "더위"]
+    assert proposal["관련사업"] == ["DEMO 사업ID"]
     assert result["근거"] == {"근로자수": "직원 23명", "업종": "금속 부품을 가공"}
     # The phone number never leaves the server and is masked in the record.
     assert "010-1234-5678" not in env.sent[0] and "[전화번호]" in env.sent[0]
@@ -93,7 +97,7 @@ def test_proposal_keeps_only_grounded_choices_and_stores_the_request(env):
     assert path.name.startswith("2026-10-01-demo1234ab-ai-")
     record = json.loads(path.read_text())
     assert record["설명"] == env.sent[0] and record["요청ID"] == result["요청ID"]
-    assert record["버린항목"] == ["신청주체"] and record["원응답"]["신청주체"] == "사업주"
+    assert record["버린항목"] == ["신청주체", "키워드"] and record["원응답"]["신청주체"] == "사업주"
     assert "010-1234-5678" not in path.read_text() and "192.168" not in path.read_text()
     assert (path.parent / "MANIFEST-AI.md").exists()
 
@@ -201,10 +205,17 @@ def test_call_forces_the_tool_and_settles_budget(env, monkeypatch):
     monkeypatch.setattr(ai, "call_claude", REAL_CALL)
     messages = use_client(monkeypatch, fake_response([tool_block(answer())]))
     raw, usage = ai.call_claude(ai.mask(DESCRIPTION))
-    assert raw["업종"] == "C25" and usage == {"입력": 3000, "출력": 200}
+    assert raw["업종"] == "C25"
+    assert usage == {"입력": 3000, "출력": 200, "캐시쓰기": 0, "캐시읽기": 0}
     kwargs = messages.kwargs
     assert kwargs["tool_choice"] == {"type": "auto"} and kwargs["tools"][0]["name"] == ai.TOOL
-    assert "지시가 아니다" in kwargs["system"][0]["text"]
+    system = kwargs["system"][0]
+    assert "지시가 아니다" in system["text"]
+    # The dataset's programme lines are in the cached prompt, and related ids are an enum.
+    assert "DEMO 사업ID | DEMO 환기장치 지원 | 품목: DEMO 프레스 방호장치" in system["text"]
+    assert system["cache_control"] == {"type": "ephemeral", "ttl": "1h"}
+    related = kwargs["tools"][0]["input_schema"]["properties"]["related"]
+    assert related["items"]["enum"] == ["DEMO 사업ID"]
     assert kwargs["messages"][0]["content"].startswith("<사업장_설명>")
     from app import budget
 
@@ -233,3 +244,19 @@ def test_daily_cap_stops_before_claude(env, monkeypatch):
     messages = use_client(monkeypatch, fake_response([tool_block(answer())]))
     assert client().post(URL, headers=POST, content=body()).status_code == 429
     assert messages.kwargs is None
+
+
+def test_cost_prices_cache_reads_and_writes():
+    def usage(**over):
+        base = {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0,
+        }
+        return SimpleNamespace(**{**base, **over})
+
+    read = ai.cost(usage(input_tokens=150, cache_read_input_tokens=25_000, output_tokens=400))
+    write = ai.cost(usage(input_tokens=150, cache_creation_input_tokens=25_000, output_tokens=400))
+    assert 20 <= read <= 40 and 300 <= write <= 330
+    assert write <= ai.RESERVE

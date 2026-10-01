@@ -493,16 +493,19 @@ export const supportProgramsDataset: Dataset = {
     "근로복지공단",
     "지자체",
     "KSIC",
+    "JSONL",
   ],
-  updated: "2026-09-28",
+  updated: "2026-10-01",
   year: 2026,
   api: false,
-  ai: false,
+  // programs.jsonl (one labelled programme per line) is built for AI readers and RAG.
+  ai: true,
   accent: "blue",
   sample: [],
   variables: [],
 };
-// Public since 2026-10-01 at the owner's request; reuse terms still unconfirmed (docs/SUPPORT-PROGRAMS-INTAKE-REVIEW.md).
+// Public since 2026-10-01 at the owner's request, with downloads (0.7-hub.1); no licence notice by the
+// owner's decision (docs/SUPPORT-PROGRAMS-INTAKE-REVIEW.md).
 export const supportProgramsPublic = true;
 export const corporateOhsDataset: Dataset = {
   isReal: true,

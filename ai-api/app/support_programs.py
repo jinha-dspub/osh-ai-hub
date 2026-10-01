@@ -28,7 +28,7 @@ from starlette.concurrency import run_in_threadpool
 
 VERSION = "0.7"
 VERSION_DATE = "2026-09-28"
-RELEASE = "20261001-v2"
+RELEASE = "20261001-v3"
 PREFIX = "/demo/osh-support-programs"
 PROJECT = "osh-support-programs"
 # NAS rule 6: the service reads only serving/current (switch with `ln -sfn`, then restart).
@@ -51,6 +51,12 @@ TABLES = {
     ),
 }
 CATEGORY_TABLE = TABLES["분류"][0]
+# The downloadable Hub dataset (web/scripts/build-support-programs-dataset.mjs) and its zip,
+# shipped in serving v3 under 6_허브판/. Only these files are served, pinned as one set:
+# sha256 of "\n".join(sorted(f"{path}\t{sha256}")) with paths relative to 6_허브판/.
+DATASET_DIR = "6_허브판"
+DATASET = "osh-support-programs-0.7-hub.1"
+DATASET_DIGEST = "e603404df9997033d9c13c1c01ab9e7420d312051595d445fe4af4bf29c151eb"
 CATEGORY_COLUMNS = ["사업ID", "분류", "원_지원범주"]
 # Hub categories (scripts/build_support_programs_categories.py). The notes are shown on the
 # category buttons and given to Claude, so both read the same meaning.
@@ -166,6 +172,39 @@ def catalogue():
     }
 
 
+@lru_cache(maxsize=1)
+def dataset_files():
+    """{download name: bytes}: the zip by its own name, dataset files by their path inside it."""
+    base = ROOT / DATASET_DIR
+    found = {}
+    for path in sorted(base.rglob("*")):
+        if path.is_file():
+            found[path.relative_to(base).as_posix()] = path.read_bytes()
+    listing = "\n".join(
+        sorted(f"{name}\t{hashlib.sha256(data).hexdigest()}" for name, data in found.items())
+    )
+    if hashlib.sha256(listing.encode()).hexdigest() != DATASET_DIGEST:
+        raise ValueError("dataset does not match the pinned release")
+    files = {f"{DATASET}.zip": found[f"{DATASET}.zip"]}
+    for name, data in found.items():
+        if name.startswith(DATASET + "/"):
+            files[name.removeprefix(DATASET + "/")] = data
+    return files
+
+
+def jsonl_programs():
+    return [json.loads(line) for line in dataset_files()["data/programs.jsonl"].splitlines()]
+
+
+DOWNLOAD_TYPES = {
+    ".zip": "application/zip",
+    ".csv": "text/csv; charset=utf-8",
+    ".jsonl": "application/x-ndjson; charset=utf-8",
+    ".json": "application/json; charset=utf-8",
+    ".md": "text/markdown; charset=utf-8",
+}
+
+
 # ---- demand log on the NAS ---------------------------------------------------
 # raw/demand-log-YYYYMMDD/<세션ID>-<순번>.json (+ MANIFEST.md), one file per beacon batch.
 # Files are only added, never overwritten, so a retried batch is stored once. If the NAS is
@@ -208,7 +247,9 @@ class Conditions(Strict):
 
 Category = Literal[tuple(CATEGORIES)]
 Way = Literal["보조금·비용지원", "융자", "무료 서비스", "보험료·세금 혜택"]
-FormField = Literal["신청주체", "근로자수", "업종", "지역", "기업", "유해인자", "분류", "키워드"]
+FormField = Literal[
+    "신청주체", "근로자수", "업종", "지역", "기업", "유해인자", "분류", "키워드", "관련사업"
+]
 
 
 class Event(Strict):
@@ -359,6 +400,22 @@ def register(app):
             raise HTTPException(
                 503, "자료를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."
             ) from None
+
+    @app.api_route(PREFIX + "/download/{name:path}", methods=["GET", "HEAD"])
+    def download(name: str, request: Request):
+        try:
+            files = dataset_files()
+        except (OSError, ValueError, KeyError):
+            raise HTTPException(503, "데이터셋을 불러오지 못했습니다.") from None
+        if name not in files:
+            raise HTTPException(404, "없는 파일입니다.")
+        filename = name.rsplit("/", 1)[-1]
+        headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+        media = DOWNLOAD_TYPES.get(Path(name).suffix, "application/octet-stream")
+        if request.method == "HEAD":
+            headers["Content-Length"] = str(len(files[name]))
+            return Response(status_code=200, headers=headers, media_type=media)
+        return Response(files[name], headers=headers, media_type=media)
 
     @app.post(PREFIX + "/api/log", status_code=204)
     async def post_log(request: Request):
