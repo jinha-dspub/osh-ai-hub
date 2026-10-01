@@ -41,7 +41,10 @@ DOWNLOAD_TYPES = sp.DOWNLOAD_TYPES
 MODEL = shared.MODEL
 USD_PER_MTOK = shared.USD_PER_MTOK
 MAX_TOKENS = 1500
-PROMPT_TOKENS = 6000
+# Measured 2026-10-01 with count_tokens: 10,292 input tokens (system + tool schema + 600-char
+# description). The reservation must cover a full cache write of it, or budget.settle freezes
+# every AI service (it did once at 6,000).
+PROMPT_TOKENS = 16_000
 RESERVE = math.ceil(
     (PROMPT_TOKENS * shared.CACHE_WRITE * USD_PER_MTOK[0] + MAX_TOKENS * USD_PER_MTOK[1])
     * budget.KRW_PER_USD

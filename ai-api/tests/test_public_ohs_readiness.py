@@ -177,3 +177,16 @@ def test_daily_cap_stops_before_claude(release, monkeypatch):
     with pytest.raises(HTTPException) as error:
         ro.call_claude("DEMO")
     assert error.value.status_code == 429 and not called
+
+
+def test_reservation_covers_a_full_cache_write_of_the_measured_prompt():
+    from types import SimpleNamespace
+
+    measured = 10_292  # count_tokens, 2026-10-01
+    worst = SimpleNamespace(
+        input_tokens=0,
+        cache_creation_input_tokens=measured,
+        cache_read_input_tokens=0,
+        output_tokens=ro.MAX_TOKENS,
+    )
+    assert shared.cost(worst) <= ro.RESERVE
