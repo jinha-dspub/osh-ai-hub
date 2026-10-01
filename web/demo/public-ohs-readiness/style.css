@@ -1,0 +1,338 @@
+/* 공공기관 안전보건 입찰 준비 점검. Family Design tokens only; layout specific to this tool. */
+.osh-app .ro-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.osh-app .ro-purposes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.osh-app .ro-purpose {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  min-height: 44px;
+  padding: 16px;
+  text-align: left;
+  border: 1px solid var(--osh-line);
+  border-radius: var(--osh-radius-card);
+  background: white;
+  cursor: pointer;
+}
+.osh-app .ro-purpose b {
+  color: var(--osh-ink);
+  font-size: 17px;
+  font-weight: 650;
+}
+.osh-app .ro-purpose span {
+  color: var(--osh-muted);
+  font-size: 14px;
+}
+.osh-app .ro-purpose[aria-pressed="true"] {
+  border: 2px solid var(--osh-primary);
+  background: var(--osh-primary-soft);
+  padding: 15px;
+}
+.osh-app .ro-textarea {
+  width: 100%;
+  min-height: 112px;
+  resize: vertical;
+  font: inherit;
+  line-height: 1.6;
+}
+.osh-app .ro-proposal {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 2px solid var(--osh-primary);
+  border-radius: var(--osh-radius-card);
+  background: var(--osh-primary-soft);
+}
+.osh-app .ro-proposal ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.osh-app .ro-proposal li {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: var(--osh-radius-control);
+  background: white;
+}
+.osh-app .ro-proposal label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.osh-app .ro-proposal input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--osh-primary);
+}
+.osh-app .ro-proposal li .osh-help {
+  margin: 0 0 0 30px;
+}
+.osh-app .ro-field {
+  min-width: 120px;
+  color: var(--osh-muted);
+  font-size: 14px;
+}
+.osh-app .ro-ai-mark {
+  display: inline-flex;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: var(--osh-radius-badge);
+  background: var(--osh-primary);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.osh-app .ro-group {
+  margin: 0;
+  padding: 16px 0 0;
+  border: 0;
+  border-top: 1px solid var(--osh-line);
+}
+.osh-app .ro-group legend {
+  padding: 0 8px 0 0;
+  color: var(--osh-ink);
+  font-weight: 650;
+}
+.osh-app .ro-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 24px;
+  margin-top: 12px;
+  align-items: start;
+}
+.osh-app .ro-fields select,
+.osh-app .ro-fields input {
+  width: 100%;
+}
+.osh-app .ro-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.osh-app .ro-tile {
+  min-height: 44px;
+  padding: 14px 18px;
+  text-align: left;
+  border: 1px solid var(--osh-line);
+  border-left-width: 4px;
+  border-radius: var(--osh-radius-card);
+  background: white;
+  color: var(--osh-muted);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.osh-app .ro-tile b {
+  display: block;
+  color: var(--osh-ink);
+  font-size: 26px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+.osh-app .ro-tile[aria-pressed="true"] {
+  background: var(--osh-primary-soft);
+  outline: 2px solid var(--osh-primary);
+}
+.osh-app .ro-tile.ro-ok,
+.osh-app .ro-item.ro-ok {
+  border-left-color: var(--osh-success-ink);
+}
+.osh-app .ro-tile.ro-no,
+.osh-app .ro-item.ro-no {
+  border-left-color: var(--osh-error-ink);
+}
+.osh-app .ro-tile.ro-check,
+.osh-app .ro-item.ro-check {
+  border-left-color: var(--osh-demo-ink);
+}
+.osh-app .ro-tile.ro-info,
+.osh-app .ro-item.ro-info {
+  border-left-color: var(--osh-input-line);
+}
+.osh-app .ro-result-group {
+  margin-top: 24px;
+}
+.osh-app .ro-count {
+  color: var(--osh-muted);
+  font-weight: 600;
+}
+.osh-app .ro-items {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.osh-app .ro-item {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  padding: 16px 20px;
+  border: 1px solid var(--osh-line);
+  border-left-width: 4px;
+  border-radius: var(--osh-radius-card);
+  background: white;
+}
+.osh-app .ro-item.ro-info {
+  opacity: 0.75;
+}
+.osh-app .ro-item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.osh-app .ro-status {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: var(--osh-radius-badge);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.osh-app .ro-status--ok {
+  background: var(--osh-success-bg);
+  color: var(--osh-success-ink);
+}
+.osh-app .ro-status--no {
+  background: var(--osh-error-bg);
+  color: var(--osh-error-ink);
+}
+.osh-app .ro-status--check {
+  background: var(--osh-demo-bg);
+  color: var(--osh-demo-ink);
+}
+.osh-app .ro-status--info {
+  background: var(--osh-paper);
+  color: var(--osh-muted);
+}
+.osh-app .ro-points {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.osh-app .ro-id {
+  margin-left: auto;
+  color: var(--osh-muted);
+  font-size: 12px;
+}
+.osh-app .ro-item-title {
+  margin: 0;
+  font-size: 17px;
+}
+.osh-app .ro-why {
+  margin: 0;
+  color: var(--osh-ink);
+}
+.osh-app .ro-item .osh-help {
+  margin: 0;
+}
+.osh-app .ro-prep {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+}
+.osh-app .ro-cite summary {
+  min-height: 32px;
+  color: var(--osh-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.osh-app .ro-cite ul {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+.osh-app .ro-cite q {
+  display: block;
+  margin: 4px 0;
+  padding: 6px 10px;
+  border-left: 3px solid var(--osh-line);
+  background: var(--osh-paper);
+  color: var(--osh-ink);
+}
+.osh-app .ro-inline {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+.osh-app .ro-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+.osh-app .ro-tab {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--osh-input-line);
+  border-radius: var(--osh-radius-control);
+  background: white;
+  color: var(--osh-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.osh-app .ro-tab[aria-selected="true"] {
+  background: var(--osh-primary);
+  border-color: var(--osh-primary);
+  color: white;
+}
+.osh-app .ro-narrow {
+  max-width: 320px;
+}
+.osh-app .ro-num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.osh-app .ro-downloads {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+}
+@media (max-width: 1150px) {
+  .osh-app .ro-purposes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 850px) {
+  .osh-app .ro-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .osh-app .ro-items {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .osh-app .ro-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .osh-app .ro-purposes,
+  .osh-app .ro-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

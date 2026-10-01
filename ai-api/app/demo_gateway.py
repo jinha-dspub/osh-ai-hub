@@ -10,6 +10,7 @@ from app.copd_demo import app
 from app.corporate_ohs import register as register_corporate_ohs
 from app.lanyard import register as register_lanyard
 from app.oshmaster import register as register_oshmaster
+from app.public_ohs_readiness import register as register_public_ohs_readiness
 from app.support_programs import register as register_support_programs
 from app.voice import register
 
@@ -18,6 +19,7 @@ register_oshmaster(app)
 register_lanyard(app)
 register_support_programs(app)
 register_corporate_ohs(app)
+register_public_ohs_readiness(app)
 
 
 @app.get("/demo")
