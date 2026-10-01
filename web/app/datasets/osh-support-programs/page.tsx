@@ -33,7 +33,7 @@ export default async function SupportProgramsPage() {
           </p>
           <p className="osh-copy">
             <strong>지원사업 114건 · 지정 지원품목 114건</strong> · 지원 종류
-            9가지 · 기준연도 2021–2027 (2026년 106건)
+            9가지(Hub 분류) · 기준연도 2021–2027 (2026년 106건)
           </p>
           <p className="osh-help">
             버전 0.7 · 최종 버전 날짜 2026-09-28 · 업데이트 계획 미정
@@ -46,18 +46,20 @@ export default async function SupportProgramsPage() {
           <h2 className="osh-heading">이렇게 활용하세요</h2>
           <div className="osh-grid">
             <article className="osh-card">
-              <h3 className="osh-card-title">1. 사업장 조건 입력</h3>
+              <h3 className="osh-card-title">1. 사업장 설명 또는 조건 입력</h3>
               <p>
-                상시근로자 수, 업종(KSIC 11차), 지역, 기업 규모, 유해인자 보유
-                여부를 고릅니다. 지원품목·위험요인으로도 검색할 수 있습니다.
+                사업장을 글로 설명하면 AI(Claude)가 근로자 수·업종·지역·필요한
+                지원을 제안하고, 맞는 것만 골라 적용합니다. 조건을 직접 고르거나
+                지원품목·위험요인으로 검색할 수도 있습니다.
               </p>
             </article>
             <article className="osh-card">
               <h3 className="osh-card-title">2. 필요한 지원 고르기</h3>
               <p>
-                설비·장비 / 진단·점검·교육 / 비용과 사람 세 갈래 중 하나와 그
-                안의 지원 종류를 고르면 받을 수 있는 사업과 확인할 조건이
-                나옵니다.
+                설비개선·환경개선·장비지원·컨설팅·점검·기술지도·측정·검진·교육·
+                보험료·감면·인증·건강상담·산재복귀 9개 분류와 받는 방식(보조금,
+                융자, 무료 서비스, 보험료·세금 혜택)을 여러 개 고르면 받을 수
+                있는 사업과 확인할 조건이 나옵니다.
               </p>
             </article>
             <article className="osh-card">
@@ -69,8 +71,9 @@ export default async function SupportProgramsPage() {
             </article>
           </div>
           <p className="osh-help">
-            판정은 요건표의 규칙으로만 합니다. AI 생성 설명·의미 검색은 포함되지
-            않으며, 실제 지원 여부는 각 기관의 공고와 심사로 정해집니다.
+            판정은 요건표의 규칙으로만 합니다. AI는 설명을 읽어 조건을 제안할 뿐
+            지원 가능 여부를 말하지 않으며, 실제 지원 여부는 각 기관의 공고와
+            심사로 정해집니다.
           </p>
         </section>
         <section className="osh-section">
@@ -124,9 +127,11 @@ export default async function SupportProgramsPage() {
             미리보기 표와 파일 다운로드는 제공하지 않습니다.
           </p>
           <p className="osh-copy">
-            DEMO 화면은 수요조사 시험판입니다. 누른 갈래·지원 종류, 검색어,
+            DEMO 화면은 수요조사 시험판입니다. 고른 분류·받는 방식, 검색어,
             사업장 조건, 목록에 보인 사업, 이동한 공식·신청 페이지를 기록하며
-            이름·연락처· 사업장명·IP는 받지 않습니다.
+            이름·연락처·IP는 받지 않습니다. AI 조건 채우기를 쓰면 직접 쓴 사업장
+            설명 원문(전화번호·이메일·사업자번호는 가림)이 Anthropic으로
+            전송되고 AI 제안과 함께 기록됩니다.
           </p>
         </section>
       </div>

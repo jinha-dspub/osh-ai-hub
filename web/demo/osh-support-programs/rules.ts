@@ -68,45 +68,16 @@ export const businessLabel: Record<Business, string> = {
   대: "중견·대기업",
 };
 
-export const categories = [
-  "설비·시설 개선",
-  "안전장비·물품",
-  "위험성평가·관리체계",
-  "현장 점검·기술지도",
-  "작업환경측정·건강진단",
-  "근로자 건강·심리",
-  "교육·안전문화",
-  "보험료·세제 감면",
-  "산재근로자 복귀",
-];
-export const branches = [
-  {
-    id: "고침",
-    name: "설비·장비를 바꾼다",
-    note: "위험한 기계·설비를 고치고, 안전장비·보호구를 산다",
-    categories: ["설비·시설 개선", "안전장비·물품"],
-  },
-  {
-    id: "진단",
-    name: "진단·점검·교육을 받는다",
-    note: "위험성평가, 현장 점검·기술지도, 작업환경측정·건강진단, 안전교육",
-    categories: [
-      "위험성평가·관리체계",
-      "현장 점검·기술지도",
-      "작업환경측정·건강진단",
-      "교육·안전문화",
-    ],
-  },
-  {
-    id: "비용",
-    name: "비용과 사람을 지원받는다",
-    note: "보험료·세금 감면, 근로자 건강·심리, 산재근로자 복귀",
-    categories: ["근로자 건강·심리", "보험료·세제 감면", "산재근로자 복귀"],
-  },
-];
-const branchOf: Record<string, string> = Object.fromEntries(
-  branches.flatMap((b) => b.categories.map((c) => [c, b.id])),
-);
+// How the support arrives, grouped from 지원형태. The nine "what" categories (분류) come with
+// the catalogue from the serving release, so the screen and the AI prompt read the same list.
+export const ways: Record<string, string[]> = {
+  "보조금·비용지원": ["보조금", "비용지원"],
+  융자: ["융자"],
+  "무료 서비스": ["무상서비스"],
+  "보험료·세금 혜택": ["보험료지원", "보험료감면", "세제", "인정제도"],
+};
+export const wayOf = (r: Program) =>
+  Object.keys(ways).find((w) => ways[w].includes(r["지원형태"])) ?? "";
 const formOrder = [
   "보조금",
   "융자",
@@ -270,6 +241,8 @@ export function amount(r: Program) {
 const searchFields = [
   "사업명",
   "세부사업명",
+  "분류",
+  "지원범주",
   "지원유형",
   "지원형태",
   "대상단위",
@@ -293,17 +266,72 @@ const searchFields = [
   "검증상태",
 ];
 
+// Words people use for the same thing. A term matches when any word of its group is present.
+const synonyms = [
+  ["보호구", "안전장비", "안전용품", "안전모", "안전대"],
+  ["에어컨", "냉방", "냉방기"],
+  ["더위", "폭염", "온열", "열사병"],
+  ["환기", "국소배기", "환기장치", "배기"],
+  ["추락", "떨어짐"],
+  ["협착", "끼임"],
+  ["충돌", "부딪힘"],
+  ["건강검진", "건강진단", "검진"],
+  ["심리", "상담", "트라우마"],
+  ["대출", "융자"],
+  ["세금", "세액공제", "세제"],
+  ["보험", "보험료"],
+  ["화학", "화학물질"],
+  ["질식", "밀폐공간"],
+  ["컨설팅", "기술지도"],
+  ["휴게", "휴게시설", "쉼터"],
+  ["배달", "이륜차"],
+];
+
+// Spaces and separators are ignored, so "환기 장치" finds "환기장치".
+export const normalize = (s: string) =>
+  s.toLowerCase().replace(/[\s·,.()/_-]+/g, "");
+
 export function searchText(programs: Program[], items: Item[]) {
   const text: Record<string, string> = {};
   for (const r of programs)
     text[r["사업ID"]] =
-      searchFields.map((c) => r[c]).join(" ") + " " + r["사업ID"];
+      searchFields.map((c) => r[c] ?? "").join(" ") + " " + r["사업ID"];
   for (const i of items)
     text[i["사업ID"]] += ` ${i["품목명"]} ${i["품목구분"]} ${i["위험요인"]}`;
+  for (const id in text) text[id] = normalize(text[id]);
   return text;
 }
 
-export type Judged = { row: Program; verdict: Verdict; why: string[] };
+function terms(query: string) {
+  return query
+    .split(/[\s,]+/)
+    .map(normalize)
+    .filter(Boolean)
+    .map((t) => [
+      t,
+      ...synonyms
+        .filter((g) => g.includes(t))
+        .flat()
+        .map(normalize),
+    ]);
+}
+
+// Search ranks, it never hides: 0 means no term matched.
+export function score(text: string, query: string) {
+  const whole = normalize(query);
+  if (!whole) return 0;
+  const groups = terms(query);
+  const hits = groups.filter((alts) => alts.some((t) => text.includes(t)));
+  return hits.length + (groups.length > 1 && text.includes(whole) ? 1 : 0);
+}
+
+export type Judged = {
+  row: Program;
+  verdict: Verdict;
+  why: string[];
+  match: number;
+};
+export type Picks = { categories: string[]; ways: string[] };
 export type Outcome = {
   tiles: {
     eligible: number;
@@ -312,39 +340,43 @@ export type Outcome = {
     excluded: number;
   };
   outOfScope: number;
+  // Facet counts: each counts rows inside the other facet's picks.
   categoryCounts: Record<string, number>;
+  categoryMatches: Record<string, number>;
+  wayCounts: Record<string, number>;
+  matches: number;
   eligible: Judged[];
   excluded: Judged[];
 };
 
 const rank = (j: Judged) => verdictOrder.indexOf(j.verdict);
 const compare = (x: Judged, y: Judged) =>
+  y.match - x.match ||
   rank(x) - rank(y) ||
   formOrder.indexOf(x.row["지원형태"]) - formOrder.indexOf(y.row["지원형태"]) ||
   x.row["기관구분"].localeCompare(y.row["기관구분"], "ko");
 
-// Tiles and chip counts ignore the branch/category pick; the lists are filtered by it.
+// Tiles ignore the picks and the search. Lists follow the picks; with no pick, only search
+// matches are listed. Matching rows go first.
 export function evaluate(
   programs: Program[],
   text: Record<string, string>,
   a: Condition,
-  branch = "",
-  category = "",
+  picks: Picks = { categories: [], ways: [] },
 ): Outcome {
   const workerMode = a.who === "근로자";
   const tiles = { eligible: 0, personal: 0, regional: 0, excluded: 0 };
-  const categoryCounts: Record<string, number> = Object.fromEntries(
-    categories.map((c) => [c, 0]),
+  const categoryCounts: Record<string, number> = {};
+  const categoryMatches: Record<string, number> = {};
+  const wayCounts: Record<string, number> = Object.fromEntries(
+    Object.keys(ways).map((w) => [w, 0]),
   );
   let outOfScope = 0;
-  const query = a.query.trim();
+  let matches = 0;
+  const picked = picks.categories.length + picks.ways.length > 0;
   const eligible: Judged[] = [];
   const excluded: Judged[] = [];
   for (const row of programs) {
-    if (query && !text[row["사업ID"]].includes(query)) {
-      outOfScope++;
-      continue;
-    }
     const who = applicant(row);
     if (
       (a.who === "사업주" && who === "근로자") ||
@@ -361,15 +393,28 @@ export function evaluate(
       if (verdict === "개인대상") tiles.personal++;
       if (verdict === "지역사업") tiles.regional++;
     }
-    if (row["지원범주"] in categoryCounts) categoryCounts[row["지원범주"]]++;
-    if (branch && branchOf[row["지원범주"]] !== branch) continue;
-    if (category && row["지원범주"] !== category) continue;
+    const match = score(text[row["사업ID"]] ?? "", a.query);
+    const category = row["분류"];
+    const way = wayOf(row);
+    const inCategory =
+      !picks.categories.length || picks.categories.includes(category);
+    const inWay = !picks.ways.length || picks.ways.includes(way);
+    if (inWay) {
+      categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
+      if (match)
+        categoryMatches[category] = (categoryMatches[category] ?? 0) + 1;
+    }
+    if (inCategory && way) wayCounts[way]++;
+    if (!inCategory || !inWay) continue;
+    if (match) matches++;
+    if (!picked && !match) continue;
     // Workers see their own programmes in the main list rather than as a side group.
     if (workerMode && verdict === "개인대상") verdict = "해당";
     (verdict === "제외" || verdict === "타지역" ? excluded : eligible).push({
       row,
       verdict,
       why,
+      match,
     });
   }
   if (workerMode) tiles.personal = 0;
@@ -377,6 +422,9 @@ export function evaluate(
     tiles,
     outOfScope,
     categoryCounts,
+    categoryMatches,
+    wayCounts,
+    matches,
     eligible: eligible.sort(compare),
     excluded: excluded.sort(compare),
   };

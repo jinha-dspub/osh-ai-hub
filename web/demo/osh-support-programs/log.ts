@@ -1,4 +1,5 @@
-// Demand log (package DEMO.md schema 2): append-only batches of not-yet-sent events.
+// Demand log (schema 3; schema 2 was the package DEMO.md form with 갈래·범주): append-only
+// batches of not-yet-sent events.
 // The server stores each batch once under the NAS raw area; failed sends are re-queued.
 
 export type Conditions = {
@@ -9,19 +10,37 @@ export type Conditions = {
   기업: string;
   유해인자: string;
 };
+export type FormField =
+  | "신청주체"
+  | "근로자수"
+  | "업종"
+  | "지역"
+  | "기업"
+  | "유해인자"
+  | "분류"
+  | "키워드";
 export type LogEvent = {
   행동:
     | "열기"
-    | "갈래선택"
-    | "범주선택"
+    | "분류선택"
+    | "분류해제"
+    | "받는방식선택"
+    | "받는방식해제"
     | "검색"
     | "조건변경"
     | "노출"
     | "품목펼침"
     | "링크이동"
-    | "0건";
+    | "0건"
+    | "AI제안"
+    | "AI적용"
+    | "AI수정";
   사업ID?: string;
   범주?: string;
+  분류?: string[];
+  받는방식?: string[];
+  항목?: FormField[];
+  요청ID?: string;
   순위?: number;
   결과건수?: number;
   검색어?: string;
@@ -55,6 +74,7 @@ export function createLog(
   conditions: () => Conditions,
   send: Sender = beacon,
   clock: () => number = Date.now,
+  release = "",
 ) {
   const started = clock();
   const session = sessionId(new Date(started));
@@ -74,8 +94,9 @@ export function createLog(
       while (retry || buffer.length) {
         // A failed batch is resent byte-for-byte; the server keeps the first copy of a 순번.
         retry ??= JSON.stringify({
-          스키마: 2,
+          스키마: 3,
           판본: build,
+          ...(release && { 자료판: release }),
           세션ID: session,
           순번: ++sequence,
           시작: new Date(started).toISOString(),
@@ -94,7 +115,10 @@ export function createLog(
 
   function record(event: LogEvent, now = false) {
     const clean = Object.fromEntries(
-      Object.entries(event).filter(([, v]) => v !== undefined && v !== ""),
+      Object.entries(event).filter(
+        ([, v]) =>
+          v !== undefined && v !== "" && !(Array.isArray(v) && !v.length),
+      ),
     ) as LogEvent;
     buffer.push({ t: clock() - started, ...clean });
     if (buffer.length > 200) buffer = buffer.slice(-200);

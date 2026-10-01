@@ -57,15 +57,6 @@
 .osh-app .osh-field:has(:disabled) {
   opacity: 0.6;
 }
-.osh-app .sp-presets {
-  display: grid;
-  gap: 8px;
-  padding-top: 16px;
-  border-top: 1px solid var(--osh-line);
-}
-.osh-app .sp-presets .osh-help {
-  margin: 0;
-}
 .osh-app .sp-error {
   display: flex;
   flex-wrap: wrap;
@@ -127,7 +118,7 @@
 }
 .osh-app .sp-branch b {
   color: var(--osh-ink);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 650;
 }
 .osh-app .sp-branch span {
@@ -148,61 +139,6 @@
   padding: 19px;
 }
 
-/* Branch map: root node with a vertical rail and one connector per kind. */
-.osh-app .sp-map {
-  display: grid;
-  grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
-  align-items: center;
-  gap: 0 32px;
-  margin-bottom: 16px;
-  padding: 20px;
-  border: 1px solid var(--osh-line);
-  border-radius: var(--osh-radius-card);
-  background: white;
-}
-.osh-app .sp-map-root {
-  position: relative;
-  margin: 0;
-  padding: 12px 16px;
-  border-radius: var(--osh-radius-control);
-  background: var(--osh-primary);
-  color: white;
-  font-weight: 650;
-}
-.osh-app .sp-map-root em {
-  display: block;
-  font-style: normal;
-  font-size: 14px;
-  opacity: 0.85;
-}
-.osh-app .sp-map-root::after {
-  content: "";
-  position: absolute;
-  right: -32px;
-  top: 50%;
-  width: 16px;
-  border-top: 2px solid var(--osh-line);
-}
-.osh-app .sp-map ul {
-  position: relative;
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding: 0 0 0 16px;
-  list-style: none;
-  border-left: 2px solid var(--osh-line);
-}
-.osh-app .sp-map li {
-  position: relative;
-}
-.osh-app .sp-map li::before {
-  content: "";
-  position: absolute;
-  left: -16px;
-  top: 50%;
-  width: 16px;
-  border-top: 2px solid var(--osh-line);
-}
 .osh-app .sp-kind {
   display: inline-flex;
   align-items: center;
@@ -443,6 +379,80 @@
   min-width: 140px;
 }
 
+/* AI 조건 채우기: description box, proposal checklist, and the mark on AI-filled fields. */
+.osh-app .sp-textarea {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  font: inherit;
+  line-height: 1.6;
+}
+.osh-app .sp-proposal {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 2px solid var(--osh-primary);
+  border-radius: var(--osh-radius-card);
+  background: var(--osh-primary-soft);
+}
+.osh-app .sp-proposal ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.osh-app .sp-proposal li {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: var(--osh-radius-control);
+  background: white;
+}
+.osh-app .sp-proposal label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.osh-app .sp-proposal input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--osh-primary);
+}
+.osh-app .sp-proposal-field {
+  min-width: 64px;
+  color: var(--osh-muted);
+  font-size: 14px;
+}
+.osh-app .sp-proposal li .osh-help {
+  margin: 0 0 0 30px;
+}
+.osh-app .sp-ai-mark {
+  display: inline-flex;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: var(--osh-radius-badge);
+  background: var(--osh-primary);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.osh-app .sp-ways {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.osh-app .sp-tag--match {
+  background: var(--osh-primary);
+  color: white;
+  border-color: transparent;
+}
+
 @media (max-width: 850px) {
   .osh-app .sp-fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -454,13 +464,6 @@
   .osh-app .sp-programs,
   .osh-app .sp-meters {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .osh-app .sp-map {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-  }
-  .osh-app .sp-map-root::after {
-    display: none;
   }
 }
 @media (max-width: 640px) {

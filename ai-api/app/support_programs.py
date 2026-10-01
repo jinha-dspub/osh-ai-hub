@@ -1,7 +1,8 @@
 """Safety and health support programme finder and its demand log, under the /demo gateway.
 
 The requirement table is real but its reuse terms are unconfirmed, so rows are served from
-the gateway API and never bundled into the public web build. What visitors pick (branches,
+the gateway API and never bundled into the public web build. Release v2 adds the Hub's nine
+support categories (categories.csv) next to the package tables, which stay unchanged. What visitors pick (branches,
 kinds, searches, exposures, outbound clicks) is the second dataset: each beacon batch is
 stored once, unchanged, in the NAS raw area (see /nas/README.md).
 """
@@ -27,6 +28,7 @@ from starlette.concurrency import run_in_threadpool
 
 VERSION = "0.7"
 VERSION_DATE = "2026-09-28"
+RELEASE = "20261001-v2"
 PREFIX = "/demo/osh-support-programs"
 PROJECT = "osh-support-programs"
 # NAS rule 6: the service reads only serving/current (switch with `ln -sfn`, then restart).
@@ -43,7 +45,27 @@ TABLES = {
         "2_자료/data/items.csv",
         "ffa08c5def0239168efb477fc703ed7fa0a7c595ca95ead8b2a89547654bd11b",
     ),
+    "분류": (
+        "2_자료/data/categories.csv",
+        "7f33842e647874edc20d7b3003828782df5f79b3a150d09657fafb952ce7bd66",
+    ),
 }
+CATEGORY_TABLE = TABLES["분류"][0]
+CATEGORY_COLUMNS = ["사업ID", "분류", "원_지원범주"]
+# Hub categories (scripts/build_support_programs_categories.py). The notes are shown on the
+# category buttons and given to Claude, so both read the same meaning.
+CATEGORY_NOTES = {
+    "설비개선": "위험한 기계·설비 교체, 방호장치, 추락방지 등 안전시설 설치·개선 비용",
+    "환경개선": "환기장치, 온열질환 예방, 냉방, 휴게시설 등 작업환경 개선",
+    "장비지원": "스마트 안전장비·감지기·보호구 구입비 지원이나 무상 대여·설치",
+    "컨설팅": "위험성평가, 안전보건관리체계 구축, 화학물질 관리 컨설팅",
+    "점검·기술지도": "전문가가 현장을 찾아가 위험요인을 점검하고 기술지도",
+    "측정·검진": "작업환경측정, 특수·배치전 건강진단, 국소배기 성능평가 비용",
+    "교육": "VR·현장 안전교육, 외국인·현장실습생 교육",
+    "보험료·감면·인증": "산재·안전보험료 지원, 산재보험요율 인하, 세액공제, 위험성평가 인정",
+    "건강상담·산재복귀": "근로자 건강·심리 상담, 노동 상담, 산재근로자 직장복귀·재활·생활 지원",
+}
+CATEGORIES = list(CATEGORY_NOTES)
 # Same columns as the package's 데모_데이터.py; the rest are not displayed.
 COLUMNS = {
     "사업": [
@@ -110,6 +132,7 @@ COLUMNS = {
         "관리품목",
         "위험요인",
     ],
+    "분류": CATEGORY_COLUMNS,
 }
 
 
@@ -128,7 +151,19 @@ def read_table(name):
 @lru_cache(maxsize=1)
 def catalogue():
     data = {name: read_table(name) for name in TABLES}
-    return {"version": VERSION, "version_date": VERSION_DATE, **data}
+    of = {r["사업ID"]: r["분류"] for r in data.pop("분류")}
+    for row in data["사업"]:
+        category = of.get(row["사업ID"])
+        if category not in CATEGORY_NOTES:
+            raise ValueError(f"{row['사업ID']} has no Hub category")
+        row["분류"] = category
+    return {
+        "version": VERSION,
+        "version_date": VERSION_DATE,
+        "release": RELEASE,
+        "분류": [{"이름": k, "설명": v} for k, v in CATEGORY_NOTES.items()],
+        **data,
+    }
 
 
 # ---- demand log on the NAS ---------------------------------------------------
@@ -147,6 +182,9 @@ RAW_MANIFEST = """# MANIFEST
   수집 항목·목적·보관은 화면 첫 안내로 고지함.
 - 규모: 하루(KST) 단위 폴더. 파일 1개 = 화면이 보낸 묶음 1개 = `<세션ID>-<순번>.json`.
   같은 세션은 순번 1, 2, 3…으로 이어 붙여 읽는다. `받은시각`만 서버가 덧붙였다.
+- AI 조건 채우기: `<세션ID>-ai-<요청ID>.json` 1개 = 요청 1건. 방문자가 직접 쓴 사업장 설명 원문
+  (전화번호·이메일·사업자번호는 서버가 가림)과 Claude 제안·검증 결과. 설명은 Anthropic API로 보냄.
+  화면이 보내기 전에 알리며, 이 파일은 묶음 파일과 형식이 다르다.
 - 비고: 다음 날 scripts/sync_support_programs_nas.py가 쓰기 권한을 뗀다.
   수요는 클릭 수가 아니라 `링크이동 ÷ 노출`로 읽는다(목록 상위 노출 편향 보정).
 """
@@ -168,13 +206,38 @@ class Conditions(Strict):
     유해인자: Literal["Y", "N", "모름"]
 
 
+Category = Literal[tuple(CATEGORIES)]
+Way = Literal["보조금·비용지원", "융자", "무료 서비스", "보험료·세금 혜택"]
+FormField = Literal["신청주체", "근로자수", "업종", "지역", "기업", "유해인자", "분류", "키워드"]
+
+
 class Event(Strict):
     t: int = Field(ge=0, le=7 * 24 * 3600 * 1000)
+    # 갈래선택·범주선택 are schema 2 (before 2026-10-01 v2); the rest of 분류…AI수정 are schema 3.
     행동: Literal[
-        "열기", "갈래선택", "범주선택", "검색", "조건변경", "노출", "품목펼침", "링크이동", "0건"
+        "열기",
+        "갈래선택",
+        "범주선택",
+        "분류선택",
+        "분류해제",
+        "받는방식선택",
+        "받는방식해제",
+        "검색",
+        "조건변경",
+        "노출",
+        "품목펼침",
+        "링크이동",
+        "0건",
+        "AI제안",
+        "AI적용",
+        "AI수정",
     ]
     사업ID: ProgramId | None = None
     범주: Annotated[str, Field(max_length=40)] | None = None
+    분류: list[Category] | None = Field(default=None, max_length=len(CATEGORIES))
+    받는방식: list[Way] | None = Field(default=None, max_length=4)
+    항목: list[FormField] | None = Field(default=None, max_length=8)
+    요청ID: str | None = Field(default=None, pattern=r"^[0-9a-f]{12}$")
     순위: int | None = Field(default=None, ge=1, le=1000)
     결과건수: int | None = Field(default=None, ge=0, le=1000)
     검색어: Text | None = None
@@ -183,8 +246,9 @@ class Event(Strict):
 
 
 class Batch(Strict):
-    스키마: Literal[2]
+    스키마: Literal[2, 3]
     판본: str = Field(pattern=r"^[a-z]+-[0-9a-f]{10}$")
+    자료판: str | None = Field(default=None, pattern=r"^\d{8}-v\d+$")
     세션ID: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}-[a-z0-9]{8,16}$")
     순번: int = Field(ge=1, le=5000)
     시작: datetime
@@ -219,6 +283,14 @@ def put_new(path: Path, data: bytes):
         temp.unlink(missing_ok=True)
 
 
+AI_MANIFEST = """# MANIFEST-AI
+- 이 폴더의 `<세션ID>-ai-<요청ID>.json`은 AI 조건 채우기 요청 기록이다(MANIFEST.md의 묶음과 다른 형식).
+- 방문자가 직접 쓴 사업장 설명 원문(전화번호·이메일·사업자번호는 서버가 가림), Claude 원응답과
+  검증 뒤 제안, 토큰 수. 설명은 Anthropic API로 보냈고 화면이 보내기 전에 알렸다.
+- 외부 공유 전 연구책임자 확인 필요. 설명에 사업장명 등이 남아 있을 수 있다.
+"""
+
+
 def archive(day: str, name: str, data: bytes):
     relative = log_path(day, name)
     try:
@@ -227,6 +299,8 @@ def archive(day: str, name: str, data: bytes):
         target = nas_root() / relative
         if not (target.parent / "MANIFEST.md").exists():
             put_new(target.parent / "MANIFEST.md", RAW_MANIFEST.format(day=day).encode())
+        if "-ai-" in name and not (target.parent / "MANIFEST-AI.md").exists():
+            put_new(target.parent / "MANIFEST-AI.md", AI_MANIFEST.encode())
         put_new(target, data)
     except OSError:
         put_new(store_dir() / "nas-pending" / relative, data)
@@ -267,6 +341,10 @@ def receive(content: bytes, now: datetime | None = None):
 
 
 def register(app):
+    from app import support_programs_ai
+
+    support_programs_ai.register(app)
+
     @app.api_route(PREFIX + "/", methods=["GET", "HEAD"])
     def page():
         if not (STATIC / "index.html").is_file():

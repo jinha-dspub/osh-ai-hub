@@ -57,6 +57,26 @@ describe("support programme demand log", () => {
     expect(JSON.parse(sent[2]).순번).toBe(2);
   });
 
+  it("sends schema 3 with the data release and drops empty lists", async () => {
+    const sent: string[] = [];
+    const log = createLog(
+      "react-0123456789",
+      conditions,
+      (b) => (sent.push(b), true),
+      Date.now,
+      "20261001-v2",
+    );
+    log.record(
+      { 행동: "노출", 목록: ["2026-01"], 분류: ["설비개선"], 받는방식: [] },
+      true,
+    );
+    await log.flush();
+    const batch = JSON.parse(sent[0]);
+    expect([batch.스키마, batch.자료판]).toEqual([3, "20261001-v2"]);
+    expect(batch.이벤트[0].분류).toEqual(["설비개선"]);
+    expect(batch.이벤트[0]).not.toHaveProperty("받는방식");
+  });
+
   it("batches by size and by delay", async () => {
     vi.useFakeTimers();
     const sent: string[] = [];

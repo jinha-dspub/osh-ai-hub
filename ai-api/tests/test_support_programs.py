@@ -17,6 +17,8 @@ def write_release(root, extra_column=True):
     for name, (path, _) in support_programs.TABLES.items():
         columns = support_programs.COLUMNS[name] + (["내부메모"] if extra_column else [])
         values = [f"DEMO {c}" for c in columns]
+        if name == "분류":  # joins the DEMO programme row to a real Hub category
+            values[:3] = ["DEMO 사업ID", "설비개선", "DEMO"]
         content = ("﻿" + ",".join(columns) + "\r\n" + ",".join(values) + "\r\n").encode()
         (root / path).parent.mkdir(parents=True, exist_ok=True)
         (root / path).write_bytes(content)
@@ -46,9 +48,27 @@ def test_catalogue_serves_only_display_columns(release):
     client = TestClient(app, client=("192.168.0.3", 1234))
     body = client.get(API, headers=HEADERS).json()
     assert body["version"] == support_programs.VERSION
-    assert list(body["사업"][0]) == support_programs.COLUMNS["사업"]
+    assert list(body["사업"][0]) == support_programs.COLUMNS["사업"] + ["분류"]
     assert list(body["품목"][0]) == support_programs.COLUMNS["품목"]
     assert "내부메모" not in body["사업"][0]
+    assert body["사업"][0]["분류"] == "설비개선"
+    assert [c["이름"] for c in body["분류"]] == support_programs.CATEGORIES
+    assert body["release"] == support_programs.RELEASE
+    assert "분류" not in support_programs.COLUMNS["사업"]
+
+
+def test_programme_without_category_is_refused(release, monkeypatch):
+    path, _ = support_programs.TABLES["분류"]
+    content = (release / path).read_bytes().replace("설비개선".encode(), b"DEMO")
+    (release / path).write_bytes(content)
+    import hashlib
+
+    tables = dict(support_programs.TABLES)
+    tables["분류"] = (path, hashlib.sha256(content).hexdigest())
+    monkeypatch.setattr(support_programs, "TABLES", tables)
+    support_programs.catalogue.cache_clear()
+    client = TestClient(app, client=("192.168.0.3", 1234))
+    assert client.get(API, headers=HEADERS).status_code == 503
 
 
 def test_changed_release_is_refused(release):
@@ -136,6 +156,23 @@ def test_log_batch_lands_once_in_nas_raw_with_manifest(nas):
     assert "192.168" not in path.read_text()
 
 
+def test_log_schema_3_events(nas):
+    client = TestClient(app, client=("192.168.0.3", 1234))
+    events = [
+        {"t": 0, "행동": "분류선택", "분류": ["설비개선"]},
+        {"t": 10, "행동": "받는방식선택", "받는방식": ["융자"]},
+        {"t": 20, "행동": "AI제안", "요청ID": "0123456789ab", "항목": ["업종", "분류"]},
+        {"t": 30, "행동": "AI적용", "요청ID": "0123456789ab", "항목": ["업종"]},
+        {"t": 40, "행동": "AI수정", "요청ID": "0123456789ab", "항목": ["업종"]},
+        {"t": 50, "행동": "노출", "목록": ["2026-01"], "분류": ["설비개선", "교육"]},
+    ]
+    body = batch(스키마=3, 자료판="20261001-v2", 이벤트=events)
+    assert client.post(LOG, headers=POST, content=body).status_code == 204
+    [path] = stored(nas)
+    record = json.loads(path.read_text())
+    assert record["자료판"] == "20261001-v2" and record["이벤트"][4]["항목"] == ["업종"]
+
+
 def test_log_waits_locally_when_nas_is_missing(nas, tmp_path):
     (nas / "README.md").unlink()
     client = TestClient(app, client=("192.168.0.3", 1234))
@@ -154,6 +191,11 @@ def test_log_waits_locally_when_nas_is_missing(nas, tmp_path):
         batch(이벤트=[{"t": 0, "행동": "링크이동", "사업ID": "../x"}]),
         batch(조건={"신청주체": "전체"}),
         batch(연락처="010"),
+        batch(스키마=3, 이벤트=[{"t": 0, "행동": "분류선택", "분류": ["없는분류"]}]),
+        batch(스키마=3, 이벤트=[{"t": 0, "행동": "AI적용", "항목": ["이름"]}]),
+        batch(스키마=3, 이벤트=[{"t": 0, "행동": "AI제안", "요청ID": "../x"}]),
+        batch(스키마=3, 이벤트=[{"t": 0, "행동": "AI제안", "설명": "DEMO 원문"}]),
+        batch(스키마=3, 자료판="../v2"),
         b"not json",
     ],
 )

@@ -57,7 +57,18 @@
 - 화면 첫머리에 수집 고지(항목·목적·보관 "연구 종료 시 파기"·제3자 제공 없음)를 둔다. 문구는 제작자 원본 고지를 따랐다.
 - 원본과 다른 점: 원본은 카드가 화면에 나오기 전에도 `노출`을 기록했다. 이용률(`링크이동 ÷ 노출`)이 부풀려지지 않도록 사업 카드가 실제로 보일 때만 기록한다. `판본`은 화면 소스의 SHA-256 앞 10자리(`react-…`)로 빌드 때 찍는다.
 
+## v2 개정 (2026-10-01) — 분류 9개, 검색 순위, AI 조건 채우기
+
+- **분류**: 제작자(ukbyun, 이 저장소 소유자) 결정으로 Hub 분류 9개를 붙였다. `programs.csv`·`items.csv`는 바꾸지 않고 `scripts/build_support_programs_categories.py`가 `2_자료/data/categories.csv`(사업ID·분류·원_지원범주, SHA-256 `7f33842e…`)를 만든다. 사업 114건이 정확히 한 번씩 들어가는지 스크립트와 테스트가 확인한다. 배포본은 v1 내용 + 이 파일 = `serving/osh-support-programs-20261001-v2`(60 파일).
+- **검색**: 검색어가 사업을 지우지 않는다. 판정 타일은 검색어와 무관하고, 목록에서는 일치하는 사업을 앞에 둔다.
+- **AI 조건 채우기**: `POST /demo/osh-support-programs/api/interpret`(`ai-api/app/support_programs_ai.py`). Claude Sonnet 5.5, 키는 `dever/claude_client.py` 설정. 공용 AI 예산(`app/budget.py`)에 `anthropic-support-programs`로 예약·정산, 하루 `SUPPORT_PROGRAMS_AI_DAILY_KRW`(기본 2,000원), 기기당 `SUPPORT_PROGRAMS_AI_PER_CLIENT`(기본 20회), 동시 4건. 화면 선택지(KSIC 98개·시·도·분류)를 도구 스키마 enum으로 주고, 서버가 다시 검사한다. 기본값이 아닌 칸은 근거 문구가 설명 안에 그대로 있어야 남는다. Sonnet 5.5는 강제 도구 호출(`tool_choice: tool`)을 받지 않아 `auto` + 프롬프트로 한 번 호출하게 했다.
+- **설명 원문 기록**: 소유자 결정으로 원문을 남긴다. 보내기 전 서버가 전화번호·이메일·사업자번호를 가리고, 가린 글만 Anthropic으로 보내고 저장한다. 실패·한도 초과 요청도 `오류` 코드와 함께 저장한다. 같은 날짜 폴더에 `MANIFEST-AI.md`를 처음 한 번 추가한다(기존 `MANIFEST.md`는 그대로). 사업장명·사람 이름은 가리지 못하므로 외부 공유 전 확인이 필요하다.
+- **로그 스키마 3**: `자료판`, 행동 `분류선택·분류해제·받는방식선택·받는방식해제·AI제안·AI적용·AI수정`, 필드 `분류·받는방식·항목·요청ID`. 서버는 스키마 2(갈래선택·범주선택)도 계속 받는다. `build_support_programs_demand.py`가 `interpretations.csv`를 따로 만든다.
+- **확인하지 않은 것**: AI 제안의 정확도(시험 설명 3건만 봄), 공개 트래픽에서의 비용·지연.
+
 ## 남은 일
+
+0. v2 운영 반영(담당자 실행): ① `nas-put osh-support-programs serving <v1 사본 + categories.csv 폴더> osh-support-programs` → ② `cd /nas/osh-support-programs/serving && ln -sfn osh-support-programs-20261001-v2 current` → ③ `npm run build:support-programs-demo --workspace web` → ④ `systemctl --user restart osh-demo` 후 `/health` 200 확인 → ⑤ 소개 페이지는 Hub 배포. ②를 ④보다 먼저 하면 v1 코드도 같은 `programs.csv`·`items.csv`를 읽으므로 문제가 없다. ③과 ④ 사이에는 새 화면이 옛 API를 보게 되므로 바로 이어서 한다.
 
 1. 운영 반영: 커밋 → `.6` 관문(`osh-demo`) 재시작 → Hub 배포. 이 작업에서는 하지 않았다. 반영과 동시에 DEMO·요건표·로그 수신이 공개된다.
 2. `sync_support_programs_nas.py` 정기 실행(타이머) 등록 여부.

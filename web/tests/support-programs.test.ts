@@ -2,11 +2,13 @@ import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   amount,
-  categories,
   evaluate,
   industryMatches,
   judge,
+  normalize,
+  score,
   searchText,
+  wayOf,
   type Condition,
   type Program,
 } from "../demo/osh-support-programs/rules";
@@ -68,6 +70,7 @@ function row(over: Partial<Program>): Program {
     사업ID: "DEMO-01",
     사업명: "DEMO 사업",
     지원범주: "설비·시설 개선",
+    분류: "설비개선",
     지원형태: "보조금",
     대상단위: "사업주",
     기관구분: "DEMO",
@@ -143,32 +146,76 @@ describe("support programme rules", () => {
     expect(amount(row({}))).toBe("금액 미기재");
   });
 
-  it("filters lists by branch while counts stay whole", () => {
+  it("lists picked categories while tiles and counts stay whole", () => {
     const programs = [
       row({}),
-      row({ 사업ID: "DEMO-02", 지원범주: "산재근로자 복귀" }),
+      row({ 사업ID: "DEMO-02", 분류: "건강상담·산재복귀", 지원형태: "융자" }),
     ];
-    const out = evaluate(
-      programs,
-      searchText(programs, []),
-      base,
-      "고침",
-      "설비·시설 개선",
-    );
+    const text = searchText(programs, []);
+    const out = evaluate(programs, text, base, {
+      categories: ["설비개선"],
+      ways: [],
+    });
     expect(out.eligible.map((j) => j.row["사업ID"])).toEqual(["DEMO-01"]);
     expect(out.tiles.eligible).toBe(2);
-    expect(out.categoryCounts["산재근로자 복귀"]).toBe(1);
+    expect(out.categoryCounts["건강상담·산재복귀"]).toBe(1);
+    expect(out.wayCounts["보조금·비용지원"]).toBe(1);
+    expect(out.wayCounts["융자"]).toBe(0);
+    // Category counts follow the way pick, and the other way round.
+    const byWay = evaluate(programs, text, base, {
+      categories: [],
+      ways: ["융자"],
+    });
+    expect(byWay.categoryCounts["설비개선"]).toBeUndefined();
+    expect(byWay.eligible.map((j) => j.row["사업ID"])).toEqual(["DEMO-02"]);
+    expect(wayOf(row({ 지원형태: "인정제도" }))).toBe("보험료·세금 혜택");
+  });
+
+  it("ranks search matches first and never removes picked rows", () => {
+    const programs = [
+      row({ 사업ID: "DEMO-01", 세부사업명: "DEMO 교육" }),
+      row({ 사업ID: "DEMO-02", 세부사업명: "DEMO 환기장치 설치" }),
+    ];
+    const text = searchText(programs, []);
+    const picked = evaluate(
+      programs,
+      text,
+      { ...base, query: "환기 장치" },
+      { categories: ["설비개선"], ways: [] },
+    );
+    expect(picked.eligible.map((j) => j.row["사업ID"])).toEqual([
+      "DEMO-02",
+      "DEMO-01",
+    ]);
+    expect(picked.matches).toBe(1);
+    expect(picked.tiles.eligible).toBe(2);
+    // With nothing picked, the list is the matches only.
+    const searched = evaluate(programs, text, { ...base, query: "국소배기" });
+    expect(searched.eligible.map((j) => j.row["사업ID"])).toEqual(["DEMO-02"]);
+    expect(searched.categoryMatches["설비개선"]).toBe(1);
+    expect(evaluate(programs, text, base).eligible).toEqual([]);
+  });
+
+  it("ignores spaces and reads synonyms in search", () => {
+    const text = normalize("DEMO 안전장비 구입 · 끼임 방지");
+    expect(score(text, "보호구")).toBe(1);
+    expect(score(text, "협착")).toBe(1);
+    expect(score(text, "안전 장비")).toBeGreaterThan(0);
+    expect(score(text, "끼임 안전장비")).toBe(2);
+    expect(score(text, "융자")).toBe(0);
+    expect(score(text, "  ")).toBe(0);
   });
 
   it("lists KSIC 11 sections and divisions", () => {
     expect(sections).toHaveLength(21);
     expect(divisions).toHaveLength(77);
-    expect(categories).toHaveLength(9);
   });
 });
 
 // The release lives on the NAS (serving/current); compare with its DEMO.md counts when mounted.
-const release = `${process.env.NAS_DATA ?? "/nas"}/osh-support-programs/serving/current/5_데모/demo/data.json`;
+const current = `${process.env.NAS_DATA ?? "/nas"}/osh-support-programs/serving/current`;
+const release = `${current}/5_데모/demo/data.json`;
+const categoryFile = `${current}/2_자료/data/categories.csv`;
 describe.skipIf(!existsSync(release))(
   "support programme release counts",
   () => {
@@ -198,22 +245,31 @@ describe.skipIf(!existsSync(release))(
       expect(tiles.eligible + tiles.excluded).toBe(114);
     });
 
-    it("branch sizes add up to 26 · 49 · 39", () => {
-      const { categoryCounts } = evaluate(data.사업, text, base);
-      const sum = (cs: string[]) =>
-        cs.reduce((n, c) => n + categoryCounts[c], 0);
-      expect(sum(categories.slice(0, 2))).toBe(26);
-      expect(
-        sum([
-          "위험성평가·관리체계",
-          "현장 점검·기술지도",
-          "작업환경측정·건강진단",
-          "교육·안전문화",
-        ]),
-      ).toBe(49);
-      expect(
-        sum(["근로자 건강·심리", "보험료·세제 감면", "산재근로자 복귀"]),
-      ).toBe(39);
-    });
+    it.skipIf(!existsSync(categoryFile))(
+      "Hub categories cover every programme once (v2)",
+      () => {
+        const lines = readFileSync(categoryFile, "utf8")
+          .replace(/^\uFEFF/, "")
+          .trim()
+          .split(/\r?\n/)
+          .slice(1)
+          .map((l) => l.split(","));
+        const of = Object.fromEntries(lines.map(([id, c]) => [id, c]));
+        const rows = data.사업.map((r) => ({ ...r, 분류: of[r["사업ID"]] }));
+        expect(rows.every((r) => r["분류"])).toBe(true);
+        const { categoryCounts } = evaluate(rows, text, base);
+        expect(categoryCounts).toEqual({
+          설비개선: 15,
+          환경개선: 5,
+          장비지원: 6,
+          컨설팅: 14,
+          "점검·기술지도": 17,
+          "측정·검진": 12,
+          교육: 4,
+          "보험료·감면·인증": 20,
+          "건강상담·산재복귀": 21,
+        });
+      },
+    );
   },
 );
