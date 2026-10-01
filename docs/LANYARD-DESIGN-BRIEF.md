@@ -41,9 +41,13 @@
 
 ## 판정 구조
 
-1. **배포본**: `/nas/보호구체결현황파악/serving/current` → `lanyard-analyzer-20260930-v1`만 읽는다. `ai-api/app/lanyard.py`의 `PINNED` sha256과 다르면 503. NAS는 누구나 파일을 바꿀 수 있어서 가중치(pickle)와 `rule_judge.py`를 검증 없이 실행하지 않는다. 새 배포본은 `RELEASE`·`PINNED`를 함께 바꾼다.
-2. **1단계**: `LANYARD_DEVICE=auto`(여유 메모리가 가장 많은 GPU, torch 2.11.0+cu128 — 드라이버 570/CUDA 12.8용). YOLO11m-pose(imgsz 1600, conf 0.25) → 죔줄 7점·안전대 박스. 0번 점 기준으로 안전대 짝을 찾고 `rule_judge.judge_v05`(형태 규칙 v0.5) 적용.
-3. **2단계**: `prompt_service.txt` 그대로 Claude Sonnet 5.5(effort medium)에 전송. 형태 규칙이 `불명`인 죔줄에만 `rule_judge.judge_chain`으로 Claude의 `clipped` 여부를 반영한다. 형태 규칙의 판정은 바꾸지 않는다.
+1. **배포본**: `/nas/보호구체결현황파악/serving/current` → `lanyard-analyzer-20261001-v2`만 읽는다(2026-10-01부터, 그 전 `20260930-v1`). `ai-api/app/lanyard.py`의 `PINNED` sha256과 다르면 503. NAS는 누구나 파일을 바꿀 수 있어서 가중치(pickle)와 `rule_judge.py`를 검증 없이 실행하지 않는다. 새 배포본은 `RELEASE`·`PINNED`를 함께 바꾼다.
+2. **1단계**: `LANYARD_DEVICE=auto`(여유 메모리가 가장 많은 GPU, torch 2.11.0+cu128 — 드라이버 570/CUDA 12.8용). YOLO11m-pose(imgsz 1600, conf 0.25) → 죔줄 7점·안전대 박스. 0번 점 기준으로 안전대 짝을 찾고 `rule_judge.judge_v05`(형태 규칙 v0.5) → `judge_r8`(끝점이 위·왼쪽·오른쪽 테두리 1% 안이면 불명, 아래는 보지 않음) 적용.
+3. **2단계**: `prompt_service.txt`(service-v3: 작업자별 박스·안전대 박스·죔줄별 7점과 고리 위치) 그대로 Claude Sonnet 5.5(effort medium)에 전송. 응답 형식이 틀리면 한 번 다시 묻는다(호출마다 따로 예약·정산). 체인 A+(배포본 manifest `service_rules`):
+   - 검출된 죔줄: 형태 규칙 판정은 그대로. `불명`이면 연결된 작업자의 AI 죔줄 중 고리 끝(7번 점)이 검출 죔줄 고리 끝에서 죔줄 길이 × 0.4(`NEAR_FRAC`) 안인 가장 가까운 것의 `hook`을 쓰고(`structure`→체결, `not_visible`→답 없음, 그 외→구조물 아님), 없으면 작업자 전체 `label`(이중 죔줄은 하나라도 구조물이면 체결)을 `judge_chain`에 넣는다.
+   - 검출기가 죔줄을 못 찾은 작업자: Claude의 7점(0–1000 → 픽셀)과 안전대 박스에 같은 형태 규칙 + R8을 적용하고, 여전히 `불명`이면 그 죔줄의 `hook`을 `judge_chain`에 넣는다. 결과 죔줄은 `origin: "ai"`, `conf: null`로 표시(화면은 끊긴 선).
+   - 1단계에서 죔줄이 0개여도 2단계를 실행한다(검출기 미검출 작업자 보완).
+   - rag 서버의 원 코드(`mvp/analyzer`, `vlm.py`)는 이 서버에서 볼 수 없어 manifest·프롬프트·`rule_judge.py`만 보고 옮겼다. 가까운 고리 기준(검출 고리 끝 ↔ AI 7번 점 거리)과 `judge_chain`의 보수형 대체값(구조물 아님 → 불명)은 이 서비스의 해석이며 원 코드와 같은지 확인하지 못했다.
    - 죔줄 ↔ 작업자 연결(0번 점이 들어간 가장 작은 작업자 네모)과 안전대 짝짓기는 이 서비스에서 새로 쓴 연결 코드다. 원 MVP(`mvp/web`, rag 서버)와 같은지 확인하지 못했다.
 4. **키**: `dever/claude_client.py` → `dever/.env` → `local_asset/anthropic_api_key.txt`. 키는 브라우저·로그에 나가지 않는다.
 

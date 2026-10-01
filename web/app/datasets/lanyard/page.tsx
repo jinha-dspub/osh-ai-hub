@@ -54,7 +54,7 @@ export default async function LanyardPage() {
             </strong>{" "}
             얼굴·이름표 등 개인을 알아볼 수 있는 부분이 없는 사진을 사용해 주세요.
           </p>
-          <p className="osh-help">배포본 lanyard-analyzer-20260930-v1 · 2026-09-30</p>
+          <p className="osh-help">배포본 lanyard-analyzer-20261001-v2 · 2026-10-01</p>
           <a className="osh-button" href="/demo/lanyard/">
             체결 판정 열기 →
           </a>
@@ -66,16 +66,18 @@ export default async function LanyardPage() {
               <h3>1단계 · 검출과 형태 규칙</h3>
               <p>
                 YOLO11m-pose 검출기가 죔줄(7개 점)과 안전대를 찾고, 죔줄의 방향·처짐·끝점 위치로
-                체결 여부를 가리는 형태 규칙 v0.5를 적용합니다. OSH AI Hub 서버에서 실행하며
+                체결 여부를 가리는 형태 규칙 v0.5를 적용합니다. 죔줄 끝이 사진 위·왼쪽·오른쪽
+                테두리에 닿아 잘렸으면 ‘불명’으로 둡니다. OSH AI Hub 서버에서 실행하며
                 사진을 외부로 보내지 않습니다.
               </p>
             </article>
             <article className="osh-card">
               <h3>2단계 · Claude 확인</h3>
               <p>
-                사진을 Anthropic Claude로 보내 작업자별 안전고리 위치와 추락
-                위험 위치를 판독합니다. 형태 규칙이 ‘불명’으로 남긴 죔줄에만 Claude의 답을
-                반영하고, 형태 규칙이 내린 판정은 바꾸지 않습니다.
+                사진을 Anthropic Claude로 보내 작업자별 죔줄(7개 점)·안전고리 위치·안전대와 추락
+                위험 위치를 판독합니다. 형태 규칙이 ‘불명’으로 남긴 죔줄에만 가장 가까운
+                안전고리에 대한 Claude의 답을 반영하고, 형태 규칙이 내린 판정은 바꾸지 않습니다.
+                검출기가 놓친 작업자는 Claude가 그린 죔줄에 같은 형태 규칙을 적용합니다.
               </p>
             </article>
             <article className="osh-card">

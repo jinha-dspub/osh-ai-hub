@@ -9,6 +9,7 @@ Service writes (run log, consented photos) stay on local disk, never on the NAS.
 
 import hashlib
 import io
+import itertools
 import json
 import math
 import os
@@ -38,16 +39,21 @@ PREFIX = "/demo/lanyard"
 ROOT = Path(__file__).resolve().parents[2]
 STATIC = Path(__file__).resolve().parents[1] / "static/lanyard"
 PROJECT = "보호구체결현황파악"
-RELEASE = "lanyard-analyzer-20260930-v1"
+RELEASE = "lanyard-analyzer-20261001-v2"
 # Pinned from the release manifest.json. A new release needs new hashes here.
 PINNED = {
-    "prompt_service.txt": "e58fb31a190a16f6a07fbf4b67d9fddb7a507eb6ce5de4e8aaa2592ef60cc24f",
-    "rule_judge.py": "61be63345720b3dffc2374080043573cb6fb5e0e6ffff1bf6ac8ff085a58223b",
+    "prompt_service.txt": "b1b5bd2f79bb4c578fe2ba87d00fed9ef110d4fd2b57d36bcb01fd677b492949",
+    "rule_judge.py": "56d8faee1db0a6803ac76ece025dfc486f5ca3a572861bc77688b48d606acef7",
     "weights/e11c_yolo11m_pose_1536_best.pt": (
         "274986f089f979240341e6481864bbbdcd798381b84345f2a3641c2c306e9aa2"
     ),
 }
 DETECTOR = {"imgsz": 1600, "conf": 0.25}  # manifest detector.setting
+# manifest service_rules: an AI hook within NEAR_FRAC x lanyard length of the detected hook end
+# answers for that lanyard; R8 ignores the bottom border (a lanyard hanging out of frame
+# already shows it is not caught above).
+NEAR_FRAC = 0.4
+R8_BOTTOM = False
 LANYARD, HARNESS = 0, 1
 MAX_UPLOAD = 4 * 1024 * 1024
 # .3 nginx caps every /demo/ request body at 16k, so photos arrive in chunks.
@@ -68,6 +74,7 @@ VLM_RESERVE = math.ceil(
 )
 PROVIDER = "anthropic-lanyard"
 HOOK = {"clipped": "체결", "unclipped": "미체결", "parked": "거치", "unknown": "불명"}
+HOOK_AT = {"structure", "own_harness", "hand", "hanging", "not_visible"}
 LOCATION = {"fall_risk": "추락 위험 위치", "ground": "바닥", "unknown": "위치 불명"}
 PENDING_TTL = 15 * 60
 PENDING_MAX = 32
@@ -220,14 +227,19 @@ def pair_harness(start, harnesses):
     return best
 
 
-def judge_detections(lanyards, harnesses):
+def shape_label(polyline, belt, width, height):
+    """Shape rule v0.5 (near) then R8 edge cut, as the release's service_rules chain."""
     rj = rules()
+    label, why = rj.judge_v05(rj.features(polyline, belt), polyline, belt)
+    return rj.judge_r8(label, why, polyline, width, height, bottom=R8_BOTTOM)
+
+
+def judge_detections(lanyards, harnesses, width, height):
     out = []
     for i, item in enumerate(lanyards):
         polyline = item["polyline"]
         belt = pair_harness(polyline[0], harnesses)
-        features = rj.features(polyline, belt)
-        label, why = rj.judge_v05(features, polyline, belt)
+        label, why = shape_label(polyline, belt, width, height)
         out.append(
             {
                 "id": i + 1,
@@ -237,6 +249,7 @@ def judge_detections(lanyards, harnesses):
                 "harness_box": belt,
                 "shape": {"label": label, "why": why},
                 "final": {"label": label, "source": "shape"},
+                "origin": "detector",
             }
         )
     return out
@@ -302,15 +315,28 @@ def summary(lanyards):
 # ---- stage 2: Claude check -------------------------------------------------
 
 
+class AiLanyard(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    points: list[list[int]] = Field(min_length=7, max_length=7)
+    hook: str
+
+
 class Worker(BaseModel):
     model_config = ConfigDict(extra="ignore")
     box: list[int] = Field(min_length=4, max_length=4)
+    harness_box: list[int] | None = Field(default=None, min_length=4, max_length=4)
+    lanyards: list[AiLanyard] = Field(default_factory=list, max_length=4)
     label: str
     location: str
     reason: str = Field(default="", max_length=400)
 
 
+def in_range(values):
+    return all(0 <= v <= 1000 for v in values)
+
+
 def parse_workers(text):
+    """Prompt service-v3 answer: per worker box, harness box, 7-point lanyards with hooks."""
     match = re.search(r"\{.*\}", text, re.DOTALL)
     if not match:
         raise ValueError("No JSON")
@@ -322,8 +348,13 @@ def parse_workers(text):
         worker = Worker.model_validate(row)
         if worker.label not in HOOK or worker.location not in LOCATION:
             raise ValueError("Bad label")
-        if not all(0 <= v <= 1000 for v in worker.box):
+        if not in_range(worker.box) or (worker.harness_box and not in_range(worker.harness_box)):
             raise ValueError("Bad box")
+        for item in worker.lanyards:
+            if item.hook not in HOOK_AT:
+                raise ValueError("Bad hook")
+            if any(len(p) != 2 or not in_range(p) for p in item.points):
+                raise ValueError("Bad points")
         workers.append(worker)
     return workers
 
@@ -354,7 +385,25 @@ def claude_client():
 
 
 def ask_claude(jpeg: bytes):
-    """Returns (workers, usage). Raises HTTPException on failure after settling the charge."""
+    """Returns (workers, usage). A malformed answer is asked again once (release service
+    rules); each call is reserved and settled on its own."""
+    total = {"input_tokens": 0, "output_tokens": 0, "calls": 0}
+    for attempt in range(2):
+        text, usage = call_claude(jpeg)
+        for key in ("input_tokens", "output_tokens"):
+            total[key] += usage[key]
+        total["calls"] += 1
+        try:
+            return parse_workers(text), total
+        except (ValueError, ValidationError, json.JSONDecodeError):
+            if attempt:
+                raise HTTPException(
+                    502, "AI 응답 형식을 해석하지 못했습니다. 1단계 결과를 참고해 주세요."
+                ) from None
+
+
+def call_claude(jpeg: bytes):
+    """Returns (text, usage). Raises HTTPException on failure after settling the charge."""
     import base64
 
     import anthropic
@@ -397,27 +446,48 @@ def ask_claude(jpeg: bytes):
     }
     if response.stop_reason == "refusal":
         raise HTTPException(422, "AI가 이 사진의 판정을 거절했습니다. 1단계 결과를 참고해 주세요.")
-    text = "".join(block.text for block in response.content if block.type == "text")
-    try:
-        return parse_workers(text), usage
-    except (ValueError, ValidationError, json.JSONDecodeError):
-        raise HTTPException(
-            502, "AI 응답 형식을 해석하지 못했습니다. 1단계 결과를 참고해 주세요."
-        ) from None
+    return "".join(block.text for block in response.content if block.type == "text"), usage
+
+
+def r5_answer(hook):
+    """Binary R5 for judge_chain from a v3 hook answer; a hidden hook gives no answer."""
+    if hook is None or hook == "not_visible":
+        return None
+    return "structure" if hook == "structure" else "not_structure"
+
+
+def worker_r5(worker):
+    """Dual lanyards: one hook on a structure is enough (manifest service_rules)."""
+    if worker.label == "unknown":
+        return None
+    return "structure" if worker.label == "clipped" else "not_structure"
+
+
+def length(polyline):
+    return sum(math.dist(a, b) for a, b in itertools.pairwise(polyline))
 
 
 def combine(lanyards, workers, width, height):
-    """Shape verdicts stand; only 불명 is resolved by Claude's hook answer (rule judge_chain)."""
+    """Release service chain A+.
+    Detected lanyards: the shape verdict stands; only 불명 takes Claude's answer, preferring the
+    AI hook nearest to the detected hook end, otherwise the worker's overall hook state.
+    Workers the detector missed: Claude's 7 points go through the same shape rule + R8, and a
+    still-불명 lanyard takes that lanyard's AI hook answer."""
     rj = rules()
-    boxes = [
-        [
-            w.box[0] * width / 1000,
-            w.box[1] * height / 1000,
-            w.box[2] * width / 1000,
-            w.box[3] * height / 1000,
+
+    def px(box):
+        return [
+            box[0] * width / 1000,
+            box[1] * height / 1000,
+            box[2] * width / 1000,
+            box[3] * height / 1000,
         ]
-        for w in workers
-    ]
+
+    def points(item):
+        return [[round(x * width / 1000, 1), round(y * height / 1000, 1)] for x, y in item.points]
+
+    boxes = [px(w.box) for w in workers]
+    ai_lines = [[points(item) for item in w.lanyards] for w in workers]
     matched = set()
     for item in lanyards:
         x, y = item["polyline"][0]
@@ -427,18 +497,51 @@ def combine(lanyards, workers, width, height):
             if hits
             else None
         )
-        worker = workers[index] if index is not None else None
+        r5, hook = None, None
         if index is not None:
             matched.add(index)
-        r5 = (
-            None
-            if worker is None
-            else ("structure" if worker.label == "clipped" else "not_structure")
-        )
+            end, limit = item["polyline"][-1], NEAR_FRAC * length(item["polyline"])
+            near = [
+                (math.dist(end, line[-1]), j)
+                for j, line in enumerate(ai_lines[index])
+                if math.dist(end, line[-1]) <= limit
+            ]
+            if near:
+                hook = workers[index].lanyards[min(near)[1]].hook
+                r5 = r5_answer(hook)
+            else:
+                r5 = worker_r5(workers[index])
         label, source = rj.judge_chain(item["shape"]["label"], r5)
         item["final"] = {"label": label, "source": source}
         item["worker"] = index + 1 if index is not None else None
-    return [
+        item["ai_hook"] = hook
+    added = []
+    for index, worker in enumerate(workers):
+        if index in matched:
+            continue
+        belt = [round(v, 1) for v in px(worker.harness_box)] if worker.harness_box else None
+        for ai, polyline in zip(worker.lanyards, ai_lines[index]):
+            try:
+                shape, why = shape_label(polyline, belt, width, height)
+            except (ArithmeticError, ValueError):  # degenerate points (e.g. all identical)
+                shape, why = "불명", ["ai_points_invalid"]
+            label, source = rj.judge_chain(shape, r5_answer(ai.hook))
+            xs, ys = [p[0] for p in polyline], [p[1] for p in polyline]
+            added.append(
+                {
+                    "id": len(lanyards) + len(added) + 1,
+                    "box": [min(xs), min(ys), max(xs), max(ys)],
+                    "conf": None,
+                    "polyline": polyline,
+                    "harness_box": belt,
+                    "shape": {"label": shape, "why": list(why)},
+                    "final": {"label": label, "source": source},
+                    "origin": "ai",
+                    "worker": index + 1,
+                    "ai_hook": ai.hook,
+                }
+            )
+    people = [
         {
             "id": i + 1,
             "box": [round(v, 1) for v in boxes[i]],
@@ -450,6 +553,7 @@ def combine(lanyards, workers, width, height):
         }
         for i, w in enumerate(workers)
     ]
+    return people, lanyards + added
 
 
 # ---- run log (local only) --------------------------------------------------
@@ -500,7 +604,8 @@ LABEL_README = """# osh-labels-{stamp}-v1
 OSH AI Hub 안전대 체결 판정 화면이 {day}에 만든 라벨. 사진은 raw/osh-uploads-{stamp}/<id>.jpg.
 
 - `<id>.stage1.json` — 배포본·사진 크기·sha256, 1단계 검출(죔줄 7점·안전대 박스·검출 신뢰도)과 형태 규칙 판정
-- `<id>.stage2.json` — Claude 확인 결과(작업자·고리·위치)와 최종 판정. 성공한 경우에만 있음
+- `<id>.stage2.json` — Claude 확인 결과(작업자·고리·위치)와 최종 판정. 성공한 경우에만 있음.
+  `origin: "ai"` 죔줄은 검출기가 놓친 작업자에 대해 Claude가 준 7점에 형태 규칙을 적용한 것(배포본 v2 체인 A+)
 - `<id>.feedback-N.json` — 이용자 의견(correct/wrong/unsure, 메모)
 - 모두 AI 판정이며 사람 검토 전 자료다. 좌표는 raw 사진의 픽셀.
 """
@@ -783,9 +888,9 @@ def analyze(data: bytes, key: str):
         raw_lanyards, harnesses = run_detector(image)
     finally:
         detect_slots.release()
-    lanyards = judge_detections(raw_lanyards, harnesses)
-    run_id = uuid.uuid4().hex
     width, height = image.size
+    lanyards = judge_detections(raw_lanyards, harnesses, width, height)
+    run_id = uuid.uuid4().hex
     stage1 = {"lanyards": lanyards, "harnesses": harnesses}
     with runs_db() as db:
         db.execute(
@@ -846,8 +951,7 @@ def review(run_id: str, key: str):
                 "UPDATE runs SET stage2_status=? WHERE id=?", (f"error:{error.status_code}", run_id)
             )
         raise
-    lanyards = stage1["lanyards"]
-    people = combine(lanyards, workers, width, height)
+    people, lanyards = combine(stage1["lanyards"], workers, width, height)
     with runs_db() as db:
         db.execute(
             "UPDATE runs SET stage2=?,stage2_status='ok',usage=? WHERE id=?",

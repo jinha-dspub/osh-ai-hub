@@ -8,12 +8,15 @@ type Label = "체결" | "미체결" | "거치" | "불명";
 type Lanyard = {
   id: number;
   box: number[];
-  conf: number;
+  conf: number | null;
   polyline: number[][];
   harness_box: number[] | null;
   shape: { label: Label; why: string[] };
   final: { label: Label; source: string };
   worker?: number | null;
+  // "ai": a worker the detector missed; Claude's 7 points went through the shape rule.
+  origin?: "detector" | "ai";
+  ai_hook?: string | null;
 };
 type Worker = {
   id: number;
@@ -134,7 +137,8 @@ function Overlay({ result, image, workers }: { result: Result; image: string; wo
               <polyline points={l.polyline.map((p) => p.join(",")).join(" ")} fill="none"
                 stroke="#ffffff" strokeWidth={stroke * 3} strokeLinejoin="round" />
               <polyline points={l.polyline.map((p) => p.join(",")).join(" ")} fill="none"
-                stroke={COLOR[l.final.label]} strokeWidth={stroke * 1.6} strokeLinejoin="round" />
+                stroke={COLOR[l.final.label]} strokeWidth={stroke * 1.6} strokeLinejoin="round"
+                strokeDasharray={l.origin === "ai" ? `${stroke * 4} ${stroke * 2}` : undefined} />
               <circle cx={l.polyline[6][0]} cy={l.polyline[6][1]} r={stroke * 3} fill={COLOR[l.final.label]}
                 stroke="#ffffff" strokeWidth={stroke} />
               <text x={l.box[0]} y={Math.max(stroke * 8, l.box[1] - stroke * 2)} fontSize={stroke * 8}
@@ -146,7 +150,8 @@ function Overlay({ result, image, workers }: { result: Result; image: string; wo
         </svg>
       </div>
       <figcaption>
-        선: 죔줄(원은 안전고리 쪽 끝) · 흰 점선: 안전대 · 노란 네모: Claude가 본 추락 위험 위치 작업자
+        선: 죔줄(원은 안전고리 쪽 끝) · 끊긴 선: 검출기가 놓쳐 Claude가 그린 죔줄 · 흰 점선: 안전대 ·
+        노란 네모: Claude가 본 추락 위험 위치 작업자
       </figcaption>
     </figure>
   );
@@ -269,11 +274,7 @@ function LanyardApp() {
           : "1단계: 사진에서 죔줄과 안전대를 찾고 있습니다.");
       });
       setResult(first);
-      if (!first.lanyards.length) {
-        setStage("done");
-        setStatus("죔줄을 찾지 못했습니다. 작업자와 죔줄이 크게 보이는 사진으로 다시 시도해 보세요.");
-        return;
-      }
+      // Even with no detected lanyard, Claude may find workers the detector missed (chain A+).
       setStage("reviewing");
       setStatus("2단계: Claude가 안전고리와 작업 위치를 확인하고 있습니다. 1분 정도 걸릴 수 있습니다.");
       try {
@@ -282,7 +283,9 @@ function LanyardApp() {
         setResult({ ...first, lanyards: second.lanyards, summary: second.summary });
         setWorkers(second.workers);
         setReviewed(true);
-        setStatus(`판정을 마쳤습니다. 죔줄 ${first.lanyards.length}개, Claude가 본 작업자 ${second.workers.length}명.`);
+        setStatus(second.lanyards.length
+          ? `판정을 마쳤습니다. 죔줄 ${second.lanyards.length}개, Claude가 본 작업자 ${second.workers.length}명.`
+          : "죔줄을 찾지 못했습니다. 작업자와 죔줄이 크게 보이는 사진으로 다시 시도해 보세요.");
       } catch (e) {
         setReviewError((e as Error).message);
         setStatus("1단계 판정만 완료했습니다. 2단계 확인은 실패했습니다.");
@@ -386,8 +389,11 @@ function LanyardApp() {
                       <td>{l.id}</td>
                       <td><strong>{l.final.label}</strong></td>
                       <td>{l.shape.label}</td>
-                      <td>{l.conf.toFixed(2)}</td>
-                      <td>{SOURCE[l.final.source] ?? l.final.source} · {l.shape.why.join(", ")}</td>
+                      <td>{l.conf === null ? "검출 안 됨" : l.conf.toFixed(2)}</td>
+                      <td>
+                        {l.origin === "ai" ? "검출기 미검출 → Claude가 그린 7점 · " : ""}
+                        {SOURCE[l.final.source] ?? l.final.source} · {l.shape.why.join(", ")}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

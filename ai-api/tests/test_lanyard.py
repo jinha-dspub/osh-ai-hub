@@ -34,6 +34,15 @@ def fake_rules():
         return ("불명", "R5_none") if r5 is None else (fallback, "chain_R5_not_structure")
 
     module.judge_chain = judge_chain
+    module.edge_calls = []
+
+    def judge_r8(pred, why, polyline, width, height, bottom=True):
+        module.edge_calls.append(bottom)
+        if pred != "불명" and polyline[-1][0] < 1:
+            return "불명", list(why) + ["R8_edge_cut"]
+        return pred, why
+
+    module.judge_r8 = judge_r8
     return module
 
 
@@ -241,10 +250,13 @@ class FakeMessages:
     def create(self, **params):
         self.calls += 1
         assert params["model"] == lanyard.VLM_MODEL
-        if isinstance(self.outcome, Exception):
-            raise self.outcome
+        outcome = self.outcome
+        if isinstance(outcome, list):  # one answer per call, in order
+            outcome = outcome[self.calls - 1]
+        if isinstance(outcome, Exception):
+            raise outcome
         usage = types.SimpleNamespace(input_tokens=3000, output_tokens=900)
-        block = types.SimpleNamespace(type="text", text=self.outcome)
+        block = types.SimpleNamespace(type="text", text=outcome)
         return types.SimpleNamespace(usage=usage, stop_reason="end_turn", content=[block])
 
 
@@ -254,10 +266,22 @@ def use_claude(monkeypatch, outcome):
     return messages
 
 
-WORKERS = (
-    '{"workers": [{"box": [300, 0, 600, 400], "label": "clipped", "location": "fall_risk",'
-    ' "reason": "DEMO 난간에 체결"}]}'
-)
+def ai_worker(box, label="clipped", lanyards=(), harness=None, location="fall_risk"):
+    return {
+        "box": box,
+        "harness_box": harness,
+        "lanyards": [{"points": points, "hook": hook} for points, hook in lanyards],
+        "label": label,
+        "location": location,
+        "reason": "DEMO 난간에 체결",
+    }
+
+
+def answer(*workers):
+    return json.dumps({"workers": list(workers)}, ensure_ascii=False)
+
+
+WORKERS = answer(ai_worker([300, 0, 600, 400]))
 
 
 def test_review_resolves_only_unknown_shape_and_settles_usage(tmp_path, monkeypatch):
@@ -320,15 +344,105 @@ def test_rejected_request_is_settled_at_zero(monkeypatch):
         assert budget.used(db, "2026-09-30") == 0
 
 
-def test_malformed_ai_answer_is_rejected(monkeypatch):
-    use_claude(
-        monkeypatch,
-        '{"workers": [{"box": [0, 0, 2000, 10], "label": "clipped", "location": "ground"}]}',
-    )
+@pytest.mark.parametrize(
+    "bad",
+    [
+        answer(ai_worker([0, 0, 2000, 10])),
+        answer(ai_worker([0, 0, 10, 10], lanyards=[([[1, 1]] * 6, "structure")])),
+        answer(ai_worker([0, 0, 10, 10], lanyards=[([[1, 1]] * 7, "rope")])),
+        answer(ai_worker([0, 0, 10, 10], lanyards=[([[1, 1001]] * 7, "hand")])),
+        answer(ai_worker([0, 0, 10, 10], harness=[0, 0, 5])),
+        "DEMO not json",
+    ],
+)
+def test_malformed_ai_answer_is_asked_again_once_then_rejected(monkeypatch, bad):
+    messages = use_claude(monkeypatch, bad)
     client = gateway()
     run = upload(client).json()
     response = client.post("/demo/lanyard/api/review", json={"id": run["id"]}, headers=ORIGIN)
     assert response.status_code == 502
+    assert messages.calls == 2
+    with budget.database() as db:  # both paid calls are charged
+        assert budget.used_by(db, "2026-09-30", lanyard.PROVIDER) == 2 * lanyard.vlm_cost(
+            types.SimpleNamespace(input_tokens=3000, output_tokens=900)
+        )
+
+
+def test_second_answer_is_used_after_one_malformed_answer(monkeypatch):
+    messages = use_claude(monkeypatch, ["DEMO not json", WORKERS])
+    client = gateway()
+    run = upload(client).json()
+    result = client.post("/demo/lanyard/api/review", json={"id": run["id"]}, headers=ORIGIN)
+    assert result.status_code == 200
+    assert messages.calls == 2
+
+
+def test_stage1_applies_r8_without_bottom_edge(monkeypatch):
+    def detect(image):
+        return [{"box": [0, 10, 50, 90], "conf": 0.9, "polyline": [[20, 20]] * 6 + [[0, 30]]}], []
+
+    monkeypatch.setattr(lanyard, "run_detector", detect)
+    rules = fake_rules()
+    monkeypatch.setattr(lanyard, "rules", lambda: rules)
+    run = upload(gateway()).json()
+    assert run["release"] == "lanyard-analyzer-20261001-v2"
+    assert run["lanyards"][0]["shape"] == {"label": "불명", "why": ["R3_hang", "R8_edge_cut"]}
+    assert rules.edge_calls == [False]
+
+
+def test_nearest_ai_hook_answers_for_an_unknown_lanyard(monkeypatch):
+    # The detected lanyard ends at (190, 80); only the second AI hook is near that end.
+    # its worker says "clipped" overall but that lanyard's own hook is hanging.
+    def detect(image):
+        line = [[160, 20], [160, 40], [160, 60], [160, 80], [170, 80], [180, 80], [190, 80]]
+        return [{"box": [150, 10, 190, 90], "conf": 0.8, "polyline": line}], []
+
+    monkeypatch.setattr(lanyard, "run_detector", detect)
+    near_end = [[0, 0]] * 6 + [[475, 267]]  # (190, 80) in the 400x300 test photo
+    far_end = [[0, 0]] * 7
+    use_claude(
+        monkeypatch,
+        answer(
+            ai_worker([200, 0, 400, 400], lanyards=[(far_end, "structure"), (near_end, "hanging")])
+        ),
+    )
+    client = gateway()
+    run = upload(client).json()
+    result = client.post("/demo/lanyard/api/review", json={"id": run["id"]}, headers=ORIGIN).json()
+    item = result["lanyards"][0]
+    assert item["ai_hook"] == "hanging"
+    assert item["final"] == {"label": "불명", "source": "chain_R5_not_structure"}
+    assert len(result["lanyards"]) == 1  # the worker had a detected lanyard: no AI lanyards
+
+
+def test_detector_missed_worker_gets_shape_rule_on_ai_points(monkeypatch):
+    monkeypatch.setattr(lanyard, "run_detector", lambda image: ([], []))
+    unknown_line = [[500, 100]] * 7  # 200 px > 100 -> fake shape rule says 불명
+    hang_line = [[10, 100]] * 7  # 4 px -> 미체결 by shape
+    use_claude(
+        monkeypatch,
+        answer(
+            ai_worker(
+                [0, 0, 1000, 1000],
+                label="unclipped",
+                harness=[0, 0, 100, 100],
+                lanyards=[(unknown_line, "structure"), (hang_line, "hand")],
+            )
+        ),
+    )
+    client = gateway()
+    run = upload(client).json()
+    assert run["lanyards"] == []
+    result = client.post("/demo/lanyard/api/review", json={"id": run["id"]}, headers=ORIGIN).json()
+    first, second = result["lanyards"]
+    assert first["origin"] == second["origin"] == "ai"
+    assert first["final"] == {"label": "체결", "source": "chain_R5_structure"}
+    assert second["final"] == {"label": "미체결", "source": "shape"}
+    assert first["conf"] is None and first["worker"] == 1
+    assert first["polyline"][0] == [200.0, 30.0]  # 0-1000 scaled to the 400x300 photo
+    assert first["harness_box"] == [0.0, 0.0, 40.0, 30.0]
+    assert result["summary"]["체결"] == 1 and result["summary"]["미체결"] == 1
+    assert result["workers"][0]["has_lanyard"] is False
 
 
 def test_per_client_daily_limit(monkeypatch):
