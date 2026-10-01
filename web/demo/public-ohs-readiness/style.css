@@ -314,6 +314,65 @@
   margin: 0;
   padding-left: 20px;
 }
+.osh-app .ro-examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.osh-app .ro-chip {
+  min-height: 40px;
+  padding: 6px 14px;
+  border: 1px solid var(--osh-input-line);
+  border-radius: var(--osh-radius-control);
+  background: white;
+  color: var(--osh-primary);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.osh-app .ro-chip:hover {
+  background: var(--osh-primary-soft);
+}
+.osh-app .ro-questions {
+  border: 2px solid var(--osh-primary);
+}
+.osh-app .ro-qlist {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding-left: 22px;
+}
+.osh-app .ro-q {
+  display: grid;
+  gap: 8px;
+}
+.osh-app .ro-q-text {
+  margin: 0;
+  color: var(--osh-ink);
+  font-weight: 600;
+}
+.osh-app .ro-q-answers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.osh-app .ro-q-answers select {
+  max-width: 100%;
+}
+.osh-app .ro-q-number {
+  width: 120px;
+}
+.osh-app .ro-all summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--osh-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
 @media (max-width: 1150px) {
   .osh-app .ro-purposes {
     grid-template-columns: repeat(2, minmax(0, 1fr));

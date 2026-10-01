@@ -33,6 +33,37 @@ type Proposal = {
   버린칸: string[];
 };
 
+// Example descriptions (illustrative companies, not real ones) for the description box.
+const examples: [string, string][] = [
+  [
+    "공공 건설공사",
+    "충남 아산의 철근콘크리트 전문건설업체로 상시근로자는 35명입니다. 공공기관 건설공사 입찰을 준비하고 있습니다. 작년에 현장 사망사고 1건으로 고용노동부 중대재해 공표가 있었습니다. 건설분야 ISO 45001 인증은 있고 KOSHA-MS는 없습니다. 최근 1년 산업안전보건관리비 과태료와 산재 발생보고 위반 과태료는 없었습니다. 위험성평가와 정기 안전보건교육을 하고 안전관리자를 선임했습니다. 하도급은 주지 않습니다.",
+  ],
+  [
+    "공공 용역",
+    "서울에서 공공기관 청사 청소·경비 용역을 하는 회사로 직원은 320명입니다. 조달청 일반용역 입찰에 참여하고 계약 뒤에는 공공기관 현장에서 일합니다. KOSHA-MS 인증은 없고 최근 2년간 산재 공표 이력도 없습니다. 위험성평가는 관리자끼리만 하고 근로자는 참여하지 않습니다. 안전관리자와 보건관리자는 선임했지만 산업안전보건위원회는 구성하지 않았습니다. 작업중지 요청 절차는 아직 없습니다.",
+  ],
+  [
+    "공공 물품",
+    "경기 화성에서 금속 가공제품을 만드는 직원 25명 제조업체입니다. 공공기관에 물품을 납품하려고 합니다. 안전보건관리담당자는 아직 선임하지 않았고 위험성평가도 해본 적이 없습니다. KOSHA-MS 인증은 없습니다. 최근 2년 산재 공표 이력은 없습니다. 정기 안전보건교육은 하고 있습니다.",
+  ],
+  [
+    "현장 작업",
+    "부산에서 공공기관 하수처리시설 유지보수를 위탁받아 하는 직원 60명 업체입니다. 밀폐공간 작업이 있어 작업 전 안전작업허가서를 쓰고 산소농도를 측정합니다. 위험성평가는 근로자와 함께 하고 기록을 남깁니다. 원청과 비상연락망·대피 계획을 공유하고 최근 3년 산업재해 현황 자료도 정리해 두었습니다. 작업중지 요청 절차는 근로자에게 교육했습니다. 안전관리자는 선임했고 보건관리자는 아직 없습니다.",
+  ],
+];
+// Questions go from the score-bearing items to the rest.
+const askOrder = [
+  "입찰 감점",
+  "입찰 가점",
+  "입찰 가·감점",
+  "법정 의무",
+  "계약 이행",
+  "원청 평가 대비",
+];
+const isUnknown = (v: unknown) =>
+  v === undefined || v === null || v === "" || v === "모름";
+
 const tone: Record<Status, string> = {
   충족: "ok",
   부족: "no",
@@ -125,6 +156,10 @@ function App() {
   const [aiFields, setAiFields] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<Status | "">("");
   const [tab, setTab] = useState("scoring");
+  // Follow-up questions: only the fields that still leave an item at '확인 필요'.
+  const [asking, setAsking] = useState(false);
+  const [skipped, setSkipped] = useState<Set<string>>(new Set());
+  const [shown, setShown] = useState(8);
   const [bidType, setBidType] = useState("");
 
   useEffect(() => {
@@ -221,7 +256,11 @@ function App() {
       setBusy(false);
     }
   }
-  function apply() {
+  const jump = (id: string) =>
+    requestAnimationFrame(() =>
+      document.getElementById(id)?.scrollIntoView({ block: "start" }),
+    );
+  function apply(mode: "evaluate" | "ask") {
     if (!proposal) return;
     const patch: Profile = {};
     for (const f of accept) patch[f] = proposal.프로필[f] as string;
@@ -230,7 +269,8 @@ function App() {
     if (proposal.프로필.목적.length)
       setPurposes((p) => [...new Set([...p, ...proposal.프로필.목적])]);
     setProposal(undefined);
-    document.getElementById("profile")?.scrollIntoView({ block: "start" });
+    setAsking(mode === "ask");
+    jump(mode === "ask" ? "questions" : "result");
   }
   function downloadResult() {
     if (!out) return;
@@ -269,6 +309,36 @@ function App() {
     for (const j of list) (by[j.item.구분] ??= []).push(j);
     return Object.entries(by);
   }, [out, filter]);
+
+  const questions = useMemo(() => {
+    if (!data || !out) return [];
+    const uses: Record<string, number> = {};
+    const rank: Record<string, number> = {};
+    const need = (field: string, order: number) => {
+      if (!isUnknown(profile[field]) || skipped.has(field)) return;
+      uses[field] = (uses[field] ?? 0) + 1;
+      rank[field] = Math.min(rank[field] ?? 99, order);
+    };
+    for (const j of out.judged) {
+      if (j.status !== "확인 필요") continue;
+      const r = j.item.판정;
+      const order = askOrder.indexOf(j.item.구분);
+      if (r.적용 === "기준표" || r.적용 === "5인이상") {
+        need("상시근로자수", -2);
+        if (r.적용 === "기준표") need("업종", -1);
+      }
+      if (r.적용 === "하도급") need("하도급사용", order);
+      if (r.조건) need(r.조건.필드, order);
+      need(r.필드, order);
+    }
+    return data.profile
+      .filter((f) => uses[f.필드])
+      .sort(
+        (a, b) => rank[a.필드] - rank[b.필드] || uses[b.필드] - uses[a.필드],
+      )
+      .map((f) => ({ field: f, uses: uses[f.필드] }));
+  }, [data, out, profile, skipped]);
+  const filled = Object.values(profile).filter((v) => !isUnknown(v)).length;
 
   const groupsOfFields = useMemo(() => {
     const by: Record<string, Row[]> = {};
@@ -363,6 +433,22 @@ function App() {
               <h2 className="osh-card-title" id="ai-title">
                 2. 업체 설명으로 채우기 <span className="osh-badge">AI</span>
               </h2>
+              <div className="ro-examples">
+                <span className="osh-help">
+                  <span className="osh-badge osh-badge--demo">예시</span> 설명을
+                  넣어 보기:
+                </span>
+                {examples.map(([label, text]) => (
+                  <button
+                    key={label}
+                    type="button"
+                    className="ro-chip"
+                    onClick={() => setDesc(text)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
               <label className="osh-field">
                 <span className="osh-label">우리 업체 설명</span>
                 <textarea
@@ -393,6 +479,16 @@ function App() {
                 >
                   {busy ? "설명을 읽는 중…" : "AI로 업체 정보 채우기"}
                 </button>
+                <button
+                  className="osh-button osh-button--secondary"
+                  type="button"
+                  onClick={() => {
+                    setAsking(true);
+                    jump("questions");
+                  }}
+                >
+                  설명 없이 질문에 답하기
+                </button>
               </div>
               {aiError && (
                 <p className="osh-note osh-note--error" role="alert">
@@ -402,7 +498,7 @@ function App() {
               {proposal && (
                 <div className="ro-proposal" role="status">
                   <h3 className="osh-card-title">
-                    이렇게 이해했어요 — 맞는 것만 남기고 적용하세요
+                    이렇게 이해했어요 — 틀린 칸은 체크를 빼세요
                   </h3>
                   {Object.keys(proposal.근거).length ? (
                     <ul>
@@ -453,21 +549,175 @@ function App() {
                     <button
                       className="osh-button"
                       type="button"
-                      onClick={apply}
+                      onClick={() => apply("evaluate")}
                     >
-                      고른 {accept.size}개 적용
+                      이대로 평가하기
                     </button>
                     <button
                       className="osh-button osh-button--secondary"
                       type="button"
+                      onClick={() => apply("ask")}
+                    >
+                      몇 가지 더 답하고 평가하기
+                    </button>
+                    <button
+                      type="button"
+                      className="osh-link ro-inline"
                       onClick={() => setProposal(undefined)}
                     >
                       적용하지 않기
                     </button>
                   </div>
+                  <p className="osh-help">
+                    고른 {accept.size}개 칸을 적용합니다. ‘더 답하기’를 고르면
+                    결과를 바꾸는 칸만 골라 질문합니다.
+                  </p>
                 </div>
               )}
             </section>
+
+            {asking && (
+              <section
+                id="questions"
+                className="osh-card osh-stack ro-questions"
+                aria-labelledby="questions-title"
+              >
+                <h2 className="osh-card-title" id="questions-title">
+                  몇 가지만 더 알려 주세요
+                </h2>
+                {!purposes.length ? (
+                  <p className="osh-note">
+                    먼저 위 ‘1. 하려는 일’을 하나 이상 고르면 그에 맞는 질문을
+                    드립니다.
+                  </p>
+                ) : !questions.length ? (
+                  <p className="osh-note">
+                    더 물어볼 것이 없습니다. 남은 ‘확인 필요’는 건너뛴
+                    질문이거나 업종 세부 확인이 필요한 항목입니다.
+                  </p>
+                ) : (
+                  <>
+                    <p className="osh-help">
+                      결과를 바꾸는 질문 {questions.length}개가 남았습니다. 입찰
+                      점수 항목부터 묻습니다. 답하면 결과가 바로 바뀌고, 모르면
+                      건너뛰세요.
+                    </p>
+                    <ol className="ro-qlist">
+                      {questions.slice(0, shown).map(({ field: f, uses }) => (
+                        <li key={f.필드} className="ro-q">
+                          <p className="ro-q-text">
+                            {f.설명}
+                            <span className="osh-help">
+                              {" "}
+                              · 판정 {uses}개에 쓰임
+                            </span>
+                          </p>
+                          <div className="ro-q-answers">
+                            {f.필드 === "업종" ? (
+                              <select
+                                className="osh-input"
+                                aria-label={f.설명}
+                                value="모름"
+                                onChange={(e) => set(f.필드, e.target.value)}
+                              >
+                                <option value="모름">업종 고르기</option>
+                                {sections.map((s) => (
+                                  <optgroup
+                                    key={s.code}
+                                    label={`${s.code} ${s.name}`}
+                                  >
+                                    {divisions
+                                      .filter((d) => d.parent === s.code)
+                                      .map((d) => (
+                                        <option key={d.code} value={d.code}>
+                                          {d.code} {d.name}
+                                        </option>
+                                      ))}
+                                  </optgroup>
+                                ))}
+                              </select>
+                            ) : f.형식.startsWith("integer") ? (
+                              <input
+                                className="osh-input ro-q-number"
+                                type="number"
+                                inputMode="numeric"
+                                min={1}
+                                max={99999}
+                                aria-label={f.설명}
+                                placeholder="명"
+                                onKeyDown={(e) => {
+                                  const n = Number.parseInt(
+                                    e.currentTarget.value,
+                                    10,
+                                  );
+                                  if (e.key === "Enter" && n > 0)
+                                    set(f.필드, Math.min(99999, n));
+                                }}
+                                onBlur={(e) => {
+                                  const n = Number.parseInt(
+                                    e.currentTarget.value,
+                                    10,
+                                  );
+                                  if (n > 0) set(f.필드, Math.min(99999, n));
+                                }}
+                              />
+                            ) : (
+                              f.선택지
+                                .split(";")
+                                .filter((o) => o !== "모름")
+                                .map((o) => (
+                                  <button
+                                    key={o}
+                                    type="button"
+                                    className="ro-chip"
+                                    onClick={() => set(f.필드, o)}
+                                  >
+                                    {o}
+                                  </button>
+                                ))
+                            )}
+                            <button
+                              type="button"
+                              className="osh-link ro-inline"
+                              onClick={() =>
+                                setSkipped((s) => new Set([...s, f.필드]))
+                              }
+                            >
+                              모름 · 건너뛰기
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                    {questions.length > shown && (
+                      <button
+                        type="button"
+                        className="osh-button osh-button--secondary"
+                        onClick={() => setShown((n) => n + 8)}
+                      >
+                        질문 더 보기 ({questions.length - shown}개 남음)
+                      </button>
+                    )}
+                  </>
+                )}
+                <div className="osh-actions">
+                  <button
+                    className="osh-button"
+                    type="button"
+                    onClick={() => jump("result")}
+                  >
+                    결과 보기
+                  </button>
+                  <button
+                    type="button"
+                    className="osh-link ro-inline"
+                    onClick={() => setAsking(false)}
+                  >
+                    질문 닫기
+                  </button>
+                </div>
+              </section>
+            )}
 
             <form
               id="profile"
@@ -477,89 +727,94 @@ function App() {
             >
               <h2 className="osh-card-title" id="profile-title">
                 3. 업체 정보{" "}
-                <span className="osh-help">모르는 칸은 ‘모름’으로 두세요</span>
+                <span className="osh-help">
+                  채운 칸 {filled}/{data.profile.length}
+                </span>
               </h2>
-              {groupsOfFields.map(([group, rows]) => (
-                <fieldset key={group} className="ro-group">
-                  <legend>{group}</legend>
-                  <div className="ro-fields">
-                    {rows.map((f) => (
-                      <label key={f.필드} className="osh-field">
-                        <span className="osh-label">
-                          {f.필드.replaceAll("_", " ")}
-                          {mark(f.필드)}
-                        </span>
-                        {f.필드 === "업종" ? (
-                          <select
-                            className="osh-input"
-                            value={String(profile[f.필드] ?? "모름")}
-                            onChange={(e) => set(f.필드, e.target.value)}
-                          >
-                            <option value="모름">모름</option>
-                            {sections.map((s) => (
-                              <optgroup
-                                key={s.code}
-                                label={`${s.code} ${s.name}`}
-                              >
-                                <option value={s.code}>{s.code} 전체</option>
-                                {divisions
-                                  .filter((d) => d.parent === s.code)
-                                  .map((d) => (
-                                    <option key={d.code} value={d.code}>
-                                      {d.code} {d.name}
-                                    </option>
-                                  ))}
-                              </optgroup>
-                            ))}
-                          </select>
-                        ) : f.형식.startsWith("integer") ? (
-                          <input
-                            className="osh-input"
-                            type="number"
-                            inputMode="numeric"
-                            min={1}
-                            max={99999}
-                            value={
-                              profile[f.필드] === null
-                                ? ""
-                                : String(profile[f.필드] ?? "")
-                            }
-                            placeholder="모름"
-                            onChange={(e) =>
-                              set(
-                                f.필드,
-                                e.target.value
-                                  ? Math.min(
-                                      99999,
-                                      Math.max(
-                                        1,
-                                        Number.parseInt(e.target.value, 10) ||
+              <details className="ro-all">
+                <summary>전체 칸 보기·직접 고치기</summary>
+                {groupsOfFields.map(([group, rows]) => (
+                  <fieldset key={group} className="ro-group">
+                    <legend>{group}</legend>
+                    <div className="ro-fields">
+                      {rows.map((f) => (
+                        <label key={f.필드} className="osh-field">
+                          <span className="osh-label">
+                            {f.필드.replaceAll("_", " ")}
+                            {mark(f.필드)}
+                          </span>
+                          {f.필드 === "업종" ? (
+                            <select
+                              className="osh-input"
+                              value={String(profile[f.필드] ?? "모름")}
+                              onChange={(e) => set(f.필드, e.target.value)}
+                            >
+                              <option value="모름">모름</option>
+                              {sections.map((s) => (
+                                <optgroup
+                                  key={s.code}
+                                  label={`${s.code} ${s.name}`}
+                                >
+                                  <option value={s.code}>{s.code} 전체</option>
+                                  {divisions
+                                    .filter((d) => d.parent === s.code)
+                                    .map((d) => (
+                                      <option key={d.code} value={d.code}>
+                                        {d.code} {d.name}
+                                      </option>
+                                    ))}
+                                </optgroup>
+                              ))}
+                            </select>
+                          ) : f.형식.startsWith("integer") ? (
+                            <input
+                              className="osh-input"
+                              type="number"
+                              inputMode="numeric"
+                              min={1}
+                              max={99999}
+                              value={
+                                profile[f.필드] === null
+                                  ? ""
+                                  : String(profile[f.필드] ?? "")
+                              }
+                              placeholder="모름"
+                              onChange={(e) =>
+                                set(
+                                  f.필드,
+                                  e.target.value
+                                    ? Math.min(
+                                        99999,
+                                        Math.max(
                                           1,
-                                      ),
-                                    )
-                                  : null,
-                              )
-                            }
-                          />
-                        ) : (
-                          <select
-                            className="osh-input"
-                            value={String(profile[f.필드] ?? "모름")}
-                            onChange={(e) => set(f.필드, e.target.value)}
-                          >
-                            {f.선택지.split(";").map((o) => (
-                              <option key={o} value={o}>
-                                {o}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                        <span className="osh-help">{f.설명}</span>
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-              ))}
+                                          Number.parseInt(e.target.value, 10) ||
+                                            1,
+                                        ),
+                                      )
+                                    : null,
+                                )
+                              }
+                            />
+                          ) : (
+                            <select
+                              className="osh-input"
+                              value={String(profile[f.필드] ?? "모름")}
+                              onChange={(e) => set(f.필드, e.target.value)}
+                            >
+                              {f.선택지.split(";").map((o) => (
+                                <option key={o} value={o}>
+                                  {o}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          <span className="osh-help">{f.설명}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                ))}
+              </details>
             </form>
 
             <section
