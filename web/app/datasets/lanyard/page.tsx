@@ -132,8 +132,9 @@ export default async function LanyardPage() {
         <section className="osh-section">
           <h2 className="osh-heading">데이터셋 받기</h2>
           <p className="osh-copy">
-            버전 2026-09-30.1 · 모두 라벨만 담았고 사진은 없습니다. AIHub에서 사진을 신청한 뒤 사진 파일명으로
-            맞춰 쓰세요.
+            버전 2026-10-01.1 · AIHub 사진에 대한 라벨은 사진 없이 제공합니다. AIHub에서 사진을 신청한 뒤 사진
+            파일명으로 맞춰 쓰세요. AIHub 밖 공개 사진(Roboflow Universe, CC BY 4.0)은 사진과 라벨을 함께 받을 수
+            있습니다.
           </p>
           <div className="osh-grid">
             <article className="osh-card">
@@ -148,6 +149,23 @@ export default async function LanyardPage() {
               <p>
                 사람이 답하지 않은 학습 사진 전체에 1단계 검출기와 형태 규칙이 붙인 라벨(ZIP 1.6MB). 죔줄 16,158개·
                 안전대 22,105개, 검출 신뢰도·점별 신뢰도·판정 근거와 아래 신뢰 범위를 함께 제공합니다.
+              </p>
+            </article>
+            <article className="osh-card">
+              <h3>Roboflow 안전대 사진 7개 세트 · CC BY 4.0</h3>
+              <p>
+                Roboflow Universe에 공개된 안전대·안전고리 사진 2,828개 파일(원본 고유 1,917장)을 COCO 라벨과 함께
+                받은 그대로 묶었습니다(세트별 ZIP, 합계 556MB). 세트마다 저작자·원본 주소·전처리를 SOURCE.md에
+                적었습니다. 원 사진의 촬영 출처는 확인되지 않았고, dyd-safe는 AIHub 자료일 가능성이 있어 이용 전
+                확인이 필요합니다. 일부 세트는 늘림·회전 증강본이라 죔줄 형태가 실제와 다릅니다.
+              </p>
+            </article>
+            <article className="osh-card">
+              <h3>외부 공개 사진 AI 라벨 · 사람 검토 전</h3>
+              <p>
+                같은 판정기와 Claude Opus 5.5가 Roboflow 사진 1,118장(작업자 1,409명: 체결 1,112·미체결 83·거치 26·
+                불명 188)과 Ultralytics Construction-PPE 사진 1,416장(작업자 70명)에 붙인 라벨(ZIP 0.4MB).
+                Construction-PPE 사진(AGPL-3.0)은 Ultralytics에서 받으세요.
               </p>
             </article>
           </div>

@@ -775,7 +775,9 @@ def upload_finish(upload_id, key):
 
 # ---- dataset download (private object storage, never proxied) -------------
 
-DATASET_VERSION = "2026-09-30.1"
+# 2026-10-01.1 adds the Roboflow photo sets and AI labels on external photos to the
+# 2026-09-30.1 label files (scripts/build_lanyard_external.py, upload_lanyard_storage.py).
+DATASET_VERSION = "2026-10-01.1"
 DATASET_MANIFEST = ROOT / "local_asset/lanyard-storage-manifest.json"
 
 

@@ -162,6 +162,14 @@ const FILE_LABEL: Record<string, string> = {
   "labels-json": "사람 검토 라벨 · 연구팀 판정·교정 1,636건 (JSON)",
   "labels-zip": "사람 검토 라벨 · JSON + 세트별 CSV + 설명 (ZIP)",
   "ai-labels-zip": "AI 자동 판정 라벨 · 사람 검토 전, 학습 사진 13,549장 + 신뢰 범위 (ZIP)",
+  "external-ai-labels-zip": "외부 공개 사진 AI 자동 판정 라벨 · 사람 검토 전, Roboflow 1,118장 + Construction-PPE 1,416장 (ZIP)",
+  "roboflow-re-j3euq": "Roboflow re-j3euq · 사진 1,283장 + COCO 라벨, CC BY 4.0 (ZIP)",
+  "roboflow-body-harness": "Roboflow body-harness · 사진 542장(train은 증강본) + COCO 라벨, CC BY 4.0 (ZIP)",
+  "roboflow-gantary": "Roboflow gantary · 사진 61장 + COCO 라벨, CC BY 4.0 (ZIP)",
+  "roboflow-hooks-project": "Roboflow hooks-project · 사진 38장 + COCO 라벨, CC BY 4.0 (ZIP)",
+  "roboflow-safebelt1": "Roboflow safebelt1 · 사진 17장 + COCO 라벨, CC BY 4.0 (ZIP)",
+  "roboflow-dyd-safe": "Roboflow dyd-safe · 사진 302장 + COCO 라벨, CC BY 4.0 — AIHub 계열 의심, SOURCE.md 확인 (ZIP)",
+  "roboflow-projectv-uiuat": "Roboflow projectv-uiuat · 사진 585장(회전·반전 증강) + COCO 라벨, CC BY 4.0 (ZIP)",
 };
 
 function DatasetDownloads() {
@@ -193,8 +201,9 @@ function DatasetDownloads() {
     <section id="files" className="ly-panel ly-files" aria-labelledby="files-title">
       <h2 id="files-title"><Download size={24} aria-hidden="true" />데이터셋 받기{version && ` · ${version}`}</h2>
       <p>
-        사람이 검토한 라벨 7개 세트(1,636건)와, 사람이 답하지 않은 학습 사진 13,549장의 AI 자동 판정 라벨(사람 검토 전, 검출 신뢰도·신뢰 범위 포함)입니다. 모두 라벨만 담았습니다. 사진과 AIHub 원본 라벨은 AIHub 이용약관상 포함하지 않으며,
-        AIHub에서 신청한 뒤 사진 파일명·죔줄 번호로 맞춰 쓰면 됩니다.
+        사람이 검토한 라벨 7개 세트(1,636건)와, 사람이 답하지 않은 학습 사진 13,549장의 AI 자동 판정 라벨(사람 검토 전, 검출 신뢰도·신뢰 범위 포함)입니다. AIHub 사진과 AIHub 원본 라벨은 AIHub 이용약관상 포함하지 않으며,
+        AIHub에서 신청한 뒤 사진 파일명·죔줄 번호로 맞춰 쓰면 됩니다. Roboflow Universe의 CC BY 4.0 안전대 사진 7개 세트는 사진과 원래
+        라벨까지 받은 그대로 제공합니다. 쓸 때는 ZIP 안 SOURCE.md의 저작자와 원본 주소를 밝혀 주세요.
       </p>
       {error && <p role="alert" className="ly-error">{error}</p>}
       {!files && !error && <p className="ly-help">파일 목록을 불러오고 있습니다.</p>}
