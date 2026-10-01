@@ -28,9 +28,10 @@ PREFIX = "/demo/corporate-ohs-disclosures"
 PROJECT = "corporate-ohs-disclosures"
 ROOT = Path(os.environ.get("NAS_DATA", "/nas")) / PROJECT / "serving/current"
 SERVED = ("demo/", "release/rc2_2/")
-# sha256 of "\n".join(sorted(f"{path}\t{sha256}")) over the 189 served files of the
-# 2026-10-01 handoff (ZIP 885f29fa…). A new release needs a new digest here.
-RELEASE_DIGEST = "f585660a6b1da31e5f2e7be167e044eaa51a619d34e2f0146d011bffa154a695"
+# sha256 of "\n".join(sorted(f"{path}\t{sha256}")) over the 189 served files of serving v2:
+# the 2026-10-01 handoff (ZIP 885f29fa…) with the app's internal-candidate wording removed
+# (3 demo files, see its RELEASE.md). A new release needs a new digest here.
+RELEASE_DIGEST = "6774d40c2ffb0f982658d134e722abe66d18408b4eeed1125ee3bfe71491025c"
 COMPRESSIBLE = {".html", ".js", ".css", ".csv", ".md", ".json"}
 TYPES = {
     ".csv": "text/csv; charset=utf-8",
