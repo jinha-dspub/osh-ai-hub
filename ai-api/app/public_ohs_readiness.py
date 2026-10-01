@@ -35,7 +35,7 @@ STATIC = Path(__file__).resolve().parents[1] / "static/public-ohs-readiness"
 DATASET = "public-ohs-readiness-0.1"
 # sha256 of "\n".join(sorted(f"{path}\t{sha256}")) over every file under serving/current
 # except RELEASE.md (written by nas-put). A new release needs a new digest here.
-DIGEST = "be3704b5e99d921e605717f9d8af7b47c25d58edc5c3eb53559271d8bb739827"
+DIGEST = "ae6078ec3611dc184ed2571976498dad3c861436908806e86becb7ccc992154b"
 DOWNLOAD_TYPES = sp.DOWNLOAD_TYPES
 # Notes that travel inside the zips but are not offered as separate downloads.
 NOT_OFFERED = sp.NOT_OFFERED
