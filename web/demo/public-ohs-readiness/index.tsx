@@ -153,6 +153,8 @@ function App() {
   const [aiError, setAiError] = useState("");
   const [proposal, setProposal] = useState<Proposal>();
   const [accept, setAccept] = useState<Set<string>>(new Set());
+  // AI may suggest 하려는 일 only when the visitor has picked none; a pick always wins.
+  const [takePurposes, setTakePurposes] = useState(true);
   const [aiFields, setAiFields] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<Status | "">("");
   const [tab, setTab] = useState("scoring");
@@ -245,6 +247,7 @@ function App() {
       if (!r.ok) throw Error(body.detail || "AI 프로필 채우기에 실패했습니다.");
       const p = body as Proposal;
       setProposal(p);
+      setTakePurposes(true);
       setAccept(new Set(Object.keys(p.근거)));
     } catch (e) {
       setAiError(
@@ -266,8 +269,8 @@ function App() {
     for (const f of accept) patch[f] = proposal.프로필[f] as string;
     setProfile((p) => ({ ...p, ...patch }));
     setAiFields(new Set(accept));
-    if (proposal.프로필.목적.length)
-      setPurposes((p) => [...new Set([...p, ...proposal.프로필.목적])]);
+    if (!purposes.length && takePurposes && proposal.프로필.목적.length)
+      setPurposes(proposal.프로필.목적);
     setProposal(undefined);
     setAsking(mode === "ask");
     jump(mode === "ask" ? "questions" : "result");
@@ -535,11 +538,32 @@ function App() {
                       설명에서 채울 정보를 찾지 못했습니다.
                     </p>
                   )}
-                  {proposal.프로필.목적.length > 0 && (
+                  {purposes.length > 0 ? (
                     <p className="osh-help">
-                      하려는 일도 함께 고릅니다:{" "}
-                      {proposal.프로필.목적.join(", ")}
+                      하려는 일은 직접 고른 그대로 둡니다:{" "}
+                      {data.purposes
+                        .filter((p) => purposes.includes(p.id))
+                        .map((p) => p.이름)
+                        .join(", ")}
                     </p>
+                  ) : (
+                    proposal.프로필.목적.length > 0 && (
+                      <label className="ro-purpose-suggest">
+                        <input
+                          type="checkbox"
+                          checked={takePurposes}
+                          onChange={(e) => setTakePurposes(e.target.checked)}
+                        />
+                        하려는 일을 아직 고르지 않아 설명에서 찾은 것으로
+                        고릅니다:{" "}
+                        <b>
+                          {data.purposes
+                            .filter((p) => proposal.프로필.목적.includes(p.id))
+                            .map((p) => p.이름)
+                            .join(", ")}
+                        </b>
+                      </label>
+                    )
                   )}
                   <p className="osh-help">
                     설명에 없는 칸은 ‘모름’으로 둡니다. 근거 문구가 설명에 없던
