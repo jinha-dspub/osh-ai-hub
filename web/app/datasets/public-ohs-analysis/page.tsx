@@ -241,40 +241,6 @@ export default async function PublicOhsPage() {
             라이선스 표기 없음.
           </p>
         </section>
-
-        <section className="osh-section">
-          <h2 className="osh-heading">함께 보면 좋은 데이터</h2>
-          <div className="osh-grid">
-            <article className="osh-card">
-              <h3 className="osh-card-title">
-                <Link
-                  className="osh-link"
-                  href="/datasets/osh-support-programs"
-                >
-                  안전보건 지원사업 요건
-                </Link>
-              </h3>
-              <p>
-                점검에서 부족한 항목을 채울 지원을 찾습니다. 위험성평가 컨설팅,
-                안전보건관리체계 구축, 안전장비·시설 개선비 등.
-              </p>
-            </article>
-            <article className="osh-card">
-              <h3 className="osh-card-title">
-                <Link
-                  className="osh-link"
-                  href="/datasets/corporate-ohs-disclosures"
-                >
-                  기업·기관 안전보건 공개정보
-                </Link>
-              </h3>
-              <p>
-                상장기업 ESG 공시와 DART 사고 공시를 함께 봅니다. 그 데이터의
-                ALIO 기관 8곳은 이 데이터의 355곳에 포함됩니다.
-              </p>
-            </article>
-          </div>
-        </section>
       </div>
     </div>
   );

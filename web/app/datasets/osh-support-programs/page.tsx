@@ -140,18 +140,6 @@ export default async function SupportProgramsPage() {
           </p>
         </section>
         <section className="osh-section">
-          <h2 className="osh-heading">함께 보면 좋은 데이터</h2>
-          <p className="osh-copy">
-            공공기관 입찰을 준비한다면{" "}
-            <Link className="osh-link" href="/datasets/public-ohs-analysis">
-              공공기관 안전보건 분석
-            </Link>
-            에서 우리 업체가 안전 점수를 잃는 부분을 점검하고, 부족한
-            항목(위험성평가, 안전보건관리체계, 안전장비 등)을 이 지원사업으로
-            채울 수 있습니다.
-          </p>
-        </section>
-        <section className="osh-section">
           <h2 className="osh-heading">값을 어디에서 읽었나</h2>
           <div
             className="osh-table-scroll"

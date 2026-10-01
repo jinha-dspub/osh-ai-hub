@@ -260,16 +260,6 @@ export default async function CorporateOhsPage() {
             문서·페이지를 함께 적어 주세요.
           </p>
         </section>
-        <section className="osh-section">
-          <h2 className="osh-heading">함께 보면 좋은 데이터</h2>
-          <p className="osh-copy">
-            이 데이터의 ALIO 기관 8곳을 포함한 공공기관 355곳의 안전 공시 전체는{" "}
-            <Link className="osh-link" href="/datasets/public-ohs-analysis">
-              공공기관 안전보건 분석
-            </Link>
-            에서 받을 수 있습니다.
-          </p>
-        </section>
       </div>
     </div>
   );

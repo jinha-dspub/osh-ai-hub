@@ -601,20 +601,6 @@ function App() {
                       내 점검 결과 CSV 내려받기
                     </button>
                   </p>
-                  {out.counts.부족 > 0 && (
-                    <p className="osh-note">
-                      부족한 항목은 정부·지자체 지원으로 채울 수 있습니다.
-                      위험성평가·안전보건관리체계 컨설팅, 안전장비·시설 개선비
-                      등은{" "}
-                      <a
-                        className="osh-link"
-                        href="/demo/osh-support-programs/"
-                      >
-                        안전보건 지원사업 찾기
-                      </a>
-                      에서 찾아보세요.
-                    </p>
-                  )}
                   {groups.map(([group, list]) => (
                     <div key={group} className="ro-result-group">
                       <h3 className="osh-card-title">
