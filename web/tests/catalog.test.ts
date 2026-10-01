@@ -77,3 +77,16 @@ describe("support programme dataset visibility", () => {
     );
   });
 });
+
+describe("corporate safety and health disclosures visibility", () => {
+  it("lists the dataset for every visitor once published", async () => {
+    const { visibleDatasets, corporateOhsPublic } = await import(
+      "../lib/catalog"
+    );
+    const slugs = (admin: boolean) => visibleDatasets(admin).map((d) => d.slug);
+    expect(slugs(true)).toContain("corporate-ohs-disclosures");
+    expect(slugs(false).includes("corporate-ohs-disclosures")).toBe(
+      corporateOhsPublic,
+    );
+  });
+});

@@ -64,9 +64,11 @@ async def gate(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["X-Frame-Options"] = "DENY"
-    response.headers["Content-Security-Policy"] = (
+    # A route may set a narrower exception for its own packaged app (see corporate_ohs.py).
+    response.headers.setdefault(
+        "Content-Security-Policy",
         "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; "
-        "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'"
+        "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'",
     )
     return response
 

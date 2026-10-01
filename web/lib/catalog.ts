@@ -504,6 +504,35 @@ export const supportProgramsDataset: Dataset = {
 };
 // Public since 2026-10-01 at the owner's request; reuse terms still unconfirmed (docs/SUPPORT-PROGRAMS-INTAKE-REVIEW.md).
 export const supportProgramsPublic = true;
+export const corporateOhsDataset: Dataset = {
+  isReal: true,
+  slug: "corporate-ohs-disclosures",
+  title: "기업·기관 안전보건 공개정보",
+  description:
+    "기업·공공기관 47곳의 안전보건 공개지표 845행을 DART 사고 공시·고용노동부 산재공표와 원문 근거로 연결했습니다. 기업·업종·지표별로 무엇이 공개됐는지 살펴보세요.",
+  category: "산업재해",
+  format: "CSV",
+  kind: "text",
+  tags: [
+    "안전보건 공시",
+    "ESG",
+    "DART",
+    "ALIO",
+    "산재공표",
+    "중대재해",
+    "지속가능경영보고서",
+  ],
+  updated: "2026-10-01",
+  year: 2026,
+  api: false,
+  ai: false,
+  accent: "blue",
+  sample: [],
+  variables: [],
+};
+// Public since 2026-10-01 at the owner's request; source rights review HR01–HR07 still open
+// (docs/CORPORATE-OHS-INTAKE-REVIEW.md).
+export const corporateOhsPublic = true;
 export const familyDesignDataset: Dataset = {
   isReal: true,
   slug: "family-design",
@@ -548,6 +577,7 @@ export function visibleDatasets(admin = false): Dataset[] {
   const optional = [
     [lanyardDataset, lanyardPublic],
     [supportProgramsDataset, supportProgramsPublic],
+    [corporateOhsDataset, corporateOhsPublic],
   ] as const;
   const published = [
     sanjeDataset,

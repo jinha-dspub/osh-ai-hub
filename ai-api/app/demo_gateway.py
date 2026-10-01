@@ -7,6 +7,7 @@ from pathlib import Path
 from fastapi.responses import HTMLResponse
 
 from app.copd_demo import app
+from app.corporate_ohs import register as register_corporate_ohs
 from app.lanyard import register as register_lanyard
 from app.oshmaster import register as register_oshmaster
 from app.support_programs import register as register_support_programs
@@ -16,6 +17,7 @@ register(app)
 register_oshmaster(app)
 register_lanyard(app)
 register_support_programs(app)
+register_corporate_ohs(app)
 
 
 @app.get("/demo")
