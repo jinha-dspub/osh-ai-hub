@@ -13,7 +13,8 @@
     "build:copd-demo": "node scripts/build-copd-demo.mjs",
     "build:voice-demo": "node scripts/build-voice-demo.mjs",
     "build:oshmaster-demo": "node scripts/build-oshmaster-demo.mjs",
-    "build:lanyard-demo": "node scripts/build-lanyard-demo.mjs"
+    "build:lanyard-demo": "node scripts/build-lanyard-demo.mjs",
+    "build:support-programs-demo": "node scripts/build-support-programs-demo.mjs"
   },
   "dependencies": {
     "@fontsource-variable/noto-sans-kr": "^5.3.0",

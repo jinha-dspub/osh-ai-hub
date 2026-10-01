@@ -341,7 +341,10 @@ export type CatalogFilters = {
 };
 const normalize = (value: string) =>
   value.toLocaleLowerCase().replace(/\s+/g, "");
-export function filterDatasets(filters: CatalogFilters, source: Dataset[] = datasets): Dataset[] {
+export function filterDatasets(
+  filters: CatalogFilters,
+  source: Dataset[] = datasets,
+): Dataset[] {
   const query = normalize((filters.q ?? "").trim());
   return source
     .filter(
@@ -382,51 +385,175 @@ export function sampleCsv(dataset: Dataset): string {
 
 // Public metadata only. Case text remains behind the authenticated demo gateway.
 export const copdDataset: Dataset = {
-  isReal: true, slug: "copd", title: "COPD 산재 판정 사례",
-  description: "COPD 2,049개 사례의 원문·가공 라벨·측정치·근무시간을 함께 확인합니다.",
-  category: "산업보건", format: "CSV", kind: "text", tags: ["COPD", "만성폐쇄성폐질환", "산재 판정"],
-  updated: "2026-09-20", year: 2021, api: false, ai: false, accent: "blue", sample: [], variables: [],
+  isReal: true,
+  slug: "copd",
+  title: "COPD 산재 판정 사례",
+  description:
+    "COPD 2,049개 사례의 원문·가공 라벨·측정치·근무시간을 함께 확인합니다.",
+  category: "산업보건",
+  format: "CSV",
+  kind: "text",
+  tags: ["COPD", "만성폐쇄성폐질환", "산재 판정"],
+  updated: "2026-09-20",
+  year: 2021,
+  api: false,
+  ai: false,
+  accent: "blue",
+  sample: [],
+  variables: [],
 };
 export const sanjeDataset: Dataset = {
-  isReal: true, slug: "sanje", title: "산재 판정사례",
-  description: "COPD·뇌심혈관·암·감염성질환·난청·근골격계·기타 7개 질환군의 61,566개 사례를 살펴봅니다. 연구자 윤진하 · 연세대학교 산업보건연구소.",
-  category: "산업보건", format: "CSV", kind: "text", tags: ["산재 판정", "COPD", "만성폐쇄성폐질환", "뇌심혈관", "암", "감염성질환", "난청", "근골격계", "분진"],
-  updated: "2026-09-20", year: 2021, api: false, ai: false, accent: "blue", sample: [], variables: [],
+  isReal: true,
+  slug: "sanje",
+  title: "산재 판정사례",
+  description:
+    "COPD·뇌심혈관·암·감염성질환·난청·근골격계·기타 7개 질환군의 61,566개 사례를 살펴봅니다. 연구자 윤진하 · 연세대학교 산업보건연구소.",
+  category: "산업보건",
+  format: "CSV",
+  kind: "text",
+  tags: [
+    "산재 판정",
+    "COPD",
+    "만성폐쇄성폐질환",
+    "뇌심혈관",
+    "암",
+    "감염성질환",
+    "난청",
+    "근골격계",
+    "분진",
+  ],
+  updated: "2026-09-20",
+  year: 2021,
+  api: false,
+  ai: false,
+  accent: "blue",
+  sample: [],
+  variables: [],
 };
 export const oshmasterDataset: Dataset = {
-  isReal: true, slug: "oshmaster", title: "산업안전보건 표준분류 마스터",
-  description: "19개 표준 식별자의 원 코드 98,638개와 동의어·판본별 계층을 탐색합니다. 질병·직업·산업·유해인자 분류를 연구자료에 연결하세요.",
-  category: "산업보건", format: "CSV", kind: "text", tags: ["OSHMASTER", "표준분류", "코드북", "KCD", "KSCO", "KSIC", "직업", "유해인자"],
-  updated: "2026-09-21", year: 2026, api: false, ai: false, accent: "blue", sample: [], variables: [],
+  isReal: true,
+  slug: "oshmaster",
+  title: "산업안전보건 표준분류 마스터",
+  description:
+    "19개 표준 식별자의 원 코드 98,638개와 동의어·판본별 계층을 탐색합니다. 질병·직업·산업·유해인자 분류를 연구자료에 연결하세요.",
+  category: "산업보건",
+  format: "CSV",
+  kind: "text",
+  tags: [
+    "OSHMASTER",
+    "표준분류",
+    "코드북",
+    "KCD",
+    "KSCO",
+    "KSIC",
+    "직업",
+    "유해인자",
+  ],
+  updated: "2026-09-21",
+  year: 2026,
+  api: false,
+  ai: false,
+  accent: "blue",
+  sample: [],
+  variables: [],
 };
 export const lanyardDataset: Dataset = {
-  isReal: true, slug: "lanyard", title: "안전대 체결 라벨링 데이터셋",
-  description: "공사현장 사진에서 안전대 죔줄이 구조물에 걸려 있는지 판정합니다. AIHub 공사현장 안전장비 사진으로 학습한 검출기·형태 규칙과 Claude 확인을 결합했습니다.",
-  category: "산업재해", format: "IMAGE", kind: "image", tags: ["안전대", "죔줄", "추락", "PPE", "보호구", "이미지 판정"],
-  updated: "2026-09-30", year: 2026, api: false, ai: true, accent: "blue", sample: [], variables: [],
+  isReal: true,
+  slug: "lanyard",
+  title: "안전대 체결 라벨링 데이터셋",
+  description:
+    "공사현장 사진에서 안전대 죔줄이 구조물에 걸려 있는지 판정합니다. AIHub 공사현장 안전장비 사진으로 학습한 검출기·형태 규칙과 Claude 확인을 결합했습니다.",
+  category: "산업재해",
+  format: "IMAGE",
+  kind: "image",
+  tags: ["안전대", "죔줄", "추락", "PPE", "보호구", "이미지 판정"],
+  updated: "2026-09-30",
+  year: 2026,
+  api: false,
+  ai: true,
+  accent: "blue",
+  sample: [],
+  variables: [],
 };
 // Flip after .3 opens /demo/lanyard/ without Basic auth (docs/LANYARD-DESIGN-BRIEF.md).
 export const lanyardPublic = true;
+export const supportProgramsDataset: Dataset = {
+  isReal: true,
+  slug: "osh-support-programs",
+  title: "안전보건 지원사업 요건",
+  description:
+    "산업안전보건 지원사업 114건의 규모·업종·지역·유해인자 요건과 지원비율·한도를 한 표로 모았습니다. 우리 사업장이 받을 수 있는 지원을 찾아보세요.",
+  category: "산업재해",
+  format: "CSV",
+  kind: "text",
+  tags: [
+    "지원사업",
+    "재정지원",
+    "안전보건공단",
+    "근로복지공단",
+    "지자체",
+    "KSIC",
+  ],
+  updated: "2026-09-28",
+  year: 2026,
+  api: false,
+  ai: false,
+  accent: "blue",
+  sample: [],
+  variables: [],
+};
+// Public since 2026-10-01 at the owner's request; reuse terms still unconfirmed (docs/SUPPORT-PROGRAMS-INTAKE-REVIEW.md).
+export const supportProgramsPublic = true;
 export const familyDesignDataset: Dataset = {
   isReal: true,
   slug: "family-design",
   title: "OSH Family Design",
-  description: "OSH AI Hub와 같은 색상·폰트·카드·버튼으로 앱을 만드는 공통 UI 키트입니다. CSS, 한글 폰트, 디자인 가이드와 예시 화면을 제공합니다.",
-  category: "디자인 리소스", format: "ZIP", kind: "design",
+  description:
+    "OSH AI Hub와 같은 색상·폰트·카드·버튼으로 앱을 만드는 공통 UI 키트입니다. CSS, 한글 폰트, 디자인 가이드와 예시 화면을 제공합니다.",
+  category: "디자인 리소스",
+  format: "ZIP",
+  kind: "design",
   tags: ["Family Design", "UI 디자인", "패밀리 디자인", "CSS", "폰트"],
-  updated: "2026-09-19", year: 2026, api: false, ai: false, accent: "blue",
-  sample: [], variables: [],
+  updated: "2026-09-19",
+  year: 2026,
+  api: false,
+  ai: false,
+  accent: "blue",
+  sample: [],
+  variables: [],
 };
 export const openDataGuideDataset: Dataset = {
-  isReal: true, slug: "opendata-guide", title: "데이터 제작 가이드",
-  description: "협업자를 위한 데이터 패키지 양식과 AI 작업 지시문. 출처·연구자·버전·검증 결과와 Python 실행 환경을 함께 준비하세요.",
-  category: "데이터 제작 가이드", format: "ZIP", kind: "guide",
+  isReal: true,
+  slug: "opendata-guide",
+  title: "데이터 제작 가이드",
+  description:
+    "협업자를 위한 데이터 패키지 양식과 AI 작업 지시문. 출처·연구자·버전·검증 결과와 Python 실행 환경을 함께 준비하세요.",
+  category: "데이터 제작 가이드",
+  format: "ZIP",
+  kind: "guide",
   tags: ["OpenData", "협업 템플릿", "Python", "requirements"],
-  updated: "2026-09-19", year: 2026, api: false, ai: false, accent: "blue",
-  sample: [], variables: [],
+  updated: "2026-09-19",
+  year: 2026,
+  api: false,
+  ai: false,
+  accent: "blue",
+  sample: [],
+  variables: [],
 };
-export const collaborationTemplates = [openDataGuideDataset, familyDesignDataset];
+export const collaborationTemplates = [
+  openDataGuideDataset,
+  familyDesignDataset,
+];
 export function visibleDatasets(admin = false): Dataset[] {
-  const published = [sanjeDataset, oshmasterDataset, ...(lanyardPublic ? [lanyardDataset] : [])];
-  return admin ? [...published, ...(lanyardPublic ? [] : [lanyardDataset]), ...datasets] : published;
+  const optional = [
+    [lanyardDataset, lanyardPublic],
+    [supportProgramsDataset, supportProgramsPublic],
+  ] as const;
+  const published = [
+    sanjeDataset,
+    oshmasterDataset,
+    ...optional.filter(([, p]) => p).map(([d]) => d),
+  ];
+  const drafts = optional.filter(([, p]) => !p).map(([d]) => d);
+  return admin ? [...published, ...drafts, ...datasets] : published;
 }

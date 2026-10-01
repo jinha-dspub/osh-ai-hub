@@ -1,0 +1,473 @@
+/* Support programme finder. Family Design tokens only; layout is specific to this tool. */
+.osh-app .sp-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.osh-app .sp-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px 24px;
+  align-items: start;
+}
+.osh-app .sp-fields select {
+  width: 100%;
+}
+.osh-app .sp-radios {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.osh-app .sp-radios legend {
+  padding: 0;
+  margin-bottom: 8px;
+}
+.osh-app .sp-radios > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.osh-app .sp-radios label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--osh-input-line);
+  border-radius: var(--osh-radius-control);
+  background: white;
+  cursor: pointer;
+}
+.osh-app .sp-radios label:has(input:checked) {
+  border-color: var(--osh-primary);
+  background: var(--osh-primary-soft);
+  color: var(--osh-primary);
+  font-weight: 600;
+}
+.osh-app .sp-radios input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--osh-primary);
+}
+.osh-app .sp-radios:disabled,
+.osh-app .osh-field:has(:disabled) {
+  opacity: 0.6;
+}
+.osh-app .sp-presets {
+  display: grid;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--osh-line);
+}
+.osh-app .sp-presets .osh-help {
+  margin: 0;
+}
+.osh-app .sp-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.osh-app .sp-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.osh-app .sp-tile {
+  margin: 0;
+  padding: 16px 20px;
+  border: 1px solid var(--osh-line);
+  border-left-width: 4px;
+  border-radius: var(--osh-radius-card);
+  background: white;
+  color: var(--osh-muted);
+  font-size: 14px;
+}
+.osh-app .sp-tile b {
+  display: block;
+  color: var(--osh-ink);
+  font-size: 28px;
+  font-weight: 750;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+.osh-app .sp-tile.sp-ok {
+  border-left-color: var(--osh-success-ink);
+}
+.osh-app .sp-tile.sp-info {
+  border-left-color: var(--osh-primary);
+}
+.osh-app .sp-tile.sp-no {
+  border-left-color: var(--osh-input-line);
+}
+
+.osh-app .sp-branches {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 16px 0;
+}
+.osh-app .sp-branch {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  min-height: 44px;
+  padding: 20px;
+  text-align: left;
+  border: 1px solid var(--osh-line);
+  border-radius: var(--osh-radius-card);
+  background: white;
+  cursor: pointer;
+}
+.osh-app .sp-branch b {
+  color: var(--osh-ink);
+  font-size: 18px;
+  font-weight: 650;
+}
+.osh-app .sp-branch span {
+  color: var(--osh-muted);
+  font-size: 14px;
+}
+.osh-app .sp-branch em {
+  color: var(--osh-primary);
+  font-style: normal;
+  font-weight: 700;
+}
+.osh-app .sp-branch:hover {
+  border-color: var(--osh-input-line);
+}
+.osh-app .sp-branch[aria-pressed="true"] {
+  border: 2px solid var(--osh-primary);
+  background: var(--osh-primary-soft);
+  padding: 19px;
+}
+
+/* Branch map: root node with a vertical rail and one connector per kind. */
+.osh-app .sp-map {
+  display: grid;
+  grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+  align-items: center;
+  gap: 0 32px;
+  margin-bottom: 16px;
+  padding: 20px;
+  border: 1px solid var(--osh-line);
+  border-radius: var(--osh-radius-card);
+  background: white;
+}
+.osh-app .sp-map-root {
+  position: relative;
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: var(--osh-radius-control);
+  background: var(--osh-primary);
+  color: white;
+  font-weight: 650;
+}
+.osh-app .sp-map-root em {
+  display: block;
+  font-style: normal;
+  font-size: 14px;
+  opacity: 0.85;
+}
+.osh-app .sp-map-root::after {
+  content: "";
+  position: absolute;
+  right: -32px;
+  top: 50%;
+  width: 16px;
+  border-top: 2px solid var(--osh-line);
+}
+.osh-app .sp-map ul {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0 0 0 16px;
+  list-style: none;
+  border-left: 2px solid var(--osh-line);
+}
+.osh-app .sp-map li {
+  position: relative;
+}
+.osh-app .sp-map li::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  width: 16px;
+  border-top: 2px solid var(--osh-line);
+}
+.osh-app .sp-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--osh-input-line);
+  border-radius: var(--osh-radius-control);
+  background: white;
+  color: var(--osh-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+.osh-app .sp-kind b {
+  min-width: 28px;
+  padding: 0 6px;
+  border-radius: var(--osh-radius-badge);
+  background: var(--osh-primary-soft);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.osh-app .sp-kind[aria-pressed="true"] {
+  background: var(--osh-primary);
+  border-color: var(--osh-primary);
+  color: white;
+}
+.osh-app .sp-kind[aria-pressed="true"] b {
+  background: white;
+  color: var(--osh-primary);
+}
+
+.osh-app .sp-count {
+  color: var(--osh-muted);
+  font-size: 18px;
+  font-weight: 600;
+}
+.osh-app .sp-programs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.osh-app .sp-program {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+  padding: 20px 24px;
+  border: 1px solid var(--osh-line);
+  border-top: 4px solid var(--osh-line);
+  border-radius: var(--osh-radius-card);
+  background: white;
+}
+.osh-app .sp-program.sp-ok {
+  border-top-color: var(--osh-success-ink);
+}
+.osh-app .sp-program.sp-check {
+  border-top-color: var(--osh-demo-ink);
+}
+.osh-app .sp-program.sp-info {
+  border-top-color: var(--osh-primary);
+}
+.osh-app .sp-program.sp-no {
+  background: var(--osh-paper);
+  color: var(--osh-muted);
+  padding-block: 14px;
+}
+.osh-app .sp-program-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.osh-app .sp-tag {
+  display: inline-flex;
+  padding: 2px 8px;
+  border: 1px solid var(--osh-line);
+  border-radius: var(--osh-radius-badge);
+  color: var(--osh-muted);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+.osh-app .sp-tag--ok {
+  background: var(--osh-success-bg);
+  color: var(--osh-success-ink);
+  border-color: transparent;
+}
+.osh-app .sp-tag--check {
+  background: var(--osh-demo-bg);
+  color: var(--osh-demo-ink);
+  border-color: transparent;
+}
+.osh-app .sp-tag--info {
+  background: var(--osh-primary-soft);
+  color: var(--osh-primary);
+  border-color: transparent;
+}
+.osh-app .sp-program-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+.osh-app .sp-program.sp-no .sp-program-title {
+  font-size: 16px;
+  color: var(--osh-ink);
+}
+.osh-app .sp-program-title small {
+  display: block;
+  color: var(--osh-muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+.osh-app .sp-money {
+  margin: 0;
+  color: var(--osh-primary);
+  font-weight: 700;
+}
+.osh-app .sp-why {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.osh-app .sp-why li + li {
+  margin-top: 4px;
+}
+.osh-app .sp-warn {
+  color: var(--osh-demo-ink);
+  font-weight: 600;
+}
+.osh-app .sp-warn::marker {
+  content: "! ";
+}
+.osh-app .sp-risks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+.osh-app .sp-foot {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--osh-line);
+}
+.osh-app .sp-foot .osh-help {
+  margin: 0;
+}
+.osh-app .sp-foot .osh-button {
+  padding: 8px 14px;
+  font-size: 14px;
+}
+.osh-app .sp-verify {
+  font-weight: 600;
+  color: var(--osh-ink);
+}
+.osh-app .sp-items summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--osh-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+.osh-app .sp-items ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 320px;
+  overflow: auto;
+  font-size: 14px;
+}
+.osh-app .sp-items li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--osh-line);
+}
+.osh-app .sp-excluded-title {
+  margin-top: 32px;
+  color: var(--osh-muted);
+}
+
+.osh-app .sp-meters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin: 24px 0;
+}
+.osh-app .sp-meter h4 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 650;
+}
+.osh-app .sp-bar {
+  display: flex;
+  height: 12px;
+  overflow: hidden;
+  border-radius: var(--osh-radius-badge);
+  background: var(--osh-line);
+}
+.osh-app .sp-meter ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+.osh-app .sp-meter li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.osh-app .sp-meter li i {
+  flex: 0 0 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+.osh-app .sp-bar-0 {
+  background: var(--osh-primary);
+}
+.osh-app .sp-bar-1 {
+  background: #63a5ef;
+}
+.osh-app .sp-bar-2 {
+  background: var(--osh-demo-ink);
+}
+.osh-app .sp-checks {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+}
+.osh-app .osh-table th[scope="row"] {
+  width: 30%;
+  min-width: 140px;
+}
+
+@media (max-width: 850px) {
+  .osh-app .sp-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .osh-app .sp-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .osh-app .sp-branches,
+  .osh-app .sp-programs,
+  .osh-app .sp-meters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .osh-app .sp-map {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .osh-app .sp-map-root::after {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .osh-app .sp-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .osh-app .sp-program {
+    padding-inline: 16px;
+  }
+}

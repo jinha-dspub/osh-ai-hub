@@ -64,3 +64,16 @@ describe("request boundaries", () => {
     expect(safeReturnPath("/datasets?q=test")).toBe("/datasets?q=test");
   });
 });
+
+describe("support programme dataset visibility", () => {
+  it("lists the support programme dataset for every visitor once published", async () => {
+    const { visibleDatasets, supportProgramsPublic } = await import(
+      "../lib/catalog"
+    );
+    const slugs = (admin: boolean) => visibleDatasets(admin).map((d) => d.slug);
+    expect(slugs(true)).toContain("osh-support-programs");
+    expect(slugs(false).includes("osh-support-programs")).toBe(
+      supportProgramsPublic,
+    );
+  });
+});

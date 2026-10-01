@@ -33,3 +33,6 @@ ai-api/models/*
 
 # Generated OSHMASTER standalone demo assets
 /ai-api/static/oshmaster/
+
+# Generated support programme demo assets
+/ai-api/static/osh-support-programs/
