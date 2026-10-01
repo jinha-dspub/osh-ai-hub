@@ -536,6 +536,34 @@ export const corporateOhsDataset: Dataset = {
 // Public since 2026-10-01 at the owner's request; source rights review HR01–HR07 still open
 // (docs/CORPORATE-OHS-INTAKE-REVIEW.md).
 export const corporateOhsPublic = true;
+export const publicOhsDataset: Dataset = {
+  isReal: true,
+  slug: "public-ohs-analysis",
+  title: "공공기관 안전보건 분석",
+  description:
+    "공공기관 355곳의 ALIO 안전 공시와, 공공기관 입찰·계약에서 업체에 요구되는 안전보건 판정기준(점수기준·법정 의무·근거 인용)을 모았습니다. 우리 업체의 입찰 준비 상태를 점검해 보세요.",
+  category: "산업재해",
+  format: "CSV",
+  kind: "text",
+  tags: [
+    "ALIO",
+    "공공기관",
+    "입찰",
+    "적격심사",
+    "안전관리등급",
+    "중대재해",
+    "JSONL",
+  ],
+  updated: "2026-10-01",
+  year: 2026,
+  api: false,
+  ai: true,
+  accent: "blue",
+  sample: [],
+  variables: [],
+};
+// Public since 2026-10-01 at the owner's request (docs/PUBLIC-OHS-READINESS-DESIGN-BRIEF.md).
+export const publicOhsPublic = true;
 export const familyDesignDataset: Dataset = {
   isReal: true,
   slug: "family-design",
@@ -581,6 +609,7 @@ export function visibleDatasets(admin = false): Dataset[] {
     [lanyardDataset, lanyardPublic],
     [supportProgramsDataset, supportProgramsPublic],
     [corporateOhsDataset, corporateOhsPublic],
+    [publicOhsDataset, publicOhsPublic],
   ] as const;
   const published = [
     sanjeDataset,

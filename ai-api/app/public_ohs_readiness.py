@@ -35,7 +35,7 @@ STATIC = Path(__file__).resolve().parents[1] / "static/public-ohs-readiness"
 DATASET = "public-ohs-readiness-0.1"
 # sha256 of "\n".join(sorted(f"{path}\t{sha256}")) over every file under serving/current
 # except RELEASE.md (written by nas-put). A new release needs a new digest here.
-DIGEST = "4ee263b248e60e0ab5658b5e782da3fe6677ba62d6bffde8d88fba0742adb9a8"
+DIGEST = "be3704b5e99d921e605717f9d8af7b47c25d58edc5c3eb53559271d8bb739827"
 DOWNLOAD_TYPES = sp.DOWNLOAD_TYPES
 
 MODEL = shared.MODEL
