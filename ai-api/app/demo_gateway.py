@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse
 
 from app.copd_demo import app
 from app.corporate_ohs import register as register_corporate_ohs
+from app.kosha_context import register as register_kosha_context
 from app.kosha_graphrag import register as register_kosha_graphrag
 from app.lanyard import register as register_lanyard
 from app.oshmaster import register as register_oshmaster
@@ -23,6 +24,7 @@ register_support_programs(app)
 register_corporate_ohs(app)
 register_public_ohs_readiness(app)
 register_kosha_graphrag(app)
+register_kosha_context(app)
 register_safetybread_apps(app)
 
 

@@ -2,6 +2,9 @@
 Description=OSH shared demo gateway on 192.168.0.6:8103
 Requires=osh-ollama.service
 After=osh-ollama.service
+# KOSHA GUIDE semantic search asks the loopback embedding service; search still works without it.
+Wants=osh-embed.service
+After=osh-embed.service
 # Lanyard analyzer reads its release from /nas/보호구체결현황파악/serving/current.
 RequiresMountsFor=/nas
 

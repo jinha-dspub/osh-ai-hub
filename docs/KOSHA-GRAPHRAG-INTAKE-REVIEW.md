@@ -53,3 +53,21 @@ KOSHA GUIDE 658건을 OCR해 구간 18,659개로 나눈 **실제 자료**와 그
 4. 의미 검색: 원하면 EmbeddingGemma로 CPU 재임베딩(약 33분)해 산재 검색과 같은 하이브리드로. 패키지 벡터는 Qwen3 전용이라 못 쓴다.
 5. 판례 DEMO(`osh-precedents`)가 공개되면 조문의 판례 번호를 링크로.
 6. 새 판본: 패키지 → 선별 복사 스크립트로 `serving/<이름>-<날짜>-v<N>` → `kosha_graphrag.py`의 `DIGEST` 갱신 → `current` 전환 → 관문 재시작.
+
+## 2026-10-06 추가: 2단계 그래프, 의미 검색, 맥락 검색
+
+소유자 지시("기존 그래프는 두고 추가로 뽑고, 커뮤니티 요약도")와 번들 `/nas/safetybread/serving/graph_rag-배포-20261006-v1/배포/이관`(임베딩 모델 등 20G) 반입에 따라 다음을 붙였다.
+
+| 무엇 | 내용 | 위치 |
+|---|---|---|
+| 2단계 추출 | 패키지가 비워 둔 청크 16,823개에서 Claude Sonnet 5.5(Message Batches, 구조화 출력)로 개체·관계 추출. 관계는 본문 인용 구절이 글에 있을 때만 채택(탈락 526). 실질 내용 청크 12,123 → 개체 81,499·관계 45,976. 토큰 입력 950만·출력 957만(캐시 적용, 배치 50% 할인 ≈ 57달러) | `ai-api/scripts/graphrag/extract.py`, 결과 `/nas/kosha-guide-graphrag/processed/graphrag-claude-20261006-v1/extract/` |
+| 합본 그래프 | 1단계(패키지 개체 3,794·관계 2,557 + 관계 캐시 13,064) + 2단계. 통제어휘로 표기 통일(379건 병합). 노드 66,450·엣지 59,664 | `scripts/graphrag/merge.py` → `graph/nodes.jsonl`, `edges.jsonl` |
+| 커뮤니티 | networkx Louvain 2단계: 0단계 2,713 · 1단계 1,611 = 보고서 대상 4,324 | `scripts/graphrag/communities.py` |
+| 커뮤니티 보고서 | 커뮤니티마다 제목·요약·근거 번호가 붙은 발견·키워드·중요도(Claude Batch). 근거 목록 밖 인용은 삭제 | `scripts/graphrag/summarize.py` → `graph/reports.jsonl` (배치 진행 중, 완료 후 serving v3) |
+| 의미 검색 | 번들의 Qwen3-Embedding-4B(rev 5cf2132)를 CPU로 올린 루프백 서비스 `osh-embed`(127.0.0.1:8104, 별도 venv `local_asset/venv-embed`). 패키지 청크 벡터와 코사인 0.998로 재현 확인. 질의 0.5초. BM25와 RRF(k=60) 융합 | `ai-api/embed_service.py`, `app/embed_client.py`, `deploy/osh-embed.service` |
+| 맥락 검색 | 질문 → Claude 이해(개념·검색어·범위) → 그래프 노드 매칭·이웃 관계(인용 구절 포함)·커뮤니티 보고서·하이브리드 발췌·조문 → Claude 답변(C/R/G/L 근거 인용, 미인용 문장 삭제). 호출 2회 약 100~150원, 같은 일일 한도 | `ai-api/app/kosha_context.py`, 화면 "맥락 검색" 탭 |
+| 배포본 v2 | v1 42개 파일 + 벡터 3개 + `graph/` = 49개, 다이제스트 `47342f12…`, `current` | `/nas/kosha-guide-graphrag/serving/kosha-guide-graphrag-20261006-v2` |
+
+확인: ai-api pytest 174 통과(`test_kosha_context.py` 8개 포함), 운영 주소에서 의미 채널 on·질의 0.3~0.8초, 맥락 검색 1건(아시바 난간) 정상. GPU는 다른 팀 vLLM이 점유해 CPU로 운영하며, 비면 `EMBED_DEVICE=cuda`로 바꾼다.
+
+남은 일: 커뮤니티 보고서 배치 완료 후 `summarize.py fetch` → serving v3(`graph/reports.jsonl` 추가) → DIGEST 갱신 → `current` → osh-demo 재시작. 2단계 그래프의 정확도 평가는 하지 않았다(인용 구절 검증만).

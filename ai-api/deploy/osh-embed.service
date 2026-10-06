@@ -1,0 +1,21 @@
+[Unit]
+Description=OSH KOSHA GUIDE embedding service (Qwen3-Embedding-4B, CPU, loopback only)
+# The model weights are read from the handoff bundle on the NAS.
+RequiresMountsFor=/nas
+
+[Service]
+Type=simple
+WorkingDirectory=/home/shield/osh-ai-hub/ai-api
+ExecStart=/home/shield/osh-ai-hub/local_asset/venv-embed/bin/uvicorn embed_service:app --host 127.0.0.1 --port 8104 --no-access-log
+Environment=HF_HOME=/nas/safetybread/serving/graph_rag-배포-20261006-v1/배포/이관/hf
+Environment=HF_HUB_OFFLINE=1
+Environment=TRANSFORMERS_OFFLINE=1
+Environment=EMBED_THREADS=16
+Environment=OMP_NUM_THREADS=16
+Restart=on-failure
+RestartSec=10
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

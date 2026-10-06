@@ -214,6 +214,19 @@ def write_release(root):
     )
     db.commit()
     db.close()
+    # DEMO chunk vectors (unit vectors along distinct axes) so the vector channel can be tested
+    # with a monkeypatched query vector.
+    emb = g / "embeddings"
+    emb.mkdir(parents=True, exist_ok=True)
+    vectors = np.zeros((len(CHUNKS), 2560), dtype=np.float32)
+    for i in range(len(CHUNKS)):
+        vectors[i, i] = 1.0
+    np.save(emb / "chunk_vectors.f32.npy", vectors)
+    write_jsonl(
+        emb / "chunk_vector_index.jsonl",
+        [{"row": i, "chunk_id": c["chunk_id"]} for i, c in enumerate(CHUNKS)],
+    )
+    (emb / "embedding_metadata.json").write_text("{}")
     (root / "RELEASE.md").write_text("DEMO release notes, not pinned")
     return digest_of(root)
 
@@ -234,6 +247,7 @@ def clear():
 
 @pytest.fixture
 def release(tmp_path, monkeypatch):
+    monkeypatch.setattr(kg.embed_client, "query_vector", lambda text: None)  # service off
     monkeypatch.setattr(kg, "ROOT", tmp_path)
     monkeypatch.setattr(kg, "DIGEST", write_release(tmp_path))
     monkeypatch.setenv("AI_BUDGET_DB", str(tmp_path / "budget.sqlite"))
@@ -406,3 +420,23 @@ def test_per_client_cap(release, monkeypatch):
     body = {"질문": "비계 작업", "청크": [CHUNKS[0]["chunk_id"]]}
     assert client().post(ANSWER, json=body, headers=POST).status_code == 200
     assert client().post(ANSWER, json=body, headers=POST).status_code == 429
+
+
+def test_vector_channel_fuses_with_keywords(release, monkeypatch):
+    # The query vector points at the 밀폐공간 chunk, which the keywords never mention.
+    import numpy as np
+
+    vector = np.zeros(2560, dtype=np.float32)
+    vector[2] = 1.0
+    monkeypatch.setattr(kg.embed_client, "query_vector", lambda text: vector)
+    body = client().get(SEARCH, params={"q": "비계 안전난간"}, headers=HEADERS).json()
+    assert body["semantic"] == "on"
+    via = {r["chunk_id"]: r["via"] for r in body["results"]}
+    assert via[CHUNKS[0]["chunk_id"]] == ["낱말"]
+    assert via[CHUNKS[2]["chunk_id"]] == ["의미"]
+    semantic_hit = next(r for r in body["results"] if r["chunk_id"] == CHUNKS[2]["chunk_id"])
+    assert semantic_hit["similarity"] == 1.0 and body["total"] == 3
+    # Service unreachable: keyword results only, state says so.
+    monkeypatch.setattr(kg.embed_client, "query_vector", lambda text: None)
+    body = client().get(SEARCH, params={"q": "비계 안전난간"}, headers=HEADERS).json()
+    assert body["semantic"] == "down" and all(r["via"] == ["낱말"] for r in body["results"])

@@ -147,7 +147,7 @@ Google 로그인은 계정 인증이며 기존 연구자료의 접근 관문을 
 
 ## KOSHA GUIDE 그래프 검색
 
-`/datasets/kosha-guide-graphrag`에서 기술지침 658건의 본문 18,659구간을 가공한 자료를 소개하고, `/demo/kosha-guide-graphrag/`에서 현장 말로 검색합니다. 검색은 패키지의 BM25 색인·통제어휘 확장·개체 관계 그래프·법령 조문 인용표로 모델 없이 돌고, 선택한 발췌와 조문만 근거로 Claude(Sonnet 5.5)가 짧게 답합니다. 자료는 NAS `kosha-guide-graphrag/serving/current`에 있고 관문이 다이제스트로 고정합니다. 2026-10-06 소유자 결정으로 공개했고(KOSHA GUIDE 이용 허락 확인), 인계 패키지 전체 zip과 핵심 zip을 비공개 Storage 서명 주소로 내려받습니다. [인수 검토](docs/KOSHA-GRAPHRAG-INTAKE-REVIEW.md), [화면 설계](docs/KOSHA-GRAPHRAG-DESIGN-BRIEF.md). 화면 빌드는 `npm run build:kosha-guide-graphrag-demo --workspace web`입니다.
+`/datasets/kosha-guide-graphrag`에서 기술지침 658건의 본문 18,659구간을 가공한 자료를 소개하고, `/demo/kosha-guide-graphrag/`에서 현장 말로 검색합니다. 낱말 검색은 패키지의 BM25 색인·통제어휘 확장에 의미(벡터) 채널을 RRF로 합친 것이고(질의 벡터는 루프백 임베딩 서비스 `osh-embed`, `ai-api/embed_service.py`, Qwen3-Embedding-4B CPU), 선택한 발췌와 조문만 근거로 Claude(Sonnet 5.5)가 짧게 답합니다. 맥락 검색(`ai-api/app/kosha_context.py`)은 질문을 Claude가 개념으로 풀어 지식 그래프(1단계 패키지 추출 + 2단계 Claude Batch 추출 `ai-api/scripts/graphrag/`)와 커뮤니티 보고서·지침 발췌·조문을 모은 뒤 근거를 인용해 답합니다. 자료는 NAS `kosha-guide-graphrag/serving/current`에 있고 관문이 다이제스트로 고정합니다. 2026-10-06 소유자 결정으로 공개했고(KOSHA GUIDE 이용 허락 확인), 인계 패키지 전체 zip과 핵심 zip을 비공개 Storage 서명 주소로 내려받습니다. [인수 검토](docs/KOSHA-GRAPHRAG-INTAKE-REVIEW.md), [화면 설계](docs/KOSHA-GRAPHRAG-DESIGN-BRIEF.md). 화면 빌드는 `npm run build:kosha-guide-graphrag-demo --workspace web`입니다.
 
 ## 산업안전 판례 · 유사어휘
 

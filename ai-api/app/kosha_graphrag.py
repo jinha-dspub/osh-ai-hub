@@ -34,7 +34,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import Field, ValidationError
 from starlette.concurrency import run_in_threadpool
 
-from app import budget
+from app import budget, embed_client
 from app import support_programs as sp
 from app import support_programs_ai as shared
 
@@ -44,9 +44,9 @@ ROOT = Path(os.environ.get("NAS_DATA", "/nas")) / PROJECT / "serving/current"
 STATIC = Path(__file__).resolve().parents[1] / "static/kosha-guide-graphrag"
 VERSION = "1.0.0"
 # sha256 of "\n".join(sorted(f"{path}\t{sha256}")) over every file under serving/current except
-# RELEASE.md: serving v1 = 42 files copied byte-for-byte from the 2026-10-06 handoff package
-# (hashes match its files.csv). A new release needs a new digest here.
-DIGEST = "3de84bf69e9b41c926f5846dde86fa4f99fd6fd9951a436f731fc4438e1561ef"
+# RELEASE.md: serving v2 = the 42-file subset of the 2026-10-06 handoff package + its chunk
+# vectors + the merged stage-1/stage-2 graph (49 files). A new release needs a new digest here.
+DIGEST = "47342f12866a3813686fd65765a447c78331bc14bfa0653ca7563bc3b032232a"
 G = "data/graphrag"
 BM25 = f"{G}/bm25_sparse/graphrag-20260801T074800Z-m3-file-bm25-u2-r60"
 RT = "data/runtime/storage"
@@ -56,6 +56,9 @@ MAX_PAGES = 5
 EXPANSION_WEIGHT = 0.6
 PARTICLE_WEIGHT = 0.5
 PARTICLE_TERMS = 24
+RRF_K = 60
+FUSE_CANDIDATES = 100
+SEMANTIC_MIN = 0.35
 CHUNK_ID = re.compile(r"^chk_[0-9a-f]{16}$")
 DOCUMENT_ID = re.compile(r"^doc_[0-9a-f]{16}$")
 LAW_KEY = re.compile(r"^[가-힣A-Za-z0-9_·()\-]{3,80}$")
@@ -203,6 +206,20 @@ class Index:
             ],
             dtype=np.int8,
         )
+        # Package chunk vectors (Qwen3-Embedding-4B, L2-normalised) when the release ships them;
+        # query vectors come from the loopback embedding service (embed_client).
+        self.vectors = None
+        emb = root / G / "embeddings"
+        if (emb / "chunk_vectors.f32.npy").is_file() and (
+            emb / "chunk_vector_index.jsonl"
+        ).is_file():
+            vectors = np.load(emb / "chunk_vectors.f32.npy", mmap_mode="r")
+            position = {cid: i for i, cid in enumerate(self.rows)}
+            rows = np.full(vectors.shape[0], -1, dtype=np.int64)
+            for r in jsonl(emb / "chunk_vector_index.jsonl"):
+                rows[r["row"]] = position.get(r["chunk_id"], -1)
+            if vectors.shape[1] == embed_client.DIMENSION and (rows >= 0).all():
+                self.vectors, self.vector_rows = vectors, rows
         self.documents = {}
         self.document_by_name = {}
         for d in jsonl(root / G / "metadata/documents.jsonl"):
@@ -346,6 +363,41 @@ class Index:
         if domain in DOMAINS:
             scores[self.row_domain != DOMAINS.index(domain)] = 0
         return scores, matched
+
+    def semantic(self, query: str, domain: str | None):
+        """Cosine scores aligned to BM25 rows, or None when vectors or the service are missing."""
+        if self.vectors is None:
+            return None
+        qv = embed_client.query_vector(query)
+        if qv is None:
+            return None
+        sims = np.asarray(self.vectors @ qv, dtype=np.float32)
+        scores = np.zeros(self.N, dtype=np.float32)
+        scores[self.vector_rows] = sims
+        if domain in DOMAINS:
+            scores[self.row_domain != DOMAINS.index(domain)] = 0
+        scores[scores < SEMANTIC_MIN] = 0
+        return scores
+
+    @staticmethod
+    def ranking(scores, limit):
+        if scores is None:
+            return []
+        n = len(scores)
+        top = np.argpartition(-scores, min(limit, n - 1))[:limit] if n > limit else np.arange(n)
+        top = sorted(top.tolist(), key=lambda i: (-float(scores[i]), i))
+        return [i for i in top if scores[i] > 0]
+
+    @staticmethod
+    def fuse(rankings: dict[str, list[int]]):
+        """Reciprocal-rank fusion; returns [(row, score, channels)] best first."""
+        fused, channels = {}, defaultdict(list)
+        for name, ranking in rankings.items():
+            for rank, row in enumerate(ranking, start=1):
+                fused[row] = fused.get(row, 0.0) + 1.0 / (RRF_K + rank)
+                channels[row].append(name)
+        order = sorted(fused, key=lambda r: (-fused[r], r))
+        return [(r, fused[r], channels[r]) for r in order]
 
     def expand(self, words: list[str]):
         """(from, to, kind) for query words the vocabulary maps to a standard term."""
@@ -508,20 +560,24 @@ class Index:
             weighted += [(t, EXPANSION_WEIGHT) for t in analyze(label)]
         scores, matched = self.bm25(weighted, domain)
         keys = {squash(t) for t in tokens} | {squash(label) for _, label, _ in expansion}
-        total = int(np.count_nonzero(scores))
+        semantic = self.semantic(query, domain)
         limit = PAGE * MAX_PAGES
-        top = (
-            np.argpartition(-scores, min(limit, self.N - 1))[:limit]
-            if self.N > limit
-            else np.arange(self.N)
+        lexical = self.ranking(scores, FUSE_CANDIDATES)
+        fused = self.fuse(
+            {"낱말": lexical, "의미": self.ranking(semantic, FUSE_CANDIDATES)}
+            if semantic is not None
+            else {"낱말": lexical}
         )
-        top = sorted(top.tolist(), key=lambda i: (-float(scores[i]), i))
-        top = [i for i in top if scores[i] > 0]
+        total = int(np.count_nonzero(scores)) + sum(1 for _, _, ch in fused if ch == ["의미"])
+        top = [row for row, _, _ in fused[:limit]]
+        channel = {row: ch for row, _, ch in fused[:limit]}
         shown = top[(page - 1) * PAGE : page * PAGE]
         highlight = sorted({w for w in words}, key=len, reverse=True)
         results = [self.chunk_card(self.rows[i], highlight) for i in shown]
         for r, i in zip(results, shown):
             r["score"] = round(float(scores[i]), 2)
+            r["similarity"] = round(float(semantic[i]), 3) if semantic is not None else None
+            r["via"] = channel[i]
         nodes, edges = self.graph(query, keys)
         return {
             "query": query,
@@ -530,6 +586,9 @@ class Index:
             "pages": min(MAX_PAGES, math.ceil(min(total, limit) / PAGE)) if total else 0,
             "total": total,
             "shown": len(results),
+            "semantic": "on"
+            if semantic is not None
+            else ("down" if self.vectors is not None else "off"),
             "matched_terms": matched,
             "highlight": highlight,
             "expansion": [{"from": f, "to": t, "kind": k} for f, t, k in expansion],
@@ -592,6 +651,8 @@ class Index:
             "laws": len(self.laws),
             "cited_laws": len({k for keys in self.document_laws.values() for k in keys}),
             "vocab": sum(len(v) for v in self.vocab.values()),
+            "vectors": int(self.vectors.shape[0]) if self.vectors is not None else 0,
+            "embedding": embed_client.health() if self.vectors is not None else {"status": "off"},
         }
 
 
