@@ -90,3 +90,31 @@ describe("corporate safety and health disclosures visibility", () => {
     );
   });
 });
+
+describe("KOSHA GUIDE GraphRAG dataset visibility", () => {
+  it("stays an admin draft until the owner opens it", async () => {
+    const { visibleDatasets, koshaGraphragPublic } = await import(
+      "../lib/catalog"
+    );
+    const slugs = (admin: boolean) => visibleDatasets(admin).map((d) => d.slug);
+    expect(slugs(true)).toContain("kosha-guide-graphrag");
+    expect(slugs(false).includes("kosha-guide-graphrag")).toBe(
+      koshaGraphragPublic,
+    );
+  });
+});
+
+describe("precedents and synonym vocabulary visibility", () => {
+  it("lists both datasets for every visitor once published", async () => {
+    const { visibleDatasets, precedentsPublic, synonymVocabPublic } =
+      await import("../lib/catalog");
+    const slugs = (admin: boolean) => visibleDatasets(admin).map((d) => d.slug);
+    for (const [slug, flag] of [
+      ["osh-precedents", precedentsPublic],
+      ["osh-synonym-vocab", synonymVocabPublic],
+    ] as const) {
+      expect(slugs(true)).toContain(slug);
+      expect(slugs(false).includes(slug)).toBe(flag);
+    }
+  });
+});

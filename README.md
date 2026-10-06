@@ -144,3 +144,11 @@ Google 로그인은 계정 인증이며 기존 연구자료의 접근 관문을 
 ## OSHMASTER 표준분류 마스터
 
 `/datasets/oshmaster`에서 자료 소개와 실제 코드 3행 미리보기를 제공합니다. `/demo/oshmaster/`는 기존 인증 관문 뒤에서 표준명·동의어·판본별 계층을 탐색하고 선택 코드 JSON 및 원본 ZIP을 제공합니다. 원 코드 98,638개이며 사건 자료와 별도 데이터셋입니다. [화면·권한·Storage·검증 및 한계](docs/OSHMASTER-DESIGN-BRIEF.md)를 참고하세요. 정적 앱 빌드는 `npm run build:oshmaster-demo --workspace web`입니다.
+
+## KOSHA GUIDE 그래프 검색
+
+`/datasets/kosha-guide-graphrag`에서 기술지침 658건의 본문 18,659구간을 가공한 자료를 소개하고, `/demo/kosha-guide-graphrag/`에서 현장 말로 검색합니다. 검색은 패키지의 BM25 색인·통제어휘 확장·개체 관계 그래프·법령 조문 인용표로 모델 없이 돌고, 선택한 발췌와 조문만 근거로 Claude(Sonnet 5.5)가 짧게 답합니다. 자료는 NAS `kosha-guide-graphrag/serving/current`에 있고 관문이 다이제스트로 고정합니다. 2026-10-06 소유자 결정으로 공개했고(KOSHA GUIDE 이용 허락 확인), 인계 패키지 전체 zip과 핵심 zip을 비공개 Storage 서명 주소로 내려받습니다. [인수 검토](docs/KOSHA-GRAPHRAG-INTAKE-REVIEW.md), [화면 설계](docs/KOSHA-GRAPHRAG-DESIGN-BRIEF.md). 화면 빌드는 `npm run build:kosha-guide-graphrag-demo --workspace web`입니다.
+
+## 산업안전 판례 · 유사어휘
+
+같은 날 들어온 두 인계 패키지는 제작자의 참조 앱(FastAPI + Jinja2, 읽기 전용)을 `ai-api/app/safetybread_apps.py`가 NAS `serving/current`에서 그대로 관문에 올립니다(`/demo/osh-precedents/`, `/demo/osh-synonym-vocab/`, 의미검색 꺼짐, 배포본 다이제스트 고정, 패키지의 파일 링크는 Storage 서명 주소로 넘김). 소개는 `/datasets/osh-precedents`, `/datasets/osh-synonym-vocab`. 판례 배포본 v2는 소유자 지시로 본문에 남아 있던 이름 표기 4종을 지운 판본입니다. 세 자료의 다운로드 파일은 `python ai-api/scripts/upload_safetybread_storage.py <slug>`로 자료별 비공개 버킷에 올리고 `local_asset/<slug>-storage-manifest.json`이 만들어져야 열립니다. [판례 인수 검토](docs/PRECEDENTS-INTAKE-REVIEW.md), [유사어휘 인수 검토](docs/SYNONYM-VOCAB-INTAKE-REVIEW.md).

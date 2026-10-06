@@ -564,6 +564,69 @@ export const publicOhsDataset: Dataset = {
 };
 // Public since 2026-10-01 at the owner's request (docs/PUBLIC-OHS-READINESS-DESIGN-BRIEF.md).
 export const publicOhsPublic = true;
+export const koshaGraphragDataset: Dataset = {
+  isReal: true,
+  slug: "kosha-guide-graphrag",
+  title: "KOSHA GUIDE 그래프 검색 자료",
+  description:
+    "한국산업안전보건공단 기술지침 658건의 본문 18,659구간을 현장 용어로 검색하고, 지침이 인용한 법령 조문과 지침에서 뽑은 개념 관계를 함께 봅니다. 선택한 근거만으로 AI가 짧게 답합니다.",
+  category: "산업재해",
+  format: "JSON",
+  kind: "text",
+  tags: ["KOSHA GUIDE", "기술지침", "GraphRAG", "법령 조문", "통제어휘", "BM25"],
+  updated: "2026-10-06",
+  year: 2026,
+  api: false,
+  ai: true,
+  accent: "blue",
+  sample: [],
+  variables: [],
+};
+// Public since 2026-10-06 at the owner's decision (KOSHA GUIDE use permitted per the owner;
+// the package itself is still status "review" — docs/KOSHA-GRAPHRAG-INTAKE-REVIEW.md).
+export const koshaGraphragPublic = true;
+export const precedentsDataset: Dataset = {
+  isReal: true,
+  slug: "osh-precedents",
+  title: "산업안전 판례 데이터",
+  description:
+    "산업안전보건법 위반·업무상과실치사상·산재 손해배상 등 공개 판결문 169건과, 판결문에서 뽑은 사건 요약·조문별 판단·선고형, 조문 인용 관계를 검색합니다.",
+  category: "산업재해",
+  format: "CSV",
+  kind: "text",
+  tags: ["판례", "판결문", "산업안전보건법", "중대재해처벌법", "업무상과실치사", "조문"],
+  updated: "2026-10-06",
+  year: 2026,
+  api: false,
+  ai: false,
+  accent: "blue",
+  sample: [],
+  variables: [],
+};
+// Public since 2026-10-06 at the owner's decision; the owner reviewed the machine name removal
+// and had four remaining name strings removed (docs/PRECEDENTS-INTAKE-REVIEW.md).
+export const precedentsPublic = true;
+export const synonymVocabDataset: Dataset = {
+  isReal: true,
+  slug: "osh-synonym-vocab",
+  title: "산업안전 유사어휘 데이터",
+  description:
+    "개념 22,365개에 한글 표기 26,119개와 영문·한자 표기 24,228개를 이은 어휘 자료입니다. ‘아시바’, ‘공구리’ 같은 현장 말을 표준 용어로 찾고 검색어를 넓힙니다.",
+  category: "산업재해",
+  format: "CSV",
+  kind: "text",
+  tags: ["용어", "동의어", "현장 용어", "통제어휘", "KOSHA", "검색어 확장"],
+  updated: "2026-10-06",
+  year: 2026,
+  api: false,
+  ai: false,
+  accent: "blue",
+  sample: [],
+  variables: [],
+};
+// Public since 2026-10-06 at the owner's decision; four of nine sources have unconfirmed terms
+// (docs/SYNONYM-VOCAB-INTAKE-REVIEW.md).
+export const synonymVocabPublic = true;
 export const familyDesignDataset: Dataset = {
   isReal: true,
   slug: "family-design",
@@ -610,6 +673,9 @@ export function visibleDatasets(admin = false): Dataset[] {
     [supportProgramsDataset, supportProgramsPublic],
     [corporateOhsDataset, corporateOhsPublic],
     [publicOhsDataset, publicOhsPublic],
+    [koshaGraphragDataset, koshaGraphragPublic],
+    [precedentsDataset, precedentsPublic],
+    [synonymVocabDataset, synonymVocabPublic],
   ] as const;
   const published = [
     sanjeDataset,

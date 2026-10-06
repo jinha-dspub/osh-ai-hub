@@ -17,6 +17,8 @@ Environment=OSH_PUBLIC_DEMOS=lanyard
 # auto = GPU with most free memory (torch cu128 for driver 570), CPU if none is free.
 Environment=LANYARD_DEVICE=auto
 Environment=LANYARD_DAILY_KRW=3000
+# KOSHA GUIDE 그래프 검색: Claude 답변의 하루 한도 (원).
+Environment=KOSHA_GRAPHRAG_AI_DAILY_KRW=3000
 Restart=on-failure
 RestartSec=5
 UMask=0077

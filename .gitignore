@@ -42,3 +42,6 @@ ai-api/models/*
 
 # Collaborator handoffs (packages land here before NAS; never publish)
 /dever/
+
+# KOSHA GUIDE graph search screen: built on .6 by `npm run build:kosha-guide-graphrag-demo --workspace web`.
+/ai-api/static/kosha-guide-graphrag/
