@@ -133,9 +133,14 @@ export default async function PrecedentsPage() {
               1,405 · 본문 구간 4,632
             </strong>
           </p>
+          <p className="osh-note osh-note--error" role="status">
+            <strong>검색 기능 임시 수정 중.</strong> 판례 검색은 현재 정상 동작하지
+            않습니다(키워드 일치만 되고 의미 검색은 꺼져 있음). 데이터 내려받기는
+            그대로 쓸 수 있습니다.
+          </p>
           <div className="osh-actions">
-            <a className="osh-button" href={TOOL}>
-              판례 검색 →
+            <a className="osh-button osh-button--secondary" href={TOOL}>
+              판례 검색 (수정 중) →
             </a>
             <a className="osh-button osh-button--secondary" href="#download">
               데이터 받기
@@ -217,7 +222,8 @@ export default async function PrecedentsPage() {
               <p>
                 판결문 원문·사건 요약·판시 요지를 키워드로 찾고, 법원·심급·사건
                 유형·사고 유형·업종·관련 조문으로 거릅니다. 결과마다 어느 종류에서
-                걸렸는지 표시합니다. 의미(벡터) 검색은 꺼져 있습니다.
+                걸렸는지 표시합니다. 의미(벡터) 검색은 꺼져 있어 현재 검색
+                기능은 임시 수정 중입니다.
               </p>
             </article>
             <article className="osh-card">
