@@ -63,11 +63,11 @@ KOSHA GUIDE 658건을 OCR해 구간 18,659개로 나눈 **실제 자료**와 그
 | 2단계 추출 | 패키지가 비워 둔 청크 16,823개에서 Claude Sonnet 5.5(Message Batches, 구조화 출력)로 개체·관계 추출. 관계는 본문 인용 구절이 글에 있을 때만 채택(탈락 526). 실질 내용 청크 12,123 → 개체 81,499·관계 45,976. 토큰 입력 950만·출력 957만(캐시 적용, 배치 50% 할인 ≈ 57달러) | `ai-api/scripts/graphrag/extract.py`, 결과 `/nas/kosha-guide-graphrag/processed/graphrag-claude-20261006-v1/extract/` |
 | 합본 그래프 | 1단계(패키지 개체 3,794·관계 2,557 + 관계 캐시 13,064) + 2단계. 통제어휘로 표기 통일(379건 병합). 노드 66,450·엣지 59,664 | `scripts/graphrag/merge.py` → `graph/nodes.jsonl`, `edges.jsonl` |
 | 커뮤니티 | networkx Louvain 2단계: 0단계 2,713 · 1단계 1,611 = 보고서 대상 4,324 | `scripts/graphrag/communities.py` |
-| 커뮤니티 보고서 | 커뮤니티마다 제목·요약·근거 번호가 붙은 발견·키워드·중요도(Claude Batch). 근거 목록 밖 인용은 삭제 | `scripts/graphrag/summarize.py` → `graph/reports.jsonl` (배치 진행 중, 완료 후 serving v3) |
+| 커뮤니티 보고서 | 커뮤니티 4,324개마다 제목·요약·근거 번호가 붙은 발견(평균 5개)·키워드·중요도(Claude Batch). 근거 목록 밖 인용은 삭제. 토큰 입력 662만(캐시 413만)·출력 305만 ≈ 18달러 | `scripts/graphrag/summarize.py` → `graph/reports.jsonl` |
 | 의미 검색 | 번들의 Qwen3-Embedding-4B(rev 5cf2132)를 CPU로 올린 루프백 서비스 `osh-embed`(127.0.0.1:8104, 별도 venv `local_asset/venv-embed`). 패키지 청크 벡터와 코사인 0.998로 재현 확인. 질의 0.5초. BM25와 RRF(k=60) 융합 | `ai-api/embed_service.py`, `app/embed_client.py`, `deploy/osh-embed.service` |
 | 맥락 검색 | 질문 → Claude 이해(개념·검색어·범위) → 그래프 노드 매칭·이웃 관계(인용 구절 포함)·커뮤니티 보고서·하이브리드 발췌·조문 → Claude 답변(C/R/G/L 근거 인용, 미인용 문장 삭제). 호출 2회 약 100~150원, 같은 일일 한도 | `ai-api/app/kosha_context.py`, 화면 "맥락 검색" 탭 |
-| 배포본 v2 | v1 42개 파일 + 벡터 3개 + `graph/` = 49개, 다이제스트 `47342f12…`, `current` | `/nas/kosha-guide-graphrag/serving/kosha-guide-graphrag-20261006-v2` |
+| 배포본 v2 → v3 | v1 42개 파일 + 벡터 3개 + `graph/`(v3부터 reports.jsonl 포함) = 50개, `current` = v3 | `/nas/kosha-guide-graphrag/serving/kosha-guide-graphrag-20261006-v3` |
 
 확인: ai-api pytest 174 통과(`test_kosha_context.py` 8개 포함), 운영 주소에서 의미 채널 on·질의 0.3~0.8초, 맥락 검색 1건(아시바 난간) 정상. GPU는 다른 팀 vLLM이 점유해 CPU로 운영하며, 비면 `EMBED_DEVICE=cuda`로 바꾼다.
 
-남은 일: 커뮤니티 보고서 배치 완료 후 `summarize.py fetch` → serving v3(`graph/reports.jsonl` 추가) → DIGEST 갱신 → `current` → osh-demo 재시작. 2단계 그래프의 정확도 평가는 하지 않았다(인용 구절 검증만).
+남은 일: 2단계 그래프와 커뮤니티 보고서의 정확도 평가는 하지 않았다(인용 구절 검증만). 평가셋을 만들어 낱말·의미·맥락 검색을 같은 질문으로 비교하는 것이 다음 단계다.

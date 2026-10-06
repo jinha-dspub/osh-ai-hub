@@ -44,9 +44,10 @@ ROOT = Path(os.environ.get("NAS_DATA", "/nas")) / PROJECT / "serving/current"
 STATIC = Path(__file__).resolve().parents[1] / "static/kosha-guide-graphrag"
 VERSION = "1.0.0"
 # sha256 of "\n".join(sorted(f"{path}\t{sha256}")) over every file under serving/current except
-# RELEASE.md: serving v2 = the 42-file subset of the 2026-10-06 handoff package + its chunk
-# vectors + the merged stage-1/stage-2 graph (49 files). A new release needs a new digest here.
-DIGEST = "47342f12866a3813686fd65765a447c78331bc14bfa0653ca7563bc3b032232a"
+# RELEASE.md: serving v3 = the 42-file subset of the 2026-10-06 handoff package + its chunk
+# vectors + the merged stage-1/stage-2 graph with community reports (50 files). A new release
+# needs a new digest here.
+DIGEST = "f22c857e279a13e80b32684299b553ab888c9c1e801e4049066721ca04536221"
 G = "data/graphrag"
 BM25 = f"{G}/bm25_sparse/graphrag-20260801T074800Z-m3-file-bm25-u2-r60"
 RT = "data/runtime/storage"
