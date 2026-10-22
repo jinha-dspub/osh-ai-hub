@@ -1,0 +1,18 @@
+[Unit]
+Description=OSH ChemReg (ukbyun 1.0.0) on 127.0.0.1:8766, behind the /demo gateway
+After=network.target
+
+[Service]
+Type=simple
+# local_asset/chemreg/current -> releases/<version>/ChemReg, patched by
+# ai-api/scripts/patch_chemreg.py; its .env holds the public-mode settings (never in git).
+WorkingDirectory=/home/shield/osh-ai-hub/local_asset/chemreg/current
+ExecStart=/home/shield/osh-ai-hub/local_asset/chemreg/current/.venv/bin/python run.py
+Environment=PYTHONDONTWRITEBYTECODE=1
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

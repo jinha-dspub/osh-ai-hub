@@ -6,6 +6,7 @@ from pathlib import Path
 
 from fastapi.responses import HTMLResponse
 
+from app.chemreg import register as register_chemreg
 from app.copd_demo import app
 from app.corporate_ohs import register as register_corporate_ohs
 from app.kosha_context import register as register_kosha_context
@@ -23,6 +24,7 @@ register_lanyard(app)
 register_support_programs(app)
 register_corporate_ohs(app)
 register_public_ohs_readiness(app)
+register_chemreg(app)
 register_kosha_graphrag(app)
 register_kosha_context(app)
 register_safetybread_apps(app)

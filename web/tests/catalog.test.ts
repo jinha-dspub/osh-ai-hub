@@ -91,6 +91,15 @@ describe("corporate safety and health disclosures visibility", () => {
   });
 });
 
+describe("ChemReg dataset visibility", () => {
+  it("lists the ChemReg tool for every visitor once published", async () => {
+    const { visibleDatasets, chemregPublic } = await import("../lib/catalog");
+    const slugs = (admin: boolean) => visibleDatasets(admin).map((d) => d.slug);
+    expect(slugs(true)).toContain("chemreg");
+    expect(slugs(false).includes("chemreg")).toBe(chemregPublic);
+  });
+});
+
 describe("KOSHA GUIDE GraphRAG dataset visibility", () => {
   it("stays an admin draft until the owner opens it", async () => {
     const { visibleDatasets, koshaGraphragPublic } = await import(

@@ -627,6 +627,27 @@ export const synonymVocabDataset: Dataset = {
 // Public since 2026-10-06 at the owner's decision; four of nine sources have unconfirmed terms
 // (docs/SYNONYM-VOCAB-INTAKE-REVIEW.md).
 export const synonymVocabPublic = true;
+export const chemregDataset: Dataset = {
+  isReal: true,
+  slug: "chemreg",
+  title: "ChemReg 화학제품 SDS·MSDS 도구",
+  description:
+    "화학제품 사진에서 제품과 SDS를 확인하고, 참고물질 69종의 MSDS 16항목, 규제·등록 현황 47,520행, 국제 식별자를 조회합니다. MSDS 작성·보관과 경고표지 출력 초안까지 한 곳에서 다룹니다.",
+  category: "화학물질",
+  format: "CSV",
+  kind: "text",
+  tags: ["SDS", "MSDS", "GHS", "경고표지", "KOSHA", "KREACH", "OCR", "WGK"],
+  updated: "2026-10-22",
+  year: 2026,
+  api: false,
+  ai: false,
+  accent: "teal",
+  sample: [],
+  variables: [],
+};
+// Public since 2026-10-22 at the owner's decision (SDS redistribution allowed per the owner);
+// open without login like the other demos (docs/CHEMREG-INTAKE-REVIEW.md).
+export const chemregPublic = true;
 export const familyDesignDataset: Dataset = {
   isReal: true,
   slug: "family-design",
@@ -676,6 +697,7 @@ export function visibleDatasets(admin = false): Dataset[] {
     [koshaGraphragDataset, koshaGraphragPublic],
     [precedentsDataset, precedentsPublic],
     [synonymVocabDataset, synonymVocabPublic],
+    [chemregDataset, chemregPublic],
   ] as const;
   const published = [
     sanjeDataset,
