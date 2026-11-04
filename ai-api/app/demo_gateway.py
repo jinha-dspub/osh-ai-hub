@@ -12,6 +12,7 @@ from app.corporate_ohs import register as register_corporate_ohs
 from app.kosha_context import register as register_kosha_context
 from app.kosha_graphrag import register as register_kosha_graphrag
 from app.lanyard import register as register_lanyard
+from app.life_years import register as register_life_years
 from app.oshmaster import register as register_oshmaster
 from app.public_ohs_readiness import register as register_public_ohs_readiness
 from app.safetybread_apps import register as register_safetybread_apps
@@ -21,6 +22,7 @@ from app.voice import register
 register(app)
 register_oshmaster(app)
 register_lanyard(app)
+register_life_years(app)
 register_support_programs(app)
 register_corporate_ohs(app)
 register_public_ohs_readiness(app)

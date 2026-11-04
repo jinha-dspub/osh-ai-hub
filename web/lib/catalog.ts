@@ -688,6 +688,23 @@ export const collaborationTemplates = [
   openDataGuideDataset,
   familyDesignDataset,
 ];
+export const lifeYearsDataset: Dataset = {
+  slug: "ei-nhis-life-years-lost",
+  title: "고용보험–건보 집계표·손실연수 계산 DEMO",
+  description:
+    "연령별 사망 수와 인년으로 생명표·손실연수·YPLL을 계산하는 제작 가이드와 합성 예제 9종입니다. 입력 양식·계산 코드를 제공하며, 실제 반출 집계자료는 포함하지 않습니다.",
+  category: "산업보건",
+  format: "CSV",
+  kind: "guide",
+  tags: ["DEMO 합성자료", "손실연수", "생명표", "YPLL", "고용보험", "건강보험"],
+  updated: "2026-10-30",
+  year: 2026,
+  api: false,
+  ai: false,
+  accent: "blue",
+  sample: [],
+  variables: [],
+};
 export function visibleDatasets(admin = false): Dataset[] {
   const optional = [
     [lanyardDataset, lanyardPublic],
@@ -700,6 +717,7 @@ export function visibleDatasets(admin = false): Dataset[] {
     [chemregDataset, chemregPublic],
   ] as const;
   const published = [
+    lifeYearsDataset,
     sanjeDataset,
     oshmasterDataset,
     ...optional.filter(([, p]) => p).map(([d]) => d),
