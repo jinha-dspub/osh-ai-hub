@@ -4,7 +4,7 @@ import "../../../../design/osh-family/osh-family.css";
 export const metadata = { title: "고용보험–건보 집계표·손실연수 계산 DEMO" };
 const demo = "/demo/ei-nhis-life-years-lost/";
 const files = [
-  ["집계표 제작 가이드", "AGGREGATION-GUIDE.md"],
+  ["집계표 작성 및 지표 재산출 가이드", "AGGREGATION-GUIDE.md"],
   ["빈 집계표 양식", "aggregate.csv"],
   ["데이터 사전", "data_dictionary.csv"],
   ["표준인구 양식", "standard_population.csv"],
@@ -29,14 +29,13 @@ export default function LifeYearsPage() {
           </span>
           <h1 className="osh-title">고용보험–건보 집계표와 손실연수</h1>
           <p className="osh-copy">
-            연령별 사망 수와 관찰 인년을 어떤 형식으로 정리하고,
-            생명표·손실연수·YPLL을 어떻게 다시 계산하는지 살펴보세요. 집계표
-            제작 가이드, 빈 입력 양식, 실행 가능한 Python 코드와 합성자료
-            계산기를 제공합니다.
+            고용보험–국민건강보험 연계자료의 집계 기준과
+            생명표·손실연수·YPLL 재산출 방법을 안내합니다. 집계표 작성 가이드,
+            빈 입력 양식, Python 코드와 합성자료 기반 계산 도구를 제공합니다.
           </p>
           <p className="osh-help">
-            자료 버전 0.1.0-local · 최종 버전 날짜 2026-10-30 · Hub 등록
-            2026-11-04 · 업데이트 계획 미정
+            자료 버전 0.1.0-local · 원 제작일 2026-10-30 · Hub 반영
+            2026-11-04.v3 · 업데이트 계획 미정
           </p>
           <a className="osh-button" href={demo}>
             손실연수 계산 DEMO 열기 →
@@ -48,12 +47,12 @@ export default function LifeYearsPage() {
           참고 자료이며, 계산기에 사용되는 입력이나 합성 계산 결과가 아닙니다.
         </p>
         <section className="osh-section">
-          <h2 className="osh-heading">이렇게 활용하세요</h2>
+          <h2 className="osh-heading">집계표 작성 및 지표 산출 절차</h2>
           <div className="osh-grid">
             <article className="osh-card">
               <h3 className="osh-card-title">1. 집계표 형식 확인</h3>
               <p>
-                분석설계·성별·분류·집단·연령을 고정하고 사망 수, 인년, 셀 상태를
+                분석설계·성별·분류·집단·연령을 고정하고 사망 건수, 관찰 인년, 셀 상태를
                 기록합니다. 누락·비공개 셀은 0으로 채우지 않습니다.
               </p>
             </article>
@@ -92,7 +91,7 @@ export default function LifeYearsPage() {
                   <th>집단</th>
                   <th>만 나이</th>
                   <th>관찰 인년</th>
-                  <th>사망 수</th>
+                  <th>사망 건수</th>
                   <th>셀 상태</th>
                 </tr>
               </thead>
@@ -118,7 +117,7 @@ export default function LifeYearsPage() {
         <section className="osh-card osh-section">
           <h2 className="osh-heading">자료와 코드 다운로드</h2>
           <p>
-            빈 입력 양식과 제작·계산 도구입니다. 논문 보고값 CSV는 합성 예제와
+            집계표 작성 양식과 지표 산출 도구입니다. 논문 보고값 CSV는 합성 예제와
             구분해서 사용하세요.
           </p>
           <ul>
@@ -170,7 +169,8 @@ export default function LifeYearsPage() {
           </p>
           <p className="osh-help">
             변경 이력: 2026-10-30 제작 패키지 0.1.0-local → 2026-11-04 Hub
-            소개·계산 DEMO·다운로드 연결. 계산식과 자료 값은 변경하지
+            소개·계산 DEMO·다운로드 연결 및 가이드·화면·계산 안내 문구 갱신.
+            계산식과 자료 값은 변경하지
             않았습니다.
           </p>
           <a className="osh-button" href={demo}>
