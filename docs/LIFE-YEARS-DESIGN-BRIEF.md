@@ -46,7 +46,7 @@ OSH Family Design 1.0의 색·로컬 Noto Sans KR·카드·버튼을 유지한�
 
 `prepare_life_years.py` → `/nas/bin/nas-put … serving …` → 다이제스트 고정 → `serving/current` 전환 → 공통 관문 재시작으로 배포한다.
 원본/서비스 파일은 Git에 넣지 않는다. 소개 페이지와 관문 코드만 Git/Vercel에 반영한다.
-원본은 `raw/data-station-handoff-20261104`, 서비스 배포본은 `serving/ei-nhis-life-years-lost-20261104-v1`이다.
+원본은 `raw/data-station-handoff-20261104`, 서비스 배포본은 `serving/ei-nhis-life-years-lost-20261104-v2`이다. v1의 서비스 자산은 동일하며 v2는 파일 목록에 Hub manifest를 추가하고 access 값을 인수 규약에 맞췄다. 가공 배포본의 199개 항목도 제작자의 검증 스크립트를 통과했다.
 156개 정적 자산·계산 코드 파일을 manifest SHA-256 `b3a8d9e529b36c64482f311cb1484cd1c8dc0c71a7a8d62d6183e411b4b2fd12`로 고정했다.
 계산 코드·CSV 결합 코드·data/ 전체의 원본과 배포본 바이트 일치를 별도 확인했다.
 

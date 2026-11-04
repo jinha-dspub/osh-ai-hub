@@ -71,6 +71,24 @@ def prepare(source: Path, target: Path):
     files = {str(p.relative_to(target)): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
     manifest = json.dumps(files, sort_keys=True, ensure_ascii=False).encode()
     (target / "hub-manifest.json").write_bytes(manifest)
+    rows.append(
+        {
+            "file_id": "hub_manifest",
+            "path": "hub-manifest.json",
+            "role": "integrity",
+            "format": "json",
+            "bytes": str(len(manifest)),
+            "sha256": hashlib.sha256(manifest).hexdigest(),
+            "rows": "",
+            "access": "restricted",
+        }
+    )
+    for row in rows:
+        row["access"] = "public" if row["path"].startswith("demo/dist/") else "restricted"
+    with listing.open("w", newline="") as stream:
+        writer = csv.DictWriter(stream, fields)
+        writer.writeheader()
+        writer.writerows(rows)
     print(json.dumps({"files": len(files), "digest": hashlib.sha256(manifest).hexdigest()}))
 
 
