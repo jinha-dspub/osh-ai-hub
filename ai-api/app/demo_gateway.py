@@ -6,6 +6,8 @@ from pathlib import Path
 
 from fastapi.responses import HTMLResponse
 
+from app.activity_tracking import register as register_activity_tracking
+
 from app.chemreg import register as register_chemreg
 from app.copd_demo import app
 from app.corporate_ohs import register as register_corporate_ohs
@@ -30,6 +32,7 @@ register_chemreg(app)
 register_kosha_graphrag(app)
 register_kosha_context(app)
 register_safetybread_apps(app)
+register_activity_tracking(app)
 
 
 @app.get("/demo")

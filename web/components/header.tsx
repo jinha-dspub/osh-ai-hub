@@ -88,8 +88,8 @@ export function Header({
               </Link>
             )}
             {isAdmin && (
-              <Link href="/admin/drafts" onClick={() => setOpen(false)}>
-                관리자 초안
+              <Link href="/admin/activity" onClick={() => setOpen(false)}>
+                관리자
               </Link>
             )}
           </nav>

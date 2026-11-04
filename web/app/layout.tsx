@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Script from "next/script";
 import { ArrowUpRight } from "lucide-react";
 import { Header, Brand } from "@/components/header";
 import "./globals.css";
@@ -22,6 +23,7 @@ export default async function RootLayout({
   return (
     <html lang="ko">
       <body>
+        <Script src="/activity.js" strategy="afterInteractive" />
         <Header
           isAdmin={await isAdmin()}
           loginEnabled={authConfigured()}

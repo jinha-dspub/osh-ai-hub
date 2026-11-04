@@ -9,5 +9,6 @@ export default defineConfig([
     "next-env.d.ts",
     "playwright-report/**",
     "test-results/**",
+    "public/activity.js", // Generated from scripts/activity-client.ts.
   ]),
 ]);
