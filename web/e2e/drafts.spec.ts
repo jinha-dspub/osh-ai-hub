@@ -43,6 +43,8 @@ test("draft URLs and forged admin flags never reveal draft content", async ({
 }) => {
   for (const path of [
     "/admin/drafts",
+    "/admin/activity",
+    "/api/admin/activity",
     "/models",
     "/models/ppe-detector",
     "/playground",

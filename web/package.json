@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1 --port 3100",
-    "build": "next build",
+    "build": "npm run build:activity && next build",
+    "build:activity": "esbuild scripts/activity-client.ts --outfile=public/activity.js --minify --target=es2020",
     "start": "next start --hostname 127.0.0.1 --port 3100",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
@@ -28,6 +29,7 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.15",
     "@playwright/test": "^1.55.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",

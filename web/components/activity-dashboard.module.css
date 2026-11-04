@@ -1,0 +1,14 @@
+.dashboard { display: grid; gap: 24px; margin-bottom: 32px; }
+.toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.toolbar p { margin: 0; color: var(--muted); }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.card, .section { border: 1px solid var(--line); border-radius: 12px; padding: 24px; background: white; min-width: 0; }
+.card h2 { font-size: 16px; margin: 0 0 12px; }
+.card strong { font-size: 34px; color: var(--primary); }
+.card p, .section > p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+.section h2 { font-size: 22px; margin-top: 0; }
+.scroll { overflow-x: auto; }
+.scroll table { width: 100%; border-collapse: collapse; white-space: nowrap; text-align: left; }
+.scroll th, .scroll td { padding: 12px; border-bottom: 1px solid var(--line); }
+@media (max-width: 850px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .cards { grid-template-columns: 1fr; } .toolbar { align-items: flex-start; flex-direction: column; } .card, .section { padding: 16px; } }
