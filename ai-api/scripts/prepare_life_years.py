@@ -49,8 +49,8 @@ def prepare(source: Path, target: Path, release_id: str):
     metadata.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
     (target / "HUB-RELEASE.md").write_text(
         f"# Hub integration · {release_id}\n\n"
-        "User requested publication of the revised package on osh.ai.kr on 2026-11-04. "
-        "Source 0.1.0-local with revised guide, UI and calculator messages is preserved. "
+        f"User requested publication of the revised package on osh.ai.kr on {release_id.split('.')[0]}. "
+        "Source 0.1.0-local with the supplied guide, UI, preview and calculator is preserved. "
         "Only hosting text, base URL and publication metadata changed; calculation code and data unchanged. "
         "9 synthetic examples; thesis table 7 contains reported results, not calculator inputs. "
         "Real age aggregates are not supplied. No new license or researcher role is asserted.\n"

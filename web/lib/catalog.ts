@@ -697,7 +697,7 @@ export const lifeYearsDataset: Dataset = {
   format: "CSV",
   kind: "guide",
   tags: ["DEMO 합성자료", "손실연수", "생명표", "YPLL", "고용보험", "건강보험"],
-  updated: "2026-11-04",
+  updated: "2026-11-05",
   year: 2026,
   api: false,
   ai: false,

@@ -4,6 +4,7 @@ import "../../../../design/osh-family/osh-family.css";
 export const metadata = { title: "고용보험–건보 집계표·손실연수 계산 DEMO" };
 const demo = "/demo/ei-nhis-life-years-lost/";
 const files = [
+  ["DEMO 합성 집계표 3행 · 전체 열", "preview.csv"],
   ["집계표 작성 및 지표 재산출 가이드", "AGGREGATION-GUIDE.md"],
   ["빈 집계표 양식", "aggregate.csv"],
   ["데이터 사전", "data_dictionary.csv"],
@@ -35,7 +36,7 @@ export default function LifeYearsPage() {
           </p>
           <p className="osh-help">
             자료 버전 0.1.0-local · 원 제작일 2026-10-30 · Hub 반영
-            2026-11-04.v3 · 업데이트 계획 미정
+            2026-11-05.v1 · 업데이트 계획 미정
           </p>
           <a className="osh-button" href={demo}>
             손실연수 계산 DEMO 열기 →
@@ -113,6 +114,11 @@ export default function LifeYearsPage() {
               </tbody>
             </table>
           </div>
+          <p>
+            <a className="osh-link" href={`${demo}downloads/preview.csv`}>
+              DEMO 미리보기 CSV 다운로드 · 전체 17개 열
+            </a>
+          </p>
         </section>
         <section className="osh-card osh-section">
           <h2 className="osh-heading">자료와 코드 다운로드</h2>
@@ -170,6 +176,7 @@ export default function LifeYearsPage() {
           <p className="osh-help">
             변경 이력: 2026-10-30 제작 패키지 0.1.0-local → 2026-11-04 Hub
             소개·계산 DEMO·다운로드 연결 및 가이드·화면·계산 안내 문구 갱신.
+            2026-11-05 합성 집계표 전체 열 미리보기·CSV 다운로드 추가.
             계산식과 자료 값은 변경하지
             않았습니다.
           </p>

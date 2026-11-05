@@ -42,6 +42,23 @@ test("published guide, real calculator, files and input error states", async ({
   await page.getByRole("link", { name: "손실연수 계산 DEMO 열기" }).click();
   await expect(page.locator("#run")).toBeEnabled();
   await expect(page.locator("#case option")).toHaveCount(9);
+  const preview = page.getByRole("region", { name: "합성 집계표 3행 미리보기", exact: true });
+  await expect(preview.locator("tbody tr")).toHaveCount(3);
+  await expect(preview.locator("thead th")).toHaveCount(17);
+  await expect(preview.locator("tbody tr").first()).toContainText("3645.0");
+  await expect(preview.locator('[aria-label="미입력"]')).toHaveCount(18);
+  await preview.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(() => preview.evaluate((el) => el.scrollWidth > el.clientWidth && el.scrollLeft > 0)).toBe(true);
+  await page.getByText("필수 항목 및 산출 용도", { exact: true }).click();
+  await expect(page.getByRole("region", { name: "집계표 필드", exact: true })).toBeVisible();
+  // Chromium downloads bypass route.fulfill; use the actual local gateway.
+  const downloadPage = await page.context().newPage();
+  await downloadPage.goto(backend + prefix);
+  const previewDownload = downloadPage.waitForEvent("download");
+  await downloadPage.getByRole("link", { name: "미리보기 CSV 다운로드", exact: true }).click();
+  expect(await (await previewDownload).failure()).toBeNull();
+  await downloadPage.close();
   await page.locator("#end").selectOption("65");
   await page.locator("#run").focus();
   await page.keyboard.press("Enter");

@@ -17,7 +17,7 @@ from starlette.concurrency import run_in_threadpool
 PREFIX = "/demo/ei-nhis-life-years-lost"
 NAS = Path(os.environ.get("NAS_DATA", "/nas"))
 ROOT = NAS / "ei-nhis-life-years-lost/serving/current"
-RELEASE_DIGEST = "1c6a1f5d4e4a795e88eec675cdbcd644104a9099f09c2f4e686ca7dcd72c5e3c"
+RELEASE_DIGEST = "6bffb5cdf5c294cdd89e82cbbfb3c393d8027b9871b2e91bc2c84e30a0dae0a5"
 LIMIT = 10 * 1024 * 1024
 SLOTS = threading.BoundedSemaphore(2)
 
